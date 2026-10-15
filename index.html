@@ -273,8 +273,10 @@ document.getElementById("year").textContent =
 
 
 function contactWhatsApp(message) {
-  const channelLink = "https://whatsapp.com/channel/0029VbE3msh47Xe5PEWcBW3b";
-  window.open(channelLink, "_blank");
+  const phone = CONFIG.whatsapp;
+  const text = encodeURIComponent(message || "Hello JKPanel, mujhe service ke baare mein inquiry karni hai.");
+  const chatLink = `https://wa.me/${phone}?text=${text}`;
+  window.open(chatLink, "_blank");
 }
 
 
