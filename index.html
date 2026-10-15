@@ -161,10 +161,18 @@ function buyProduct(name){
   window.open('https://wa.me/917645957071?text='+encodeURIComponent(message),'_blank');
 }
 </script>
-<!-- PhonePe QR Payment -->
-<div style="text-align:center;padding:24px;background:#fff;color:#222;border-radius:16px;margin:20px;">
+<!-- PhonePe QR on Home Page -->
+<section id="phonepe-payment" style="
+  background:#fff;
+  color:#222;
+  padding:24px 16px;
+  margin:24px auto;
+  max-width:420px;
+  border-radius:16px;
+  text-align:center;
+">
   <h2>Pay with PhonePe</h2>
-  <p>Scan the QR code below to make payment</p>
+  <p>Scan this QR code to pay</p>
 
   <img
     src="/phonepe-qr.png"
@@ -172,7 +180,7 @@ function buyProduct(name){
     style="display:block;width:260px;max-width:100%;height:auto;margin:20px auto;"
   >
 
-  <p>Payment karne ke baad apni transaction details sambhal kar rakhein.</p>
-</div>
+  <p>Payment karne ke baad transaction details sambhal kar rakhein.</p>
+</section>
 </body>
 </html>
