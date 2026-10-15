@@ -1,326 +1,65 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#080c12">
-<title>JKPanel.shop | Gaming Hub</title>
-
+<title>JK PANEL SHOP</title>
 <style>
-:root {
-  --bg: #080c12;
-  --panel: #111923;
-  --green: #39f58b;
-  --muted: #a6b2c0;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
-body {
-  background: var(--bg);
-  color: white;
-  font-family: Arial, sans-serif;
-}
-a { color: inherit; text-decoration: none; }
-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 7%;
-  background: #0d131b;
-  border-bottom: 1px solid #25302d;
-  gap: 15px;
-}
-.logo { font-size: 24px; font-weight: 900; }
-.logo span, .green { color: var(--green); }
-nav { display: flex; gap: 20px; flex-wrap: wrap; }
-nav a { color: #c4ced8; font-size: 14px; }
-nav a:hover { color: var(--green); }
-.hero {
-  padding: 85px 7%;
-  text-align: center;
-  background: radial-gradient(ellipse at top, #16412d, var(--bg) 70%);
-}
-.pill {
-  display: inline-block;
-  padding: 8px 13px;
-  border: 1px solid #347a51;
-  border-radius: 30px;
-  color: var(--green);
-  font-size: 12px;
-  letter-spacing: 1px;
-}
-h1 {
-  margin: 22px 0 16px;
-  font-size: clamp(36px, 7vw, 65px);
-}
-.hero p {
-  max-width: 560px;
-  margin: auto;
-  color: var(--muted);
-  line-height: 1.8;
-}
-.btn {
-  display: inline-block;
-  border: none;
-  border-radius: 8px;
-  background: var(--green);
-  color: #07110b;
-  padding: 13px 19px;
-  font-weight: bold;
-  cursor: pointer;
-}
-.btn:hover { filter: brightness(.9); }
-.btn.secondary {
-  background: transparent;
-  color: var(--green);
-  border: 1px solid var(--green);
-}
-.hero .btn { margin-top: 25px; }
-section { padding: 55px 7%; }
-.heading { text-align: center; margin-bottom: 30px; }
-.heading p { color: var(--muted); margin-top: 10px; }
-.grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 20px;
-}
-.card {
-  background: var(--panel);
-  border: 1px solid #28352f;
-  border-radius: 15px;
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-.card .emoji { font-size: 38px; }
-.card h3 { margin: 17px 0 10px; }
-.card p { color: var(--muted); line-height: 1.7; flex: 1; }
-.card .btn { margin-top: 20px; }
-.price { color: var(--green); margin-top: 14px; font-weight: bold; }
-.info {
-  text-align: center;
-  border: 1px solid #26342e;
-  border-radius: 14px;
-  background: var(--panel);
-  padding: 30px 20px;
-}
-.info p { color: var(--muted); line-height: 1.8; margin: 12px auto; }
-footer {
-  padding: 25px 7%;
-  text-align: center;
-  border-top: 1px solid #25302d;
-  color: var(--muted);
-  font-size: 13px;
-}
-footer p { margin-top: 8px; }
-#notice { font-size: 14px; margin-top: 15px; color: var(--green); }
-
-@media(max-width: 750px) {
-  header { padding: 17px 5%; flex-direction: column; }
-  nav { justify-content: center; gap: 16px; }
-  .hero { padding: 65px 5%; }
-  section { padding: 42px 5%; }
-  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-  .card { padding: 17px; }
-}
-@media(max-width: 430px) {
-  .grid { grid-template-columns: 1fr; }
-}
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+body{background:#0b0f19;color:#fff;padding:12px;padding-bottom:90px}
+.top-header{display:flex;justify-content:space-between;align-items:center;padding-bottom:12px;border-bottom:1px solid #1f293d;gap:8px}
+.btn-menu{background:#1e293b;color:#38bdf8;border:1px solid #334155;font-size:20px;padding:6px 12px;border-radius:8px}
+.btn-contact{background:#064e3b;color:#34d399;border:1px solid #059669;font-size:11px;font-weight:bold;padding:8px 12px;border-radius:8px;text-decoration:none}
+.btn-deposit-top{background:#dc2626;color:#fff;font-size:11px;font-weight:bold;padding:8px 12px;border:0;border-radius:8px}
+.box{background:#111827;border-radius:12px;padding:14px;margin-top:14px}
+.box-green{border:1px solid #10b981}.box-purple{border:1px solid #a855f7}
+.box-blue{border:1px solid #3b82f6}.box-orange{border:1px solid #f97316}.box-cyan{border:1px solid #06b6d4}
+.btn-action{display:block;width:100%;text-align:center;padding:10px;margin-top:10px;border-radius:8px;font-weight:bold;font-size:12px;text-decoration:none;border:0;cursor:pointer}
+.btn-upgrade{background:#10b981;color:#000}.btn-channel{background:#581c87;color:#f3e8ff;border:1px solid #a855f7}
+.stats-container{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.stat-number{font-size:26px;font-weight:bold}.stat-text{font-size:11px;color:#94a3b8;font-weight:bold;margin-top:4px}
+.product-card{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#111827;border:1px solid #1f293d;padding:12px;border-radius:10px;margin-top:8px}
+.product-card img{width:55px;height:55px;object-fit:cover;border-radius:7px}
+.product-info{flex:1;min-width:0}.product-name{font-size:13px;font-weight:bold;overflow-wrap:anywhere}
+.product-price{font-size:12px;color:#38bdf8;font-weight:bold;margin-top:5px}
+.btn-buy-link{background:#06b6d4;color:#000;padding:8px 12px;border-radius:6px;font-size:11px;font-weight:bold;text-decoration:none;white-space:nowrap}
+.whatsapp-float{position:fixed;bottom:20px;right:20px;width:52px;height:52px;border-radius:50%;background:#25d366;color:#fff;display:flex;align-items:center;justify-content:center;font-size:26px;text-decoration:none;z-index:50}
+#sidebarMenu{display:none;position:fixed;top:0;left:0;width:260px;max-width:85%;height:100%;overflow-y:auto;background:#0f172a;border-right:1px solid #334155;padding:16px;z-index:100}
+#menuBackdrop{display:none;position:fixed;inset:0;background:#000b;z-index:99}
+.menu-item{display:block;color:#e2e8f0;text-decoration:none;padding:12px 0;font-size:13px;border-bottom:1px solid #1e293b}
+#qrPopup{display:none;position:fixed;inset:0;background:#000d;z-index:200;align-items:center;justify-content:center;padding:16px}
+.qr-card{background:#0f172a;border:1px solid #10b981;padding:20px;border-radius:14px;text-align:center;max-width:320px;width:100%}
+.qr-card img{width:160px;height:160px;object-fit:contain;display:block}
+.muted{font-size:12px;color:#94a3b8;line-height:1.5}
+@media(max-width:360px){.btn-contact{padding:8px;font-size:10px}.btn-deposit-top{padding:8px;font-size:10px}.product-card{padding:9px}}
 </style>
 </head>
-
 <body>
-<header>
-  <a class="logo" href="#home">JK<span>Panel</span>.shop</a>
-  <nav>
-    <a href="#home">Home</a>
-    <a href="#services">Services</a>
-    <a href="#payment">UPI Payment</a>
-    <a href="#contact">Contact</a>
-  </nav>
+
+<div id="menuBackdrop" onclick="closeSidebar()"></div>
+
+<div id="sidebarMenu">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <span style="font-weight:bold;color:#06b6d4;font-size:18px">JK PANEL SHOP</span>
+    <button onclick="closeSidebar()" style="background:none;border:0;color:white;font-size:20px">✕</button>
+  </div>
+  <a href="#" class="menu-item" onclick="closeSidebar()">Dashboard</a>
+  <a href="javascript:void(0)" class="menu-item" onclick="closeSidebar();showQR()">Deposit</a>
+  <a href="#servicesList" class="menu-item" onclick="closeSidebar()">Buy Keys / Products</a>
+  <a href="javascript:void(0)" class="menu-item" onclick="support('My Resellers')">My Resellers</a>
+  <a href="javascript:void(0)" class="menu-item" onclick="support('My Keys')">My Keys</a>
+  <a href="javascript:void(0)" class="menu-item" onclick="support('Order History')">History</a>
+  <a id="supportMenu" href="#" target="_blank" rel="noopener" class="menu-item">Support Ticket</a>
+  <a href="javascript:void(0)" class="menu-item" onclick="support('Refer And Earn')">Refer And Earn</a>
+  <a href="javascript:void(0)" class="menu-item" onclick="support('API And Password')">API And Password</a>
+</div>
+
+<header class="top-header">
+  <div style="display:flex;gap:8px;align-items:center">
+    <button class="btn-menu" onclick="openSidebar()" aria-label="Menu">☰</button>
+    <a id="contactBtn" href="#" target="_blank" rel="noopener" class="btn-contact">CONTACT</a>
+  </div>
+  <button class="btn-deposit-top" onclick="showQR()">▶ HOW TO DEPOSIT?</button>
 </header>
 
-<main>
-<section class="hero" id="home">
-  <span class="pill">WELCOME TO THE GAMING ZONE</span>
-  <h1>PLAY SMART.<br><span class="green">LEVEL UP.</span></h1>
-  <p>
-    Welcome to JKPanel.shop — your gaming destination.
-    Explore gaming services, discover new options
-    and contact us to place an order.
-  </p>
-  <a class="btn" href="#services">Explore Services →</a>
-</section>
-
-<section id="services">
-  <div class="heading">
-    <h2>Our Gaming Services</h2>
-    <p>Select a service to enquire about availability and pricing.</p>
-  </div>
-
-  <div class="grid">
-    <article class="card">
-      <div class="emoji">🎮</div>
-      <h3>Gaming Assistance</h3>
-      <p>Get information and assistance with supported games.</p>
-      <div class="price">Price on request</div>
-      <button class="btn order" data-service="Gaming Assistance">
-        Enquire Now
-      </button>
-    </article>
-
-    <article class="card">
-      <div class="emoji">⚡</div>
-      <h3>Gaming Top-Up</h3>
-      <p>Ask about available top-up options for supported games.</p>
-      <div class="price">Price on request</div>
-      <button class="btn order" data-service="Gaming Top-Up">
-        Enquire Now
-      </button>
-    </article>
-
-    <article class="card">
-      <div class="emoji">🛡️</div>
-      <h3>Gaming Support</h3>
-      <p>Get help with general gameplay and game-related questions.</p>
-      <div class="price">Price on request</div>
-      <button class="btn order" data-service="Gaming Support">
-        Enquire Now
-      </button>
-    </article>
-
-    <article class="card">
-      <div class="emoji">🖥️</div>
-      <h3>Gaming Accessories</h3>
-      <p>Ask about gaming gear and accessories.</p>
-      <div class="price">Price on request</div>
-      <button class="btn order" data-service="Gaming Accessories">
-        Enquire Now
-      </button>
-    </article>
-
-    <article class="card">
-      <div class="emoji">🏆</div>
-      <h3>Gaming Community</h3>
-      <p>Connect with us for gaming community information.</p>
-      <div class="price">Contact for details</div>
-      <button class="btn order" data-service="Gaming Community">
-        Enquire Now
-      </button>
-    </article>
-
-    <article class="card">
-      <div class="emoji">✨</div>
-      <h3>Other Services</h3>
-      <p>Have a different gaming requirement? Send us your enquiry.</p>
-      <div class="price">Contact for details</div>
-      <button class="btn order" data-service="Other Gaming Services">
-        Enquire Now
-      </button>
-    </article>
-  </div>
-</section>
-
-<section id="payment">
-  <div class="info">
-    <h2>💳 UPI Payment</h2>
-    <p>
-      Place your enquiry first. After the service and amount
-      are confirmed, you can proceed with the configured UPI ID.
-    </p>
-    <button class="btn" id="pay">Pay with UPI</button>
-    <p id="notice" role="status">
-      UPI payment setup pending.
-    </p>
-    <p>Never share your UPI PIN or OTP with anyone.</p>
-  </div>
-</section>
-
-<section id="contact">
-  <div class="info">
-    <h2>Need Help?</h2>
-    <p>
-      Contact our team for service details, pricing
-      and order assistance.
-    </p>
-    <button class="btn secondary" id="contactBtn">
-      Contact JKPanel
-    </button>
-  </div>
-</section>
-</main>
-
-<footer>
-  <div class="logo">JK<span>Panel</span>.shop</div>
-  <p>Gaming services and support.</p>
-  <p>© <span id="year"></span> JKPanel.shop</p>
-</footer>
-
-<script>
-// SET THESE VALUES BEFORE PUBLISHING.
-const CONFIG = {
-  whatsapp: "917645957071",
-  upiId: "YOUR_UPI_ID@bank",
-  payeeName: "JKPanel",
-  defaultAmount: ""
-};
-
-document.getElementById("year").textContent =
-  new Date().getFullYear();
-
-
-
-function contactWhatsApp(message) {
-  const phone = CONFIG.whatsapp;
-  const text = encodeURIComponent(message || "Hello JKPanel, mujhe service ke baare mein inquiry karni hai.");
-  const chatLink = `https://wa.me/${phone}?text=${text}`;
-  window.open(chatLink, "_blank");
-}
-
-
-
-document.querySelectorAll(".order").forEach(button => {
-  button.addEventListener("click", () => {
-    const service = button.dataset.service;
-    contactWhatsApp(
-      "Hello JKPanel.shop! I want to enquire about: " + service +
-      ". Please share availability and pricing."
-    );
-  });
-});
-
-document.getElementById("contactBtn").addEventListener("click", () => {
-  contactWhatsApp("Hello JKPanel.shop! I need assistance.");
-});
-
-document.getElementById("pay").addEventListener("click", () => {
-  const notice = document.getElementById("notice");
-
-  if (!/^[\w.-]+@[\w.-]+$/.test(CONFIG.upiId) ||
-      CONFIG.upiId === "YOUR_UPI_ID@bank") {
-    notice.textContent = "Owner: add your correct UPI ID in the code first.";
-    return;
-  }
-
-  const amount = Number(CONFIG.defaultAmount);
-  if (!Number.isFinite(amount) || amount <= 0) {
-    notice.textContent =
-      "Please confirm the order amount with the owner before payment.";
-    return;
-  }
-
-  const params = new URLSearchParams({
-    pa: CONFIG.upiId,
-    pn: CONFIG.payeeName,
-    am: amount.toFixed(2),
-    cu: "INR",
-    tn: "JKPanel.shop order"
-  });
-
-  window.location.href = "upi://pay?" + params.toString();
-});
-</script>
-</body>
-</html>
+<div
