@@ -4,184 +4,162 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>JK PANEL SHOP</title>
-
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Arial,sans-serif;background:#0b0f19;color:#fff;padding:12px;padding-bottom:75px}
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+body{background:#0b0f19;color:#fff;padding:12px 12px 80px}
 button,a{cursor:pointer}
-header{display:flex;justify-content:space-between;align-items:center;gap:8px;padding-bottom:14px;border-bottom:1px solid #263247}
-button{border:0;border-radius:8px;padding:10px;font-weight:bold}
-.menu-btn{background:#1e293b;color:#38bdf8;font-size:20px}
-.contact-btn{background:#064e3b;color:#34d399;text-decoration:none;font-size:11px;padding:11px;border-radius:8px}
-.deposit-btn{background:#dc2626;color:white;font-size:11px}
-h2{font-size:19px;margin-bottom:8px}
-p{color:#94a3b8;font-size:13px;line-height:1.6}
-.box{background:#111827;border:1px solid #263247;border-radius:12px;padding:16px;margin-top:15px}
-.hero{border-color:#0891b2}
-.hero h2{color:#38bdf8}
+button{border:0;border-radius:8px;font-weight:bold}
+header{display:flex;align-items:center;justify-content:space-between;gap:8px;border-bottom:1px solid #263247;padding-bottom:12px}
+.header-left{display:flex;align-items:center;gap:8px}
+.menu-btn{background:#1e293b;border:1px solid #334155;color:#38bdf8;padding:8px 12px;font-size:20px}
+.contact-btn{background:#064e3b;color:#34d399;padding:10px;text-decoration:none;font-size:11px;border-radius:8px}
+.deposit-btn{background:#dc2626;color:#fff;padding:10px;font-size:11px}
+.brand{color:#38bdf8;font-size:21px;font-weight:bold;margin-top:18px}
+.subtitle{color:#94a3b8;font-size:12px;margin-top:6px}
+.box{background:#111827;border:1px solid #263247;border-radius:12px;padding:14px;margin-top:14px}
+.box h3{font-size:15px;margin-bottom:10px}
+.box p{font-size:12px;color:#94a3b8;line-height:1.6}
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
 .stat{background:#111827;border:1px solid #263247;border-radius:10px;padding:14px}
-.stat strong{display:block;font-size:23px;color:#38bdf8;margin-bottom:5px}
+.stat b{display:block;font-size:23px;color:#38bdf8;margin-bottom:6px}
 .stat span{font-size:11px;color:#94a3b8}
-.section-title{margin-top:22px;font-size:17px}
-.action{width:100%;margin-top:12px;background:#0891b2;color:white;padding:12px}
-.product{padding:14px;background:#111827;border:1px solid #263247;border-radius:10px;margin-top:10px}
-.product h3{font-size:14px;margin-bottom:7px}
-.product button{background:#0891b2;color:white;margin-top:10px;width:100%}
-#sidebarMenu{display:none;position:fixed;top:0;left:0;width:270px;max-width:85%;height:100%;overflow:auto;background:#0f172a;padding:16px;z-index:101}
-#menuBackdrop{display:none;position:fixed;inset:0;background:#000b;z-index:100}
-.menu-item{display:block;padding:14px 5px;color:#e2e8f0;text-decoration:none;border-bottom:1px solid #263247;font-size:14px}
-.close-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
-.close-btn{background:#263247;color:white}
-#popup{display:none;position:fixed;inset:0;background:#000d;z-index:200;align-items:center;justify-content:center;padding:18px}
-.popup-card{width:100%;max-width:360px;background:#111827;border:1px solid #0891b2;border-radius:14px;padding:20px}
-.popup-card h2{color:#38bdf8;margin-bottom:12px}
-.popup-card button{width:100%;margin-top:12px;background:#0891b2;color:white}
-.popup-card .secondary{background:#263247}
-footer{position:fixed;bottom:0;left:0;right:0;text-align:center;background:#111827;padding:12px;color:#94a3b8;font-size:11px;border-top:1px solid #263247}
+.section-title{font-size:17px;margin-top:23px}
+.action{display:block;width:100%;padding:12px;margin-top:10px;text-align:center;background:#10b981;color:#04130b;text-decoration:none;border-radius:8px;font-weight:bold;font-size:12px}
+.purple{background:#581c87;color:#fff;border:1px solid #a855f7}
+.blue{background:#1d4ed8;color:#fff}
+.product{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#111827;border:1px solid #263247;padding:13px;border-radius:10px;margin-top:10px}
+.product-info{flex:1;min-width:0}
+.product h4{font-size:13px}
+.product p{font-size:11px;color:#94a3b8;margin-top:5px}
+.buy{background:#06b6d4;color:#001018;padding:10px;font-size:11px}
+#backdrop{display:none;position:fixed;inset:0;background:#000b;z-index:99}
+#sidebar{display:none;position:fixed;top:0;left:0;width:270px;max-width:85%;height:100%;overflow-y:auto;background:#0f172a;padding:16px;z-index:100}
+.menu-heading{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.menu-item{display:block;padding:14px 4px;color:#e2e8f0;text-decoration:none;border-bottom:1px solid #263247;font-size:13px}
+#popup{display:none;position:fixed;inset:0;background:#000c;z-index:200;align-items:center;justify-content:center;padding:16px}
+.popup-card{width:100%;max-width:340px;background:#111827;border:1px solid #10b981;border-radius:14px;padding:20px}
+.popup-card h3{color:#38bdf8;margin-bottom:12px}
+.popup-card p{color:#cbd5e1;font-size:13px;line-height:1.6}
+.popup-card button{width:100%;padding:12px;margin-top:12px;background:#10b981;color:#04130b}
+.whatsapp-float{position:fixed;right:18px;bottom:64px;width:50px;height:50px;border-radius:50%;background:#25d366;color:white;text-decoration:none;display:flex;align-items:center;justify-content:center;font-size:25px;z-index:50}
+footer{position:fixed;bottom:0;left:0;right:0;text-align:center;background:#111827;border-top:1px solid #263247;padding:12px;color:#94a3b8;font-size:11px}
+@media(max-width:360px){.contact-btn,.deposit-btn{padding:8px;font-size:10px}.brand{font-size:19px}}
 </style>
 </head>
-
 <body>
 
-<div id="menuBackdrop" onclick="closeSidebar()"></div>
+<div id="backdrop" onclick="closeMenu()"></div>
 
-<nav id="sidebarMenu">
-  <div class="close-row">
-    <strong style="color:#38bdf8">JK PANEL SHOP</strong>
-    <button class="close-btn" onclick="closeSidebar()">✕</button>
+<nav id="sidebar">
+  <div class="menu-heading">
+    <b style="color:#38bdf8">JK PANEL SHOP</b>
+    <button onclick="closeMenu()" style="background:#263247;color:white;padding:8px">✕</button>
   </div>
-
-  <a class="menu-item" href="#" onclick="closeSidebar()">Dashboard</a>
-  <a class="menu-item" href="#" onclick="closeSidebar();showDeposit()">Deposit</a>
-  <a class="menu-item" href="#servicesList" onclick="closeSidebar()">Buy Keys / Products</a>
-  <a class="menu-item" href="#" onclick="support('My Resellers');return false">My Resellers</a>
-  <a class="menu-item" href="#" onclick="support('My Keys');return false">My Keys</a>
-  <a class="menu-item" href="#" onclick="support('Order History');return false">Order History</a>
-  <a class="menu-item" href="#" onclick="contactSupport();return false">Support Ticket</a>
-  <a class="menu-item" href="#" onclick="support('Refer And Earn');return false">Refer And Earn</a>
-  <a class="menu-item" href="#" onclick="support('API And Password');return false">API And Password</a>
+  <a class="menu-item" href="#" onclick="closeMenu()">Dashboard</a>
+  <a class="menu-item" href="#" onclick="deposit();return false">Wallet Recharge</a>
+  <a class="menu-item" href="#products" onclick="closeMenu()">Buy Keys / Products</a>
+  <a class="menu-item" href="#" onclick="feature('My Resellers');return false">My Resellers</a>
+  <a class="menu-item" href="#" onclick="feature('My Keys');return false">My Keys</a>
+  <a class="menu-item" href="#" onclick="feature('Order History');return false">Order History</a>
+  <a class="menu-item" href="https://wa.me/917645957071" target="_blank" rel="noopener">Contact Support</a>
+  <a class="menu-item" href="https://whatsapp.com/channel/0029VbE3msh47Xe5PEWcBW3b" target="_blank" rel="noopener">📢 JOIN WHATSAPP CHANNEL</a>
+  <a class="menu-item" href="#" onclick="feature('API And Password');return false">API And Password</a>
 </nav>
 
 <header>
-  <div style="display:flex;gap:8px;align-items:center">
-    <button class="menu-btn" onclick="openSidebar()" aria-label="Open menu">☰</button>
-    <a class="contact-btn" href="#" onclick="contactSupport();return false">CONTACT</a>
+  <div class="header-left">
+    <button class="menu-btn" onclick="openMenu()" aria-label="Open menu">☰</button>
+    <a class="contact-btn" href="https://wa.me/917645957071?text=Hello%20JK%20PANEL%20SHOP" target="_blank" rel="noopener">CONTACT</a>
   </div>
-  <button class="deposit-btn" onclick="showDeposit()">HOW TO DEPOSIT?</button>
+  <button class="deposit-btn" onclick="deposit()">▶ HOW TO DEPOSIT?</button>
 </header>
 
-<section class="box hero">
-  <h2>Welcome to JK PANEL SHOP</h2>
-  <p>Your reseller panel for keys and digital products.</p>
-  <button class="action" onclick="showDeposit()">Wallet Recharge / Deposit</button>
-</section>
+<div class="brand">JK PANEL SHOP</div>
+<div class="subtitle">Digital Products & Reseller Dashboard</div>
 
-<div class="stats">
-  <div class="stat">
-    <strong>₹0</strong>
-    <span>Wallet Balance</span>
-  </div>
-  <div class="stat">
-    <strong>0</strong>
-    <span>Total Orders</span>
-  </div>
-  <div class="stat">
-    <strong>0</strong>
-    <span>My Keys</span>
-  </div>
-  <div class="stat">
-    <strong>0</strong>
-    <span>My Resellers</span>
-  </div>
+<div class="box" style="border-color:#10b981">
+  <h3>Welcome to JK PANEL SHOP!</h3>
+  <p>Manage your wallet, digital products and reseller services from one place.</p>
+  <button class="action" onclick="deposit()">+ ADD WALLET BALANCE</button>
+  <a class="action purple" href="https://whatsapp.com/channel/0029VbE3msh47Xe5PEWcBW3b" target="_blank" rel="noopener">📢 JOIN CHANNEL</a>
 </div>
 
-<section id="servicesList">
-  <h2 class="section-title">Available Products</h2>
-  <div class="box">
-    <p>Products will be added by the administrator.</p>
-    <p style="margin-top:8px">For product details, please contact support.</p>
-    <button class="action" onclick="contactSupport()">Contact Support</button>
-  </div>
-</section>
+<div class="stats">
+  <div class="stat"><b>₹0.00</b><span>Wallet Balance</span></div>
+  <div class="stat"><b>0</b><span>Total Orders</span></div>
+  <div class="stat"><b>0</b><span>Available Keys</span></div>
+  <div class="stat"><b>0</b><span>My Resellers</span></div>
+</div>
 
-<section class="box">
-  <h2>Need Help?</h2>
-  <p>Contact support for deposits, products and reseller queries.</p>
-  <button class="action" onclick="contactSupport()">Contact Us</button>
-</section>
+<h3 class="section-title">Quick Services</h3>
+<div class="box">
+  <button class="action" onclick="deposit()">WALLET RECHARGE</button>
+  <button class="action purple" onclick="feature('My Resellers')">RESELLER PANEL</button>
+  <button class="action blue" onclick="feature('Order History')">ORDER HISTORY</button>
+</div>
 
-<div id="popup">
+<h3 class="section-title" id="products">Our Products</h3>
+
+<div class="product">
+  <div class="product-info"><h4>Digital Product 1</h4><p>Price: To be announced</p></div>
+  <button class="buy" onclick="buyProduct('Digital Product 1')">BUY NOW</button>
+</div>
+<div class="product">
+  <div class="product-info"><h4>Digital Product 2</h4><p>Price: To be announced</p></div>
+  <button class="buy" onclick="buyProduct('Digital Product 2')">BUY NOW</button>
+</div>
+<div class="product">
+  <div class="product-info"><h4>Digital Product 3</h4><p>Price: To be announced</p></div>
+  <button class="buy" onclick="buyProduct('Digital Product 3')">BUY NOW</button>
+</div>
+
+<div class="box">
+  <h3>Need Help?</h3>
+  <p>Contact support for product and payment assistance.</p>
+  <a class="action" href="https://wa.me/917645957071?text=Hello%20JK%20PANEL%20SHOP%2C%20mujhe%20help%20chahiye." target="_blank" rel="noopener">CONTACT ON WHATSAPP</a>
+</div>
+
+<a class="whatsapp-float" href="https://wa.me/917645957071" target="_blank" rel="noopener" aria-label="WhatsApp">☎</a>
+
+<div id="popup" onclick="if(event.target===this)closePopup()">
   <div class="popup-card">
-    <h2 id="popupTitle">Wallet Deposit</h2>
-    <p id="popupText">Please contact the administrator for verified payment details.</p>
-    <button id="popupContact" onclick="contactSupport()">Contact Support</button>
-    <button class="secondary" onclick="closePopup()">Close</button>
+    <h3 id="popupTitle">JK PANEL SHOP</h3>
+    <p id="popupMessage"></p>
+    <button onclick="closePopup()">CLOSE</button>
   </div>
 </div>
 
 <footer>© 2026 JK PANEL SHOP</footer>
 
 <script>
-/* Add your official support number here.
-   Use country code + number without the + sign.
-   Example format: 919876543210
-*/
-const SUPPORT_NUMBER = "";
-
-function openSidebar(){
-  document.getElementById("sidebarMenu").style.display="block";
-  document.getElementById("menuBackdrop").style.display="block";
+function openMenu(){
+  document.getElementById('sidebar').style.display='block';
+  document.getElementById('backdrop').style.display='block';
 }
-
-function closeSidebar(){
-  document.getElementById("sidebarMenu").style.display="none";
-  document.getElementById("menuBackdrop").style.display="none";
+function closeMenu(){
+  document.getElementById('sidebar').style.display='none';
+  document.getElementById('backdrop').style.display='none';
 }
-
 function showPopup(title,message){
-  document.getElementById("popupTitle").textContent=title;
-  document.getElementById("popupText").textContent=message;
-  document.getElementById("popup").style.display="flex";
+  document.getElementById('popupTitle').textContent=title;
+  document.getElementById('popupMessage').textContent=message;
+  document.getElementById('popup').style.display='flex';
 }
-
 function closePopup(){
-  document.getElementById("popup").style.display="none";
+  document.getElementById('popup').style.display='none';
 }
-
-function showDeposit(){
-  closeSidebar();
-  showPopup(
-    "Wallet Deposit",
-    "Official payment QR, UPI ID and automatic recharge are not configured yet. Contact the administrator for verified payment details. Do not pay an unverified account."
-  );
+function deposit(){
+  closeMenu();
+  showPopup('Wallet Recharge','Automatic payment gateway aur verified UPI QR abhi connect nahi hain. Payment karne se pehle official payment details verify karein.');
 }
-
-function contactSupport(){
-  if(!SUPPORT_NUMBER){
-    showPopup(
-      "Contact Support",
-      "Support number abhi set nahi hai. Website owner ko apna official WhatsApp number code mein add karna hoga."
-    );
-    return;
-  }
-  window.open(
-    "https://wa.me/"+SUPPORT_NUMBER+"?text="+encodeURIComponent("Hello JK PANEL SHOP, I need help."),
-    "_blank"
-  );
+function feature(name){
+  closeMenu();
+  showPopup(name,'Is feature ko real data ke saath chalane ke liye backend aur database connection zaroori hai.');
 }
-
-function support(section){
-  closeSidebar();
-  showPopup(
-    section,
-    "This feature requires a connected backend and a logged-in user account. Please contact the administrator for assistance."
-  );
+function buyProduct(name){
+  const message='Hello JK PANEL SHOP, mujhe '+name+' ke baare mein jankari chahiye.';
+  window.open('https://wa.me/917645957071?text='+encodeURIComponent(message),'_blank');
 }
-
-document.getElementById("popup").addEventListener("click",function(event){
-  if(event.target===this) closePopup();
-});
 </script>
 
 </body>
