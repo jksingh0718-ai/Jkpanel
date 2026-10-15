@@ -225,8 +225,7 @@ app.get("/api/admin/orders", isAdmin, async (req, res) => {
 
   const { data, error } = await supabase
     .from("orders")
-    .select("id,created_at,customer_name,product_name,amount,payment_status,order_status")
-    .order("created_at", { ascending: false })
+    .select('id, created_at, "Customer_name", "Product_name", "Amount", "Payment_status", "Order status"')
     .limit(100);
 
   if (error) {
@@ -251,9 +250,9 @@ app.patch("/api/admin/orders/:id", isAdmin, async (req, res) => {
 
   const { data, error } = await supabase
     .from("orders")
-    .update({ order_status })
+    .update({ "Order status": order_status })
     .eq("id", req.params.id)
-    .select("id,order_status")
+    .select('id, "Order status"')
     .maybeSingle();
 
   if (error) {
