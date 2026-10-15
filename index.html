@@ -153,14 +153,11 @@ function deposit(){
 
   document.getElementById('popupTitle').textContent = 'Wallet Recharge';
 
-  document.getElementById('popupMessage').innerHTML = `
-    <p>PhonePe se QR scan karke payment karein.</p>
-    src="/phonepe-qr.png?v=2"
-         alt="PhonePe QR"
-         style="display:block;width:220px;max-width:100%;height:auto;margin:15px auto;">
-    <p>Payment ke baad transaction ID sambhal kar rakhein.</p>
-    <p>Wallet balance payment verify hone ke baad hi add hoga.</p>
-  `;
+  document.getElementById('popupMessage').innerHTML =
+    '<p>PhonePe se QR scan karke payment karein.</p>' +
+    '<img src="/phonepe-qr.png?v=2" alt="PhonePe QR" style="display:block;width:280px;max-width:100%;height:auto;margin:15px auto;">' +
+    '<p>Payment ke baad transaction ID sambhal kar rakhein.</p>' +
+    '<p>Wallet balance payment verify hone ke baad hi add hoga.</p>';
 
   document.getElementById('popup').style.display = 'flex';
 }
