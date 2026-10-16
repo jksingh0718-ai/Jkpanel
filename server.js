@@ -467,6 +467,8 @@ async function loadOrders(){
    id.textContent="Order ID: "+order.id+" | Created: "+(order.created_at||"");
    const payment=document.createElement("p");
    payment.textContent="Payment: "+order.payment_status;
+   const supplier=document.createElement("p");
+   supplier.textContent="Supplier delivery: "+(order.supplier_status||"not_started")+(order.supplier_duration?" ("+order.supplier_duration+")":"")+(order.supplier_error?" — "+order.supplier_error:"");
    const verifyPayment=document.createElement("button");
    verifyPayment.textContent="Mark payment verified";
    verifyPayment.disabled=order.payment_status==="paid";
@@ -498,7 +500,7 @@ async function loadOrders(){
      await loadOrders();
     }catch(e){message.textContent=e.message;}
    };
-   card.append(title,details,id,payment,verifyPayment,orderStatus,document.createElement("br"),select,save);
+   card.append(title,details,id,payment,supplier,verifyPayment,orderStatus,document.createElement("br"),select,save);
    root.appendChild(card);
   });
   message.textContent="";
