@@ -130,7 +130,7 @@ footer{display:none}
 
 <header>
   <div class="header-left">
-    <button class="menu-btn" onclick="openMenu()" aria-label="Open menu">⋮</button>
+    <button class="menu-btn" onclick="openMenu()" aria-label="Open menu">☰</button>
     <a class="contact-btn" href="https://wa.me/917645957071?text=Hello%20JK%20PANEL%20SHOP" target="_blank" rel="noopener">CONTACT</a>
   </div>
   <button class="deposit-btn" onclick="deposit()">▶ HOW TO DEPOSIT?</button>
@@ -874,11 +874,13 @@ async function loadShopProducts(){
     const open=plans.style.display==='none';
     plans.style.display=open?'block':'none';plans.hidden=!open;
     purchase.setAttribute('aria-expanded',String(open));
-    purchase.textContent=open?'HIDE DURATIONS':'PURCHASE KEY';
+    purchase.textContent='PURCHASE KEY';
    };
+   const durationRank=duration=>{const d=String(duration).toLowerCase().replace(/\s+/g,'');if(d.includes('6hour')||d.includes('6hr'))return 6;if(d.includes('12hour')||d.includes('12hr'))return 12;if(d.includes('1day')||d.includes('24hour')||d.includes('24hr'))return 24;if(d.includes('7day'))return 168;return 9999;};
+   dripProducts.sort((a,b)=>durationRank((a.name||'').replace(/^DRIP Wire\s*-\s*/i,''))-durationRank((b.name||'').replace(/^DRIP Wire\s*-\s*/i,'')));
    dripProducts.forEach(product=>{
     const duration=(product.name||'DRIP Wire').replace(/^DRIP Wire\s*-\s*/i,'').trim()||'Duration';
-    const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid #263247';
+    const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 0;border-bottom:1px solid #263247';
     const details=document.createElement('div');details.style.cssText='min-width:0;flex:1';
     const durationLabel=document.createElement('p');durationLabel.textContent=duration;durationLabel.style.cssText='font-size:14px;font-weight:bold;color:#f8fafc';
     const price=document.createElement('p');price.textContent='₹'+Number(product.price||0).toFixed(0);price.style.cssText='font-size:13px;color:#6ee7b7;margin-top:5px';
@@ -893,24 +895,23 @@ async function loadShopProducts(){
   }
 
   otherProducts.forEach(product=>{
-   const card=document.createElement('div');card.className='product';card.style.flexWrap='wrap';
-   if(product.video_url){
-    const video=document.createElement('video');video.src=product.video_url;video.controls=true;video.preload='metadata';video.playsInline=true;
-    video.style.cssText='display:block;width:100%;max-height:280px;object-fit:contain;background:#030712;border-radius:8px';
-    card.appendChild(video);
-   }else if(product.image_url){
+   const card=document.createElement('article');card.className='drip-product-card product';card.style.cssText='display:block;margin-top:12px;padding:14px;background:linear-gradient(160deg,#111827,#0b1220);border:1px solid #334155;border-radius:16px;overflow:hidden;box-shadow:0 8px 26px #0003';
+   if(product.image_url){
     const img=document.createElement('img');img.src=product.image_url;img.alt=product.name;img.loading='lazy';
-    img.style.cssText='width:90px;height:90px;object-fit:contain;border-radius:8px;background:#0b0f19';
-    img.onerror=()=>img.remove();card.appendChild(img);
+    img.style.cssText='display:block;width:100%;height:clamp(220px,64vw,360px);object-fit:contain;background:#030712;border-radius:12px;margin-bottom:14px';
+    img.onerror=()=>img.style.display='none';card.appendChild(img);
+   }else if(product.video_url){
+    const video=document.createElement('video');video.src=product.video_url;video.controls=true;video.preload='metadata';video.playsInline=true;
+    video.style.cssText='display:block;width:100%;height:clamp(220px,64vw,360px);object-fit:contain;background:#030712;border-radius:12px;margin-bottom:14px';
+    card.appendChild(video);
    }
-   const info=document.createElement('div');info.className='product-info';info.style.minWidth='55%';
-   const title=document.createElement('h4');title.textContent=product.name;
-   const price=document.createElement('p');price.textContent='Price: ₹'+Number(product.price).toFixed(2);
-   info.append(title,price);
-   if(product.description){const description=document.createElement('p');description.textContent=product.description;description.style.cssText='margin-top:6px;color:#cbd5e1;font-size:12px;line-height:1.5;overflow-wrap:anywhere';info.appendChild(description);}
-   const buy=document.createElement('button');buy.className='buy';buy.textContent='BUY KEYS';
+   const title=document.createElement('h4');title.textContent=product.name;title.style.cssText='font-size:20px;color:#f8fafc;margin:4px 0 8px;overflow-wrap:anywhere';
+   const price=document.createElement('p');price.textContent='₹'+Number(product.price).toFixed(2);price.style.cssText='font-size:15px;color:#6ee7b7;margin-bottom:12px';
+   card.append(title,price);
+   if(product.description){const description=document.createElement('p');description.textContent=product.description;description.style.cssText='margin:0 0 12px;color:#cbd5e1;font-size:12px;line-height:1.6;overflow-wrap:anywhere';card.appendChild(description);}
+   const buy=document.createElement('button');buy.className='buy';buy.textContent='BUY KEYS';buy.style.cssText='display:block;width:100%;padding:13px;background:#10b981;color:#052e16;font-size:13px;border-radius:10px';
    buy.onclick=()=>buyProduct(product);
-   card.append(info,buy);root.appendChild(card);
+   card.appendChild(buy);root.appendChild(card);
   });
  }catch(e){
   root.replaceChildren();const p=document.createElement('p');p.textContent=e.message||'Products load nahi ho sake.';p.style.cssText='color:#fca5a5;font-size:12px;margin-top:10px';root.appendChild(p);
