@@ -681,8 +681,8 @@ app.get("/api/admin/orders", isAdmin, async (req, res) => {
 
   const { data, error } = await supabase
     .from("orders")
-    .select('id, created_at, "Customer_name", "Product_name", "Amount", "Payment_status", "Order status"')
-    .limit(100);
+    .select('id, created_at, customer_name:"Customer_name", product_name:"Product_name", amount:"Amount", payment_status:"Payment_status", order_status:"Order status"')
+    .order("created_at", { ascending: false }).limit(100);
 
   if (error) {
     console.error("Admin order query failed:", error.message);
@@ -897,6 +897,55 @@ app.get("/api/products", async (req, res) => {
     return res.status(500).json({ error: "Products load nahi ho sake." });
   }
   res.json({ products: data || [] });
+});
+
+app.post("/api/orders", async (req, res) => {
+  if (!supabase) return res.status(503).json({ error: "Database is not configured" });
+  const user = await getAuthenticatedUser(req);
+  if (!user) return res.status(401).json({ error: "Order banane ke liye pehle login karein." });
+
+  const productId = typeof req.body?.product_id === "string" ? req.body.product_id.trim() : "";
+  if (!productId || productId.length > 100) {
+    return res.status(400).json({ error: "Valid product select karein." });
+  }
+
+  const { data: product, error: productError } = await supabase.from("products")
+    .select("id, name, price").eq("id", productId).eq("published", true).maybeSingle();
+  if (productError) {
+    console.error("Order product lookup failed:", productError.message);
+    return res.status(500).json({ error: "Product verify nahi ho saka." });
+  }
+  if (!product) return res.status(404).json({ error: "Product available nahi hai. Page refresh karein." });
+
+  const amount = Number(product.price);
+  if (!Number.isFinite(amount) || amount <= 0 || amount > 1000000) {
+    return res.status(400).json({ error: "Is product ki price admin panel mein sahi set karein." });
+  }
+
+  const { data: order, error: orderError } = await supabase.from("orders").insert({
+    "Customer_name": user.email || "Customer",
+    "Product_name": product.name,
+    "Amount": amount,
+    "Payment_status": "pending",
+    "Order status": "pending"
+  }).select('id, created_at, "Product_name", "Amount", "Payment_status", "Order status"').single();
+
+  if (orderError) {
+    console.error("Order creation failed:", orderError.message);
+    return res.status(500).json({ error: "Order save nahi ho saka. Admin database ke orders table columns check karein." });
+  }
+
+  return res.status(201).json({
+    success: true,
+    order: {
+      id: order.id,
+      product_name: order.Product_name,
+      amount: Number(order.Amount),
+      payment_status: order.Payment_status,
+      order_status: order["Order status"],
+      created_at: order.created_at
+    }
+  });
 });
 
 app.get("/api/admin/products", isAdmin, async (req, res) => {
