@@ -83,6 +83,11 @@ footer{position:fixed;bottom:0;left:0;right:0;text-align:center;background:#1118
 #popup.auth-screen .auth-links{margin-top:20px;font-size:13px;line-height:2.3}
 #popup.auth-screen .auth-footer{margin-top:18px}
 
+
+#popup.auth-screen .auth-input{padding:12px 15px!important;font-size:14px!important;margin-bottom:10px!important;border-radius:14px!important}
+#popup.auth-screen .auth-main-btn{padding:14px 10px!important;font-size:15px!important;margin:10px 0 18px!important;border-radius:14px!important}
+#popup.auth-screen .auth-google{padding:13px 8px!important;font-size:13px!important;border-radius:15px!important;margin-bottom:14px!important}
+
 </style>
 </head>
 <body>
@@ -276,16 +281,50 @@ async function registerCustomer(){
 async function forgotCustomerPassword(){
   const email=document.getElementById('authEmail')?.value.trim();
   const status=document.getElementById('authStatus');
-  if(!email){if(status)status.textContent='Pehle apna registered email address enter karein.';document.getElementById('authEmail')?.focus();return;}
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){if(status)status.textContent='Valid email address enter karein.';return;}
-  if(status)status.textContent='Password reset request bhej rahe hain...';
+  if(!email){if(status)status.textContent='Pehle registered Gmail address enter karein.';document.getElementById('authEmail')?.focus();return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){if(status)status.textContent='Valid Gmail address enter karein.';return;}
+  if(status)status.textContent='6-digit OTP bheja ja raha hai...';
   try{
     const r=await fetch('https://jkpanel-backend.onrender.com/api/auth/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
     const d=await r.json();
-    if(!r.ok)throw new Error(d.error||'Password reset request nahi bhej paaye.');
-    if(status)status.textContent=d.message||'Agar is email par account hai, reset instructions bhej di jayengi. Inbox aur spam folder check karein.';
-  }catch(e){if(status)status.textContent=e.message||'Abhi request nahi ho paayi. Thodi der baad try karein.';}
+    if(!r.ok)throw new Error(d.error||'OTP request fail hui.');
+    const root=document.getElementById('popupMessage');
+    root.innerHTML='<div class="auth-shield" aria-hidden="true">✉️</div><h3><span style="color:#f8fafc">RESET</span> <span style="color:#00e5f3">PASSWORD</span></h3><div class="auth-subtitle">VERIFY YOUR GMAIL</div><p style="color:#a1a1aa;text-align:center;font-size:13px;margin:0 0 20px">Apne Gmail par aaya 6-digit OTP daalein.</p><input class="auth-input" id="resetOtp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6-DIGIT OTP"><p id="authStatus" aria-live="polite" style="color:#cbd5e1;font-size:12px;line-height:1.5"></p><button class="auth-main-btn" type="button" onclick="verifyResetOtp()">VERIFY OTP</button><div class="auth-links"><a href="#" onclick="openAuth(\'login\');return false">Back to Login</a></div>';
+    document.getElementById('resetEmailAddress')?.remove();
+    root.insertAdjacentHTML('beforeend','<input id="resetEmailAddress" type="hidden" value="'+email.replace(/"/g,'&quot;')+'">');
+  }catch(e){if(status)status.textContent=e.message||'OTP abhi nahi bhej paaye.';}
 }
+async function verifyResetOtp(){
+  const email=document.getElementById('resetEmailAddress')?.value;
+  const token=document.getElementById('resetOtp')?.value.trim();
+  const status=document.getElementById('authStatus');
+  if(!email||!/^\d{6}$/.test(token||'')){if(status)status.textContent='6-digit OTP enter karein.';return;}
+  status.textContent='OTP verify ho raha hai...';
+  try{
+    const r=await fetch('https://jkpanel-backend.onrender.com/api/auth/verify-reset-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,token})});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error||'OTP galat ya expire ho gaya.');
+    const root=document.getElementById('popupMessage');
+    root.innerHTML='<div class="auth-shield" aria-hidden="true">🔐</div><h3><span style="color:#f8fafc">NEW</span> <span style="color:#00e5f3">PASSWORD</span></h3><div class="auth-subtitle">CREATE NEW PASSWORD</div><input class="auth-input" id="resetNewPassword" type="password" inputmode="numeric" maxlength="6" placeholder="NEW 6-DIGIT PASSWORD"><input class="auth-input" id="resetConfirmPassword" type="password" inputmode="numeric" maxlength="6" placeholder="CONFIRM NEW PASSWORD"><input id="resetAccessToken" type="hidden" value="'+String(d.access_token||'').replace(/"/g,'&quot;')+'"><p id="authStatus" aria-live="polite" style="color:#cbd5e1;font-size:12px;line-height:1.5"></p><button class="auth-main-btn" type="button" onclick="saveResetPassword()">SAVE NEW PASSWORD</button>';
+  }catch(e){status.textContent=e.message||'OTP verify nahi hua.';}
+}
+async function saveResetPassword(){
+  const password=document.getElementById('resetNewPassword')?.value||'';
+  const confirm=document.getElementById('resetConfirmPassword')?.value||'';
+  const accessToken=document.getElementById('resetAccessToken')?.value||'';
+  const status=document.getElementById('authStatus');
+  if(!/^\d{6}$/.test(password)){status.textContent='Naya password 6 digits ka hona chahiye.';return;}
+  if(password!==confirm){status.textContent='Dono passwords match nahi karte.';return;}
+  status.textContent='Password update ho raha hai...';
+  try{
+    const r=await fetch('https://jkpanel-backend.onrender.com/api/auth/complete-password-reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({accessToken,password})});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error||'Password update nahi hua.');
+    status.textContent='Password successfully change ho gaya. Ab naye password se login karein.';
+    setTimeout(()=>openAuth('login'),1200);
+  }catch(e){status.textContent=e.message||'Password update fail hua.';}
+}
+
 function openChangeCustomerEmail(){
   const root=document.getElementById('popupMessage');
   document.getElementById('popupTitle').textContent='';
