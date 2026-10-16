@@ -133,9 +133,9 @@ footer{position:fixed;bottom:0;left:0;right:0;text-align:center;background:#1118
 </div>
 
 <div class="stats">
-  <div class="stat"><b>₹0.00</b><span>Wallet Balance</span></div>
-  <div class="stat"><b>0</b><span>Total Orders</span></div>
-  <div class="stat"><b>0</b><span>Available Keys</span></div>
+  <div class="stat"><b id="walletBalanceStat">₹0.00</b><span>Wallet Balance</span></div>
+  <div class="stat"><b id="totalOrdersStat">0</b><span>Total Orders</span></div>
+  <div class="stat"><b id="availableKeysStat">0</b><span>Available Keys</span></div>
   <div class="stat"><b id="referralStatCount">0</b><span>Refer and Earn 🎁</span></div>
 </div>
 
@@ -357,6 +357,12 @@ async function loadMyAccountSummary(){
     updateAccountBar(data.user.email);
     const stat=document.getElementById('referralStatCount');
     if(stat)stat.textContent=String(data.referral?.referredUsers||0);
+    const walletStat=document.getElementById('walletBalanceStat');
+    if(walletStat)walletStat.textContent='₹'+Number(data.walletBalance||0).toFixed(2);
+    const ordersStat=document.getElementById('totalOrdersStat');
+    if(ordersStat)ordersStat.textContent=String((data.orders||[]).length);
+    const keysStat=document.getElementById('availableKeysStat');
+    if(keysStat)keysStat.textContent=String((data.keys||[]).filter(k=>k.status==='active').length);
   }catch(e){
     if(e.message==='Login required'){clearCustomerSession();updateAccountBar('');}
   }
@@ -365,30 +371,50 @@ function openMyAccount(){
   const defaultClose=document.getElementById('popupDefaultClose');if(defaultClose)defaultClose.style.display='block';
   document.getElementById('popupTitle').textContent='My Account';
   const root=document.getElementById('popupMessage');root.replaceChildren();
-  const status=document.createElement('p');status.textContent='Account details load ho rahe hain...';root.appendChild(status);
+  const loading=document.createElement('p');loading.textContent='Account details load ho rahe hain...';root.appendChild(loading);
   document.getElementById('popup').style.display='flex';
   customerApi('/api/my-account').then(data=>{
     root.replaceChildren();
-    const summary=document.createElement('p');
-    summary.textContent='Email: '+data.user.email+' | Wallet: ₹'+Number(data.walletBalance||0).toFixed(2)+' | Approved deposits: ₹'+Number(data.totalDeposited||0).toFixed(2)+' | Pending: ₹'+Number(data.pendingDeposits||0).toFixed(2);
-    root.appendChild(summary);
-    const dh=document.createElement('h4');dh.textContent='Deposit History';dh.style.marginTop='12px';root.appendChild(dh);
-    if(!data.deposits.length){const p=document.createElement('p');p.textContent='Abhi koi deposit request nahi hai.';root.appendChild(p);}
-    data.deposits.forEach(d=>{const p=document.createElement('p');p.textContent='₹'+d.amount+' | '+d.status+' | UTR: '+d.transaction_id+' | '+(d.created_at||'');p.style.marginTop='7px';root.appendChild(p);});
-    const oh=document.createElement('h4');oh.textContent='My Orders';oh.style.marginTop='12px';root.appendChild(oh);
-    if(!data.orders || !data.orders.length){const p=document.createElement('p');p.textContent='Abhi koi order nahi hai.';root.appendChild(p);}
-    (data.orders||[]).forEach(o=>{
+    const heading=document.createElement('h3');heading.textContent='Wallet Overview';root.appendChild(heading);
+    const balance=document.createElement('div');balance.style.cssText='padding:14px;margin:8px 0;background:#0b2b22;border:1px solid #10b981;border-radius:10px';
+    const bal=document.createElement('strong');bal.textContent='Current Wallet Balance: ₹'+Number(data.walletBalance||0).toFixed(2);bal.style.cssText='display:block;font-size:20px;color:#6ee7b7';
+    const total=document.createElement('p');total.textContent='Total paisa add hua (approved deposits): ₹'+Number(data.totalDeposited||0).toFixed(2);total.style.margin='8px 0 0';
+    const pending=document.createElement('p');pending.textContent='Deposit verification pending: ₹'+Number(data.pendingDeposits||0).toFixed(2);pending.style.margin='5px 0 0';
+    balance.append(bal,total,pending);root.appendChild(balance);
+    const add=document.createElement('button');add.textContent='+ ADD WALLET BALANCE';add.onclick=()=>{closePopup();deposit();};add.style.cssText='width:100%;margin:6px 0;padding:11px';root.appendChild(add);
+
+    const txTitle=document.createElement('h4');txTitle.textContent='Money Added / Deposit History';txTitle.style.marginTop='16px';root.appendChild(txTitle);
+    const deposits=Array.isArray(data.deposits)?data.deposits:[];
+    if(!deposits.length){const p=document.createElement('p');p.textContent='Abhi koi deposit request nahi hai.';root.appendChild(p);}
+    deposits.forEach(d=>{
       const card=document.createElement('div');card.style.cssText='margin-top:8px;padding:10px;border:1px solid #334155;border-radius:8px';
-      const title=document.createElement('p');title.textContent=o.product_name+' — ₹'+Number(o.amount||0).toFixed(2);
-      const payment=document.createElement('p');payment.textContent='Payment: '+o.payment_status;
-      const status=document.createElement('p');status.textContent='Order status: '+o.order_status;
-      const date=document.createElement('small');date.textContent='Order ID: '+o.id+' | '+(o.created_at||'');
-      card.append(title,payment,status,date);root.appendChild(card);
+      const amount=document.createElement('p');amount.textContent=(d.status==='approved'?'+ ':'')+'₹'+Number(d.amount||0).toFixed(2)+' · '+String(d.status||'pending').toUpperCase();amount.style.color=d.status==='approved'?'#6ee7b7':'#fbbf24';
+      const utr=document.createElement('p');utr.textContent='Transaction ID: '+(d.transaction_id||'—');
+      const date=document.createElement('small');date.textContent='Date: '+(d.created_at?new Date(d.created_at).toLocaleString('en-IN'):'—');
+      card.append(amount,utr,date);root.appendChild(card);
     });
-    const kh=document.createElement('h4');kh.textContent='My Keys';kh.style.marginTop='12px';root.appendChild(kh);
-    if(!data.keys.length){const p=document.createElement('p');p.textContent='Abhi koi key assign nahi hui.';root.appendChild(p);}
-    data.keys.forEach(k=>{const p=document.createElement('p');p.textContent=k.product_name+' — KEY: '+k.key_value+' ('+k.status+')';p.style.marginTop='7px';root.appendChild(p);});
-    const close=document.createElement('button');close.textContent='CLOSE';close.onclick=closePopup;root.appendChild(close);
+
+    const ordersTitle=document.createElement('h4');ordersTitle.textContent='Purchased Products / Orders';ordersTitle.style.marginTop='16px';root.appendChild(ordersTitle);
+    const orders=Array.isArray(data.orders)?data.orders:[];
+    if(!orders.length){const p=document.createElement('p');p.textContent='Abhi koi order nahi hai.';root.appendChild(p);}
+    orders.forEach(o=>{
+      const card=document.createElement('div');card.style.cssText='margin-top:8px;padding:10px;border:1px solid #334155;border-radius:8px';
+      const title=document.createElement('p');title.textContent=(o.product_name||'Product')+' — ₹'+Number(o.amount||0).toFixed(2);
+      const payment=document.createElement('p');payment.textContent='Payment: '+(o.payment_status||'pending')+' | Order: '+(o.order_status||'pending');
+      const date=document.createElement('small');date.textContent='Purchased/ordered: '+(o.created_at?new Date(o.created_at).toLocaleString('en-IN'):'—')+' | ID: '+o.id;
+      card.append(title,payment,date);root.appendChild(card);
+    });
+
+    const keysTitle=document.createElement('h4');keysTitle.textContent='My Keys';keysTitle.style.marginTop='16px';root.appendChild(keysTitle);
+    const keys=Array.isArray(data.keys)?data.keys:[];
+    if(!keys.length){const p=document.createElement('p');p.textContent='Abhi koi key assign nahi hui.';root.appendChild(p);}
+    keys.forEach(k=>{
+      const card=document.createElement('div');card.style.cssText='margin-top:8px;padding:10px;border:1px solid #334155;border-radius:8px';
+      const name=document.createElement('p');name.textContent=(k.product_name||'Key')+' · '+(k.status||'active');
+      const date=document.createElement('small');date.textContent='Key added: '+(k.created_at?new Date(k.created_at).toLocaleString('en-IN'):'—');
+      card.append(name,date);root.appendChild(card);
+    });
+    const close=document.createElement('button');close.textContent='CLOSE';close.onclick=closePopup;close.style.cssText='width:100%;margin-top:14px;padding:11px';root.appendChild(close);
   }).catch(e=>{root.replaceChildren();const p=document.createElement('p');p.textContent=e.message;root.appendChild(p);});
 }
 
