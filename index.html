@@ -56,7 +56,9 @@ footer{position:fixed;bottom:0;left:0;right:0;text-align:center;background:#1118
     <button onclick="closeMenu()" style="background:#263247;color:white;padding:8px">✕</button>
   </div>
   <a class="menu-item" href="#" onclick="closeMenu()">Dashboard</a>
-  <a class="menu-item" href="#" onclick="deposit();return false">Wallet Recharge</a>
+
+<a class="menu-item" href="#" onclick="deposit();return false">Deposit</a>
+  
   <a class="menu-item" href="#products" onclick="closeMenu()">Buy Keys / Products</a>
   <a class="menu-item" href="#" onclick="feature('My Resellers');return false">My Resellers</a>
   <a class="menu-item" href="#" onclick="feature('My Keys');return false">My Keys</a>
@@ -148,27 +150,60 @@ function showPopup(title,message){
 function closePopup(){
   document.getElementById('popup').style.display='none';
 }
+
 function deposit(){
   closeMenu();
 
-  document.getElementById('popupTitle').textContent = 'Wallet Recharge';
+  document.getElementById('popupTitle').textContent = 'Deposit';
 
   document.getElementById('popupMessage').innerHTML =
+    '<label for="depositAmount">Deposit Amount (₹)</label>' +
+    '<input id="depositAmount" type="number" min="1" max="50000" step="1" placeholder="Amount enter karein" style="width:100%;padding:12px;box-sizing:border-box;border:1px solid #ccc;border-radius:8px;">' +
+
     '<p>PhonePe se QR scan karke payment karein.</p>' +
-    '<img src="/phonepe-qr.png?v=3" alt="PhonePe QR" style="display:block;width:280px;max-width:100%;height:auto;margin:15px auto;">' +
-'<p>Payment ke baad transaction ID sambhal kar rakhein.</p>' +
-    '<p>Wallet balance payment verify hone ke baad hi add hoga.</p>';
+
+    '<img id="depositQR" src="/phonepe-qr.png?v=3" alt="PhonePe QR" style="display:block;width:250px;max-width:100%;height:auto;margin:15px auto;">' +
+
+    '<button class="action" type="button" onclick="downloadDepositQR()">Download QR</button>' +
+
+    '<label for="depositTxn" style="display:block;margin-top:15px;">Transaction ID / UTR</label>' +
+    '<input id="depositTxn" type="text" maxlength="100" placeholder="Transaction ID enter karein" style="width:100%;padding:12px;box-sizing:border-box;border:1px solid #ccc;border-radius:8px;">' +
+
+    '<button class="action" type="button" onclick="submitDepositRequest()">Submit Payment Details</button>' +
+
+    '<p id="depositStatus">Payment verify hone ke baad hi wallet balance add hoga.</p>';
 
   document.getElementById('popup').style.display = 'flex';
 }
-function feature(name){
-  closeMenu();
-  showPopup(name,'Is feature ko real data ke saath chalane ke liye backend aur database connection zaroori hai.');
+
+function downloadDepositQR(){
+  const link = document.createElement('a');
+  link.href = '/phonepe-qr.png?v=3';
+  link.download = 'JK-PANEL-SHOP-PhonePe-QR.png';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
 }
-function buyProduct(name){
-  const message='Hello JK PANEL SHOP, mujhe '+name+' ke baare mein jankari chahiye.';
-  window.open('https://wa.me/917645957071?text='+encodeURIComponent(message),'_blank');
+
+function submitDepositRequest(){
+  const amount = Number(document.getElementById('depositAmount').value);
+  const txn = document.getElementById('depositTxn').value.trim();
+  const status = document.getElementById('depositStatus');
+
+  if(!Number.isInteger(amount) || amount < 1 || amount > 50000){
+    status.textContent = '₹1 se ₹50,000 tak valid amount enter karein.';
+    return;
+  }
+
+  if(txn.length < 6){
+    status.textContent = 'Valid Transaction ID / UTR enter karein.';
+    return;
+  }
+
+  status.textContent =
+    'Details check ho gayi hain, lekin request save karne ke liye secure backend connection abhi zaroori hai. Wallet balance abhi add nahi hua.';
 }
+  
 </script>
   
 </body>
