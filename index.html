@@ -93,6 +93,16 @@ footer{position:fixed;bottom:0;left:0;right:0;text-align:center;background:#1118
 #popup:not(.auth-screen){overflow-y:auto;align-items:flex-start;overscroll-behavior:contain}
 #popup:not(.auth-screen) .popup-card{max-height:calc(100dvh - 32px);overflow-y:auto;overscroll-behavior:contain;margin:auto}
 #popup:not(.auth-screen) .popup-card button{flex-shrink:0}
+
+/* Fixed bottom navigation: Home, Store, Keys, Profile */
+body{padding-bottom:96px}
+#bottomNav{position:fixed;left:0;right:0;bottom:0;z-index:80;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:9px 10px calc(9px + env(safe-area-inset-bottom));background:#0b1220;border-top:1px solid #263247;box-shadow:0 -8px 24px #0005}
+#bottomNav button{min-width:0;background:transparent;color:#94a3b8;border:1px solid transparent;border-radius:12px;padding:8px 2px 7px;font-size:11px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+#bottomNav button .nav-icon{font-size:20px;line-height:1.1}
+#bottomNav button.active{color:#38bdf8;background:#102235;border-color:#164e63}
+#bottomNav button:active{transform:scale(.98)}
+footer{display:none}
+#popup:not(.auth-screen){padding-bottom:calc(16px + env(safe-area-inset-bottom))}
 </style>
 </head>
 <body>
@@ -170,6 +180,14 @@ footer{position:fixed;bottom:0;left:0;right:0;text-align:center;background:#1118
   </div>
 </div>
 
+
+<nav id="bottomNav" aria-label="Main navigation">
+  <button type="button" class="active" data-nav="home" onclick="navigateBottom('home')"><span class="nav-icon">⌂</span><span>Home</span></button>
+  <button type="button" data-nav="store" onclick="navigateBottom('store')"><span class="nav-icon">▣</span><span>Store</span></button>
+  <button type="button" data-nav="keys" onclick="navigateBottom('keys')"><span class="nav-icon">🔑</span><span>Keys</span></button>
+  <button type="button" data-nav="profile" onclick="navigateBottom('profile')"><span class="nav-icon">♙</span><span>Profile</span></button>
+</nav>
+
 <footer>© 2026 JK PANEL SHOP</footer>
 
 <script>
@@ -213,7 +231,7 @@ async function customerApi(url,options={},retry=true){
 function updateAccountBar(email){
   const menuLogin=document.getElementById('menuLogin');
   const menuLogout=document.getElementById('menuLogout');
-  if(menuLogin){menuLogin.textContent=email?'MY ACCOUNT':'LOGIN / REGISTER';menuLogin.onclick=()=>{closeMenu();if(email)openMyAccount();else openAuth('login');return false;};}
+  if(menuLogin){menuLogin.textContent=email?'PROFILE':'LOGIN / REGISTER';menuLogin.onclick=()=>{closeMenu();if(email)openMyAccount();else openAuth('login');return false;};}
   if(menuLogout)menuLogout.style.display=email?'block':'none';
   const bar=document.getElementById('accountBar');
   bar.replaceChildren();
@@ -222,7 +240,7 @@ function updateAccountBar(email){
   bar.appendChild(label);
   const buttons=document.createElement('div');buttons.style.display='flex';buttons.style.gap='6px';buttons.style.flexWrap='wrap';
   if(email){
-    const account=document.createElement('button');account.textContent='MY ACCOUNT';account.onclick=openMyAccount;
+    const account=document.createElement('button');account.textContent='PROFILE';account.onclick=openMyAccount;
     const logout=document.createElement('button');logout.textContent='LOGOUT';logout.className='secondary';logout.onclick=logoutCustomer;
     buttons.append(account,logout);
   }else{
@@ -435,6 +453,46 @@ function openMyAccount(){
     });
     const close=document.createElement('button');close.textContent='CLOSE';close.onclick=closePopup;close.style.cssText='width:100%;margin-top:14px;padding:11px';root.appendChild(close);
   }).catch(e=>{root.replaceChildren();const p=document.createElement('p');p.textContent=e.message;root.appendChild(p);});
+}
+
+
+function setBottomNavActive(name){
+  document.querySelectorAll('#bottomNav [data-nav]').forEach(button=>{
+    const active=button.dataset.nav===name;
+    button.classList.toggle('active',active);
+    button.setAttribute('aria-current',active?'page':'false');
+  });
+}
+function navigateBottom(name){
+  closePopup();
+  closeMenu();
+  if(name==='home'){
+    setBottomNavActive('home');
+    window.scrollTo({top:0,behavior:'smooth'});
+    return;
+  }
+  if(name==='store'){
+    setBottomNavActive('store');
+    const target=document.getElementById('products');
+    if(target)target.scrollIntoView({behavior:'smooth',block:'start'});
+    return;
+  }
+  if(name==='keys'){
+    setBottomNavActive('keys');
+    if(!localStorage.getItem('jk_customer_access_token')){openAuth('login');return;}
+    openMyAccount();
+    const waitForKeys=()=>{
+      const title=[...document.querySelectorAll('#popupMessage h4')].find(el=>el.textContent==='My Keys');
+      if(title)title.scrollIntoView({behavior:'smooth',block:'start'});
+    };
+    setTimeout(waitForKeys,500);
+    return;
+  }
+  if(name==='profile'){
+    setBottomNavActive('profile');
+    if(localStorage.getItem('jk_customer_access_token'))openMyAccount();
+    else openAuth('login');
+  }
 }
 
 function openMenu(){
