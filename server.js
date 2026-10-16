@@ -384,6 +384,25 @@ small{color:#a6b2c0}
 <button id="refreshCustomers">Customers / Deposits / Keys</button>
 <button id="logout">Logout</button>
 <div id="orders"></div>
+
+<h2 style="margin-top:24px">Manage Products</h2>
+<div class="card">
+ <form id="productForm">
+  <input id="productId" type="hidden">
+  <label for="productName">Product name</label><br>
+  <input id="productName" required maxlength="120" placeholder="Product name" style="width:100%"><br>
+  <label for="productPrice">Selling price (₹)</label><br>
+  <input id="productPrice" required type="number" min="0" max="1000000" step="0.01" placeholder="30" style="width:100%"><br>
+  <label for="productImage">Image URL (optional)</label><br>
+  <input id="productImage" type="url" maxlength="1000" placeholder="https://..." style="width:100%"><br>
+  <label style="display:block;margin:10px 0"><input id="productPublished" type="checkbox" checked> Show on shop</label>
+  <button type="submit" id="productSave">Add Product</button>
+  <button type="button" id="productCancel" style="background:#475569;color:white">Clear</button>
+ </form>
+ <p id="productMessage" role="status"></p>
+</div>
+<div id="productList"></div>
+
 <h2 style="margin-top:24px">Customers, Deposits & Keys</h2>
 <div id="customerList"></div>
 </section>
@@ -451,7 +470,68 @@ document.getElementById("loginForm").onsubmit=async e=>{
   document.getElementById("password").value="";
   await loadOrders();
   await loadCustomers();
+  await loadProducts();
  }catch(err){message.textContent=err.message;}
+};
+
+
+async function loadProducts(){
+ try{
+  const data=await api("/api/admin/products");
+  const root=document.getElementById("productList");
+  root.replaceChildren();
+  if(!data.products.length){root.textContent="No products yet. Add your first product above.";return;}
+  data.products.forEach(product=>{
+   const card=document.createElement("article");card.className="card";
+   const title=document.createElement("h3");title.textContent=product.name;
+   const info=document.createElement("p");info.textContent="Price: ₹"+Number(product.price).toFixed(2)+" | "+(product.published?"Published":"Hidden");
+   const img=document.createElement("p");img.textContent=product.image_url||"No image URL";
+   const edit=document.createElement("button");edit.textContent="Edit";
+   edit.onclick=()=>{
+    document.getElementById("productId").value=product.id;
+    document.getElementById("productName").value=product.name;
+    document.getElementById("productPrice").value=product.price;
+    document.getElementById("productImage").value=product.image_url||"";
+    document.getElementById("productPublished").checked=Boolean(product.published);
+    document.getElementById("productSave").textContent="Save Changes";
+    document.getElementById("productMessage").textContent="Editing: "+product.name;
+    document.getElementById("productForm").scrollIntoView({behavior:"smooth",block:"center"});
+   };
+   const toggle=document.createElement("button");toggle.style.marginLeft="8px";toggle.style.background=product.published?"#b45309":"#059669";toggle.style.color="white";toggle.textContent=product.published?"Hide from shop":"Publish";
+   toggle.onclick=async()=>{
+    try{await api("/api/admin/products/"+encodeURIComponent(product.id),{method:"PATCH",body:JSON.stringify({published:!product.published})});await loadProducts();message.textContent="Product visibility updated.";}
+    catch(e){document.getElementById("productMessage").textContent=e.message;}
+   };
+   card.append(title,info,img,edit,toggle);root.appendChild(card);
+  });
+ }catch(e){document.getElementById("productMessage").textContent=e.message;}
+}
+function clearProductForm(){
+ document.getElementById("productForm").reset();
+ document.getElementById("productId").value="";
+ document.getElementById("productPublished").checked=true;
+ document.getElementById("productSave").textContent="Add Product";
+ document.getElementById("productMessage").textContent="";
+}
+document.getElementById("productCancel").onclick=clearProductForm;
+document.getElementById("productForm").onsubmit=async e=>{
+ e.preventDefault();
+ const id=document.getElementById("productId").value;
+ const payload={
+  name:document.getElementById("productName").value.trim(),
+  price:Number(document.getElementById("productPrice").value),
+  image_url:document.getElementById("productImage").value.trim()||null,
+  published:document.getElementById("productPublished").checked
+ };
+ const status=document.getElementById("productMessage");
+ try{
+  status.textContent=id?"Saving changes...":"Adding product...";
+  await api(id?"/api/admin/products/"+encodeURIComponent(id):"/api/admin/products",{
+   method:id?"PATCH":"POST",body:JSON.stringify(payload)
+  });
+  clearProductForm();status.textContent="Product saved successfully.";
+  await loadProducts();
+ }catch(err){status.textContent=err.message;}
 };
 
 async function loadCustomers(){
@@ -491,8 +571,8 @@ async function loadCustomers(){
  }catch(e){message.textContent=e.message;}
 }
 
-document.getElementById("refreshCustomers").onclick=loadCustomers;
-document.getElementById("refresh").onclick=async()=>{await loadOrders();await loadCustomers();};
+document.getElementById("refreshCustomers").onclick=async()=>{await loadCustomers();await loadProducts();};
+document.getElementById("refresh").onclick=async()=>{await loadOrders();await loadCustomers();await loadProducts();};
 document.getElementById("logout").onclick=async()=>{
  try{await api("/api/admin/logout",{method:"POST"});}catch(e){}
  document.getElementById("dashboard").hidden=true;
@@ -501,6 +581,7 @@ document.getElementById("logout").onclick=async()=>{
 };
 loadOrders();
 loadCustomers();
+loadProducts();
 </script>
 </main></body></html>`);
 });
@@ -756,6 +837,88 @@ app.patch("/api/admin/deposit-requests/:id", isAdmin, async (req, res) => {
     commission: Number(data.commission || 0),
     commissionCredited: Boolean(data.commissionCredited)
   });
+});
+
+
+app.get("/api/products", async (req, res) => {
+  if (!supabase) return res.status(503).json({ error: "Database is not configured" });
+  const { data, error } = await supabase.from("products")
+    .select("id, name, price, image_url").eq("published", true).order("created_at", { ascending: false });
+  if (error) {
+    console.error("Public products load failed:", error.message);
+    return res.status(500).json({ error: "Products load nahi ho sake." });
+  }
+  res.json({ products: data || [] });
+});
+
+app.get("/api/admin/products", isAdmin, async (req, res) => {
+  if (!supabase) return res.status(503).json({ error: "Database is not configured" });
+  const { data, error } = await supabase.from("products")
+    .select("id, name, price, image_url, published, created_at, updated_at")
+    .order("created_at", { ascending: false });
+  if (error) {
+    console.error("Admin products load failed:", error.message);
+    return res.status(500).json({ error: "Products load nahi ho sake." });
+  }
+  res.json({ products: data || [] });
+});
+
+app.post("/api/admin/products", isAdmin, async (req, res) => {
+  if (!supabase) return res.status(503).json({ error: "Database is not configured" });
+  const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
+  const price = Number(req.body?.price);
+  const imageUrl = typeof req.body?.image_url === "string" ? req.body.image_url.trim() : "";
+  const published = req.body?.published === true;
+  if (!name || name.length > 120 || !Number.isFinite(price) || price < 0 || price > 1000000) {
+    return res.status(400).json({ error: "Product name aur valid price enter karein." });
+  }
+  if (imageUrl && (imageUrl.length > 1000 || !/^https:\/\//i.test(imageUrl))) {
+    return res.status(400).json({ error: "Image URL https:// se shuru hona chahiye." });
+  }
+  const { data, error } = await supabase.from("products")
+    .insert({ name, price, image_url: imageUrl || null, published })
+    .select("id, name, price, image_url, published").single();
+  if (error) {
+    console.error("Product create failed:", error.message);
+    return res.status(500).json({ error: "Product save nahi ho saka." });
+  }
+  res.status(201).json({ success: true, product: data });
+});
+
+app.patch("/api/admin/products/:id", isAdmin, async (req, res) => {
+  if (!supabase) return res.status(503).json({ error: "Database is not configured" });
+  const updates = {};
+  if (Object.prototype.hasOwnProperty.call(req.body || {}, "name")) {
+    if (typeof req.body.name !== "string" || !req.body.name.trim() || req.body.name.trim().length > 120)
+      return res.status(400).json({ error: "Valid product name enter karein." });
+    updates.name = req.body.name.trim();
+  }
+  if (Object.prototype.hasOwnProperty.call(req.body || {}, "price")) {
+    const price = Number(req.body.price);
+    if (!Number.isFinite(price) || price < 0 || price > 1000000)
+      return res.status(400).json({ error: "Valid product price enter karein." });
+    updates.price = price;
+  }
+  if (Object.prototype.hasOwnProperty.call(req.body || {}, "image_url")) {
+    const imageUrl = typeof req.body.image_url === "string" ? req.body.image_url.trim() : "";
+    if (imageUrl && (imageUrl.length > 1000 || !/^https:\/\//i.test(imageUrl)))
+      return res.status(400).json({ error: "Image URL https:// se shuru hona chahiye." });
+    updates.image_url = imageUrl || null;
+  }
+  if (Object.prototype.hasOwnProperty.call(req.body || {}, "published")) {
+    if (typeof req.body.published !== "boolean") return res.status(400).json({ error: "Invalid published value." });
+    updates.published = req.body.published;
+  }
+  if (!Object.keys(updates).length) return res.status(400).json({ error: "Koi product change nahi mila." });
+  updates.updated_at = new Date().toISOString();
+  const { data, error } = await supabase.from("products").update(updates)
+    .eq("id", req.params.id).select("id, name, price, image_url, published").maybeSingle();
+  if (error) {
+    console.error("Product update failed:", error.message);
+    return res.status(500).json({ error: "Product update nahi ho saka." });
+  }
+  if (!data) return res.status(404).json({ error: "Product nahi mila." });
+  res.json({ success: true, product: data });
 });
 
 app.listen(PORT, () => {
