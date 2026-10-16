@@ -1,4 +1,5 @@
 
+
 const express = require("express");
 const path = require("path");
 const crypto = require("crypto");
@@ -265,6 +266,108 @@ app.patch("/api/admin/orders/:id", isAdmin, async (req, res) => {
   }
 
   res.json({ order: data });
+});
+
+app.post("/api/deposit-requests", async (req, res) => {
+  if (!supabase) {
+    return res.status(503).json({ error: "Database is not configured" });
+  }
+
+  const amount = Number(req.body?.amount);
+  const transactionId = req.body?.transaction_id?.trim();
+
+  if (!Number.isInteger(amount) || amount < 1 || amount > 50000) {
+    return res.status(400).json({ error: "Invalid deposit amount" });
+  }
+
+  if (
+    typeof transactionId !== "string" ||
+    transactionId.length < 6 ||
+    transactionId.length > 100
+  ) {
+    return res.status(400).json({ error: "Invalid transaction ID" });
+  }
+
+  const { data, error } = await supabase
+    .from("deposit_requests")
+    .insert({
+      amount,
+      transaction_id: transactionId,
+      status: "pending"
+    })
+    .select("id, amount, status, created_at")
+    .single();
+
+  if (error) {
+    if (error.code === "23505") {
+      return res.status(409).json({
+        error: "This transaction ID has already been submitted"
+      });
+    }
+
+    console.error("Deposit submission failed:", error.message);
+    return res.status(500).json({
+      error: "Could not submit deposit request"
+    });
+  }
+
+  res.status(201).json({
+    success: true,
+    message: "Deposit request submitted for verification",
+    request: data
+  });
+});
+
+app.get("/api/admin/deposit-requests", isAdmin, async (req, res) => {
+  if (!supabase) {
+    return res.status(503).json({ error: "Database is not configured" });
+  }
+
+  const { data, error } = await supabase
+    .from("deposit_requests")
+    .select("id, amount, transaction_id, status, created_at")
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  if (error) {
+    console.error("Deposit list failed:", error.message);
+    return res.status(500).json({ error: "Could not load deposits" });
+  }
+
+  res.json({ requests: data });
+});
+
+app.patch("/api/admin/deposit-requests/:id", isAdmin, async (req, res) => {
+  if (!supabase) {
+    return res.status(503).json({ error: "Database is not configured" });
+  }
+
+  const status = req.body?.status;
+
+  if (!["approved", "rejected"].includes(status)) {
+    return res.status(400).json({ error: "Invalid status" });
+  }
+
+  const { data, error } = await supabase
+    .from("deposit_requests")
+    .update({ status })
+    .eq("id", req.params.id)
+    .eq("status", "pending")
+    .select("id, amount, status")
+    .maybeSingle();
+
+  if (error) {
+    console.error("Deposit update failed:", error.message);
+    return res.status(500).json({ error: "Could not update deposit" });
+  }
+
+  if (!data) {
+    return res.status(404).json({
+      error: "Pending request not found"
+    });
+  }
+
+  res.json({ success: true, request: data });
 });
 
 app.listen(PORT, () => {
