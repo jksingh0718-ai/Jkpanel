@@ -8,6 +8,26 @@ const { createClient } = require("@supabase/supabase-js");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Allow the shop frontend to call this API across domains.
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const allowedOrigins = new Set([
+    "https://jkpanel.shop",
+    "https://www.jkpanel.shop",
+    "https://jkpanel.onrender.com"
+  ]);
+  if (origin && (allowedOrigins.has(origin) || /^https:\/\/[a-z0-9-]+\.onrender\.com$/i.test(origin))) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Vary", "Origin");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  }
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+  next();
+});
+
 app.use(express.json({ limit: "20kb" }));
 
 const supabaseUrl = process.env.SUPABASE_URL;
