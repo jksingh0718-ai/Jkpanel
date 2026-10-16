@@ -281,6 +281,10 @@ function showPopup(title,message){
   document.getElementById('popup').style.display='flex';
 }
 function closePopup(){
+  if(!localStorage.getItem('jk_customer_access_token')){
+    openAuth('login');
+    return;
+  }
   document.getElementById('popup').style.display='none';
 }
 
