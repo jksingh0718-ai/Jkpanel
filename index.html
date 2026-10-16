@@ -130,7 +130,7 @@ footer{display:none}
 
 <header>
   <div class="header-left">
-    <button class="menu-btn" onclick="openMenu()" aria-label="Open menu">☰</button>
+    <button class="menu-btn" onclick="openMenu()" aria-label="Open menu">⋮</button>
     <a class="contact-btn" href="https://wa.me/917645957071?text=Hello%20JK%20PANEL%20SHOP" target="_blank" rel="noopener">CONTACT</a>
   </div>
   <button class="deposit-btn" onclick="deposit()">▶ HOW TO DEPOSIT?</button>
@@ -689,7 +689,75 @@ status.textContent =
 
 function feature(name){
   closeMenu();
+  if(name==='Order History'){openOrderHistoryPanel();return;}
   showPopup(name, name + ' section abhi setup nahi hua hai. Is feature ko use karne ke liye admin/backend setup zaroori hai.');
+}
+
+async function openOrderHistoryPanel(){
+  closeMenu();
+  const defaultClose=document.getElementById('popupDefaultClose');
+  if(defaultClose)defaultClose.style.display='block';
+  const root=document.getElementById('popupMessage');
+  document.getElementById('popupTitle').textContent='Order History';
+  root.replaceChildren();
+  document.getElementById('popup').classList.remove('auth-screen');
+  document.getElementById('popup').style.display='flex';
+  if(!localStorage.getItem('jk_customer_access_token')){
+    const p=document.createElement('p');
+    p.textContent='Apni order history dekhne ke liye pehle login karein.';
+    root.appendChild(p);
+    const login=document.createElement('button');
+    login.textContent='LOGIN / REGISTER';
+    login.style.cssText='width:100%;padding:12px;margin-top:12px;background:#10b981;color:#04130b';
+    login.onclick=()=>openAuth('login');
+    root.appendChild(login);
+    return;
+  }
+  const loading=document.createElement('p');
+  loading.textContent='Order history load ho rahi hai...';
+  loading.style.cssText='padding:14px 0;color:#94a3b8;text-align:center';
+  root.appendChild(loading);
+  try{
+    const data=await customerApi('/api/my-account');
+    root.replaceChildren();
+    const orders=Array.isArray(data.orders)?data.orders:[];
+    if(!orders.length){
+      const empty=document.createElement('p');
+      empty.textContent='Abhi koi order nahi hai.';
+      empty.style.cssText='padding:18px 0;color:#94a3b8;text-align:center';
+      root.appendChild(empty);
+      return;
+    }
+    orders.forEach(order=>{
+      const card=document.createElement('div');
+      card.style.cssText='margin-top:10px;padding:13px;background:#0b1220;border:1px solid #334155;border-radius:10px;overflow-wrap:anywhere';
+      const title=document.createElement('h4');
+      title.textContent=order.product_name||'Product order';
+      title.style.cssText='color:#e2e8f0;font-size:14px;margin-bottom:8px';
+      const amount=document.createElement('p');
+      amount.textContent='Amount: ₹'+Number(order.amount||0).toFixed(2);
+      amount.style.cssText='font-size:13px;color:#38bdf8;margin-bottom:6px';
+      const paymentStatus=String(order.payment_status||'pending').toUpperCase();
+      const orderStatus=String(order.order_status||'pending').toUpperCase();
+      const status=document.createElement('p');
+      status.textContent='Payment: '+paymentStatus+' · Order: '+orderStatus;
+      status.style.cssText='font-size:12px;color:'+(orderStatus==='COMPLETED'?'#6ee7b7':(orderStatus==='REJECTED'?'#fca5a5':'#fbbf24'))+';margin-bottom:7px';
+      const date=document.createElement('small');
+      date.textContent='Date: '+(order.created_at?new Date(order.created_at).toLocaleString('en-IN'):'—');
+      date.style.cssText='display:block;color:#94a3b8;font-size:11px;line-height:1.6';
+      const id=document.createElement('small');
+      id.textContent='Order ID: '+(order.id||'—');
+      id.style.cssText='display:block;color:#64748b;font-size:10px;line-height:1.6;overflow-wrap:anywhere';
+      card.append(title,amount,status,date,id);
+      root.appendChild(card);
+    });
+  }catch(error){
+    root.replaceChildren();
+    const p=document.createElement('p');
+    p.textContent=error.message||'Order history load nahi ho saki.';
+    p.style.cssText='color:#fca5a5;padding:12px 0';
+    root.appendChild(p);
+  }
 }
 
 async function openReferral(){
@@ -775,7 +843,56 @@ async function loadShopProducts(){
   if(!Array.isArray(data.products)||!data.products.length){
    const empty=document.createElement('p');empty.textContent='Abhi products available nahi hain.';empty.style.cssText='color:#94a3b8;font-size:12px;margin-top:10px';root.appendChild(empty);return;
   }
-  data.products.forEach(product=>{
+
+  const products=data.products;
+  const dripProducts=products.filter(product=>/^DRIP Wire\\s*-\\s*/i.test(product.name||''));
+  const otherProducts=products.filter(product=>!/^DRIP Wire\\s*-\\s*/i.test(product.name||''));
+
+  if(dripProducts.length){
+   const card=document.createElement('article');
+   card.className='drip-product-card';
+   card.style.cssText='display:block;margin-top:12px;padding:14px;background:linear-gradient(160deg,#111827,#0b1220);border:1px solid #155e75;border-radius:16px;overflow:hidden;box-shadow:0 8px 26px #0003';
+   const imageProduct=dripProducts.find(p=>p.image_url)||dripProducts[0];
+   if(imageProduct.video_url){
+    const video=document.createElement('video');video.src=imageProduct.video_url;video.controls=true;video.preload='metadata';video.playsInline=true;
+    video.style.cssText='display:block;width:100%;height:clamp(220px,62vw,360px);object-fit:contain;background:#030712;border-radius:12px;margin-bottom:14px';
+    card.appendChild(video);
+   }else if(imageProduct.image_url){
+    const img=document.createElement('img');img.src=imageProduct.image_url;img.alt='DRIP Wire';img.loading='eager';
+    img.style.cssText='display:block;width:100%;height:clamp(240px,70vw,390px);object-fit:contain;background:#030712;border-radius:12px;margin-bottom:14px';
+    img.onerror=()=>{img.style.display='none';};card.appendChild(img);
+   }else{
+    const visual=document.createElement('div');visual.textContent='DRIP WIRE';visual.style.cssText='display:flex;align-items:center;justify-content:center;width:100%;height:220px;margin-bottom:14px;border-radius:12px;background:radial-gradient(circle,#164e63,#030712 70%);color:#67e8f9;font-size:28px;font-weight:900;letter-spacing:3px';
+    card.appendChild(visual);
+   }
+   const title=document.createElement('h4');title.textContent='DRIP Wire';title.style.cssText='font-size:21px;color:#f8fafc;margin:4px 0 7px';
+   const desc=document.createElement('p');desc.textContent='Apni key ka time duration select karein.';desc.style.cssText='font-size:12px;color:#94a3b8;line-height:1.6;margin-bottom:12px';
+   const purchase=document.createElement('button');purchase.type='button';purchase.textContent='PURCHASE KEY';purchase.setAttribute('aria-expanded','false');
+   purchase.style.cssText='display:block;width:100%;padding:14px;background:linear-gradient(90deg,#06b6d4,#22d3ee);color:#082f49;font-size:14px;border-radius:10px';
+   const plans=document.createElement('div');plans.hidden=true;plans.style.cssText='margin-top:12px;display:none';
+   purchase.onclick=()=>{
+    const open=plans.style.display==='none';
+    plans.style.display=open?'block':'none';plans.hidden=!open;
+    purchase.setAttribute('aria-expanded',String(open));
+    purchase.textContent=open?'HIDE DURATIONS':'PURCHASE KEY';
+   };
+   dripProducts.forEach(product=>{
+    const duration=(product.name||'DRIP Wire').replace(/^DRIP Wire\\s*-\\s*/i,'').trim()||'Duration';
+    const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid #263247';
+    const details=document.createElement('div');details.style.cssText='min-width:0;flex:1';
+    const durationLabel=document.createElement('p');durationLabel.textContent=duration;durationLabel.style.cssText='font-size:14px;font-weight:bold;color:#f8fafc';
+    const price=document.createElement('p');price.textContent='₹'+Number(product.price||0).toFixed(0);price.style.cssText='font-size:13px;color:#6ee7b7;margin-top:5px';
+    details.append(durationLabel,price);
+    const buy=document.createElement('button');buy.type='button';buy.className='buy';buy.textContent='BUY';buy.style.cssText='padding:11px 14px;flex-shrink:0;background:#10b981;color:#052e16;font-size:12px';
+    buy.onclick=()=>buyProduct(product);
+    row.append(details,buy);plans.appendChild(row);
+   });
+   if(!dripProducts.length){plans.style.display='none';}
+   card.append(title,desc,purchase,plans);
+   root.appendChild(card);
+  }
+
+  otherProducts.forEach(product=>{
    const card=document.createElement('div');card.className='product';card.style.flexWrap='wrap';
    if(product.video_url){
     const video=document.createElement('video');video.src=product.video_url;video.controls=true;video.preload='metadata';video.playsInline=true;
@@ -783,7 +900,7 @@ async function loadShopProducts(){
     card.appendChild(video);
    }else if(product.image_url){
     const img=document.createElement('img');img.src=product.image_url;img.alt=product.name;img.loading='lazy';
-    img.style.cssText='width:58px;height:58px;object-fit:contain;border-radius:8px;background:#0b0f19';
+    img.style.cssText='width:90px;height:90px;object-fit:contain;border-radius:8px;background:#0b0f19';
     img.onerror=()=>img.remove();card.appendChild(img);
    }
    const info=document.createElement('div');info.className='product-info';info.style.minWidth='55%';
