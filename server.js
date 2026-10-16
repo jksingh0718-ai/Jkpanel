@@ -36,8 +36,28 @@ const adminPassword = process.env.ADMIN_PASSWORD;
 
 const supabase =
   supabaseUrl && supabaseKey
-    ? createClient(supabaseUrl, supabaseKey)
+    ? createClient(supabaseUrl, supabaseKey, {
+        auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+      })
     : null;
+
+// Publishable key is safe to use for public Auth endpoints; service-role key stays server-side.
+const supabasePublishableKey = process.env.SUPABASE_PUBLISHABLE_KEY ||
+  "sb_publishable_nzK0bDW3lAcuPWEgeqWsqg_Zp3vuqe2";
+const authClient = supabaseUrl
+  ? createClient(supabaseUrl, supabasePublishableKey, {
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+    })
+  : null;
+
+async function getAuthenticatedUser(req) {
+  const authHeader = req.headers.authorization || "";
+  const match = authHeader.match(/^Bearer\s+(.+)$/i);
+  if (!match || !authClient) return null;
+  const { data, error } = await authClient.auth.getUser(match[1]);
+  if (error || !data?.user) return null;
+  return data.user;
+}
 
 function signToken(expiry) {
   return crypto
@@ -85,6 +105,103 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
+
+app.post("/api/auth/register", async (req, res) => {
+  if (!authClient) return res.status(503).json({ error: "Authentication is not configured" });
+  const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
+  const password = typeof req.body?.password === "string" ? req.body.password : "";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ error: "Valid email address enter karein." });
+  }
+  if (!/^\d{6}$/.test(password)) {
+    return res.status(400).json({ error: "Password exactly 6 digits ka hona chahiye." });
+  }
+  const { data, error } = await authClient.auth.signUp({ email, password });
+  if (error) {
+    return res.status(400).json({ error: error.message || "Registration failed" });
+  }
+  res.status(201).json({
+    success: true,
+    user: data.user ? { id: data.user.id, email: data.user.email } : null,
+    session: data.session ? {
+      access_token: data.session.access_token,
+      refresh_token: data.session.refresh_token,
+      expires_at: data.session.expires_at
+    } : null,
+    requiresEmailConfirmation: !data.session
+  });
+});
+
+app.post("/api/auth/login", async (req, res) => {
+  if (!authClient) return res.status(503).json({ error: "Authentication is not configured" });
+  const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
+  const password = typeof req.body?.password === "string" ? req.body.password : "";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !/^\d{6}$/.test(password)) {
+    return res.status(400).json({ error: "Email aur 6-digit password sahi enter karein." });
+  }
+  const { data, error } = await authClient.auth.signInWithPassword({ email, password });
+  if (error || !data.session) {
+    return res.status(401).json({ error: "Email/password galat hai ya email verify nahi hua." });
+  }
+  res.json({
+    success: true,
+    user: { id: data.user.id, email: data.user.email },
+    session: {
+      access_token: data.session.access_token,
+      refresh_token: data.session.refresh_token,
+      expires_at: data.session.expires_at
+    }
+  });
+});
+
+app.post("/api/auth/refresh", async (req, res) => {
+  if (!authClient) return res.status(503).json({ error: "Authentication is not configured" });
+  const refresh_token = typeof req.body?.refresh_token === "string" ? req.body.refresh_token : "";
+  if (!refresh_token) return res.status(400).json({ error: "Refresh token missing" });
+  const { data, error } = await authClient.auth.refreshSession({ refresh_token });
+  if (error || !data.session) return res.status(401).json({ error: "Session expire ho gaya. Dobara login karein." });
+  res.json({
+    success: true,
+    user: { id: data.user.id, email: data.user.email },
+    session: {
+      access_token: data.session.access_token,
+      refresh_token: data.session.refresh_token,
+      expires_at: data.session.expires_at
+    }
+  });
+});
+
+app.get("/api/my-account", async (req, res) => {
+  if (!supabase) return res.status(503).json({ error: "Database is not configured" });
+  const user = await getAuthenticatedUser(req);
+  if (!user) return res.status(401).json({ error: "Login required" });
+
+  const [depositsResult, keysResult, walletResult] = await Promise.all([
+    supabase.from("deposit_requests").select("id, amount, transaction_id, status, created_at")
+      .eq("user_id", user.id).order("created_at", { ascending: false }).limit(100),
+    supabase.from("customer_keys").select("id, product_name, key_value, status, created_at")
+      .eq("user_id", user.id).order("created_at", { ascending: false }).limit(100),
+    supabase.from("wallets").select("balance").eq("user_id", user.id).maybeSingle()
+  ]);
+  if (depositsResult.error || keysResult.error) {
+    console.error("Customer account query failed:", depositsResult.error?.message || keysResult.error?.message);
+    return res.status(500).json({ error: "Account data load nahi ho saka." });
+  }
+  const deposits = depositsResult.data || [];
+  res.json({
+    user: { id: user.id, email: user.email },
+    walletBalance: Number(walletResult.data?.balance || 0),
+    totalDeposited: deposits.filter(d => d.status === "approved").reduce((sum, d) => sum + Number(d.amount || 0), 0),
+    pendingDeposits: deposits.filter(d => d.status === "pending").reduce((sum, d) => sum + Number(d.amount || 0), 0),
+    deposits,
+    keys: keysResult.data || []
+  });
+});
+
+app.post("/api/auth/logout", (req, res) => {
+  res.json({ success: true });
+});
+
 app.get("/api/status", (req, res) => {
   res.json({
     status: "ok",
@@ -119,8 +236,11 @@ small{color:#a6b2c0}
 </section>
 <section id="dashboard" hidden>
 <button id="refresh">Refresh Orders</button>
+<button id="refreshCustomers">Customers / Deposits / Keys</button>
 <button id="logout">Logout</button>
 <div id="orders"></div>
+<h2 style="margin-top:24px">Customers, Deposits & Keys</h2>
+<div id="customerList"></div>
 </section>
 <p id="message" role="status"></p>
 <script>
@@ -185,9 +305,49 @@ document.getElementById("loginForm").onsubmit=async e=>{
   await api("/api/admin/login",{method:"POST",body:JSON.stringify({password:document.getElementById("password").value})});
   document.getElementById("password").value="";
   await loadOrders();
+  await loadCustomers();
  }catch(err){message.textContent=err.message;}
 };
-document.getElementById("refresh").onclick=loadOrders;
+
+async function loadCustomers(){
+ try{
+  const data=await api("/api/admin/customers");
+  const root=document.getElementById("customerList");
+  root.replaceChildren();
+  const summary=document.createElement("p");
+  summary.textContent="Registered customers: "+data.customers.length+" | Old/guest deposits: "+data.unlinkedDeposits.length;
+  root.appendChild(summary);
+  data.customers.forEach(customer=>{
+   const card=document.createElement("article");card.className="card";
+   const title=document.createElement("h3");title.textContent=customer.email||"No email";
+   const info=document.createElement("p");
+   info.textContent="Joined: "+(customer.created_at||"")+" | Email verified: "+(customer.confirmed?"Yes":"No")+" | Approved deposits: ₹"+Number(customer.totalDeposited||0).toFixed(2)+" | Pending: ₹"+Number(customer.pendingDeposits||0).toFixed(2);
+   card.append(title,info);
+   const depositsTitle=document.createElement("h4");depositsTitle.textContent="Deposit history ("+customer.deposits.length+")";card.appendChild(depositsTitle);
+   customer.deposits.forEach(d=>{
+    const p=document.createElement("p");
+    p.textContent="₹"+d.amount+" | "+d.status+" | UTR: "+d.transaction_id+" | "+(d.created_at||"");
+    card.appendChild(p);
+   });
+   const keysTitle=document.createElement("h4");keysTitle.textContent="Customer keys ("+customer.keys.length+")";keysTitle.style.marginTop="10px";card.appendChild(keysTitle);
+   if(!customer.keys.length){const none=document.createElement("p");none.textContent="No keys assigned.";card.appendChild(none);}
+   customer.keys.forEach(k=>{
+    const p=document.createElement("p");p.textContent=k.product_name+" | KEY: "+k.key_value+" | "+k.status+" | "+(k.created_at||"");card.appendChild(p);
+   });
+   root.appendChild(card);
+  });
+  if(data.unlinkedDeposits.length){
+   const old=document.createElement("article");old.className="card";
+   const heading=document.createElement("h3");heading.textContent="Old / unlinked deposit requests";
+   old.appendChild(heading);
+   data.unlinkedDeposits.forEach(d=>{const p=document.createElement("p");p.textContent=(d.customer_email||"Guest")+" | ₹"+d.amount+" | "+d.status+" | UTR: "+d.transaction_id;old.appendChild(p);});
+   root.appendChild(old);
+  }
+ }catch(e){message.textContent=e.message;}
+}
+
+document.getElementById("refreshCustomers").onclick=loadCustomers;
+document.getElementById("refresh").onclick=async()=>{await loadOrders();await loadCustomers();};
 document.getElementById("logout").onclick=async()=>{
  try{await api("/api/admin/logout",{method:"POST"});}catch(e){}
  document.getElementById("dashboard").hidden=true;
@@ -195,6 +355,7 @@ document.getElementById("logout").onclick=async()=>{
  message.textContent="Logged out.";
 };
 loadOrders();
+loadCustomers();
 </script>
 </main></body></html>`);
 });
@@ -288,13 +449,60 @@ app.patch("/api/admin/orders/:id", isAdmin, async (req, res) => {
   res.json({ order: data });
 });
 
+
+app.get("/api/admin/customers", isAdmin, async (req, res) => {
+  if (!supabase) return res.status(503).json({ error: "Database is not configured" });
+  try {
+    const [usersResult, depositsResult, keysResult] = await Promise.all([
+      supabase.auth.admin.listUsers({ page: 1, perPage: 1000 }),
+      supabase.from("deposit_requests")
+        .select("id, user_id, customer_email, amount, transaction_id, status, created_at")
+        .order("created_at", { ascending: false }).limit(1000),
+      supabase.from("customer_keys")
+        .select("id, user_id, product_name, key_value, status, created_at")
+        .order("created_at", { ascending: false }).limit(1000)
+    ]);
+    if (usersResult.error || depositsResult.error || keysResult.error) {
+      console.error("Admin customer data failed:", usersResult.error?.message || depositsResult.error?.message || keysResult.error?.message);
+      return res.status(500).json({ error: "Customer/deposit/key data load nahi ho saka." });
+    }
+    const users = usersResult.data?.users || [];
+    const deposits = depositsResult.data || [];
+    const keys = keysResult.data || [];
+    const customers = users.map(user => {
+      const userDeposits = deposits.filter(d => d.user_id === user.id);
+      const userKeys = keys.filter(k => k.user_id === user.id);
+      return {
+        id: user.id,
+        email: user.email || "",
+        created_at: user.created_at,
+        confirmed: Boolean(user.email_confirmed_at),
+        totalDeposited: userDeposits.filter(d => d.status === "approved").reduce((sum,d) => sum + Number(d.amount || 0), 0),
+        pendingDeposits: userDeposits.filter(d => d.status === "pending").reduce((sum,d) => sum + Number(d.amount || 0), 0),
+        deposits: userDeposits,
+        keys: userKeys
+      };
+    });
+    const unlinkedDeposits = deposits.filter(d => !d.user_id).map(d => ({
+      ...d, customer_email: d.customer_email || "Old/guest request"
+    }));
+    res.json({ customers, unlinkedDeposits });
+  } catch (e) {
+    console.error("Admin customer data exception:", e.message);
+    res.status(500).json({ error: "Customer data load nahi ho saka." });
+  }
+});
+
 app.post("/api/deposit-requests", async (req, res) => {
   if (!supabase) {
     return res.status(503).json({ error: "Database is not configured" });
   }
 
+  const user = await getAuthenticatedUser(req);
+  if (!user) return res.status(401).json({ error: "Deposit submit karne ke liye pehle login karein." });
+
   const amount = Number(req.body?.amount);
-  const transactionId = req.body?.transaction_id?.trim();
+  const transactionId = typeof req.body?.transaction_id === "string" ? req.body.transaction_id.trim() : "";
 
   if (!Number.isInteger(amount) || amount < 1 || amount > 50000) {
     return res.status(400).json({ error: "Invalid deposit amount" });
@@ -311,6 +519,8 @@ app.post("/api/deposit-requests", async (req, res) => {
   const { data, error } = await supabase
     .from("deposit_requests")
     .insert({
+      user_id: user.id,
+      customer_email: user.email || null,
       amount,
       transaction_id: transactionId,
       status: "pending"
