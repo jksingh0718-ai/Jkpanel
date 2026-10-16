@@ -114,10 +114,10 @@ app.post("/api/auth/register", async (req, res) => {
   const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
   const password = typeof req.body?.password === "string" ? req.body.password : "";
 
-  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return res.status(400).json({ error: "Valid email address enter karein." });
   }
-  if (!/^\\d{6}$/.test(password)) {
+  if (!/^\d{6}$/.test(password)) {
     return res.status(400).json({ error: "Password exactly 6 digits ka hona chahiye." });
   }
 
