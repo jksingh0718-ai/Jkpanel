@@ -36,12 +36,12 @@ header{display:flex;align-items:center;justify-content:space-between;gap:8px;bor
 .product p{font-size:11px;color:#94a3b8;margin-top:5px}
 .buy{background:#06b6d4;color:#001018;padding:10px;font-size:11px}
 #backdrop{display:none;position:fixed;inset:0;background:#000b;z-index:99}
-#sidebar{display:none;flex-direction:column;position:fixed;top:0;left:0;width:270px;max-width:85%;height:100dvh;overflow-y:auto;background:#0f172a;padding:16px;z-index:100}
+#sidebar{display:none;position:fixed;top:0;left:0;width:270px;max-width:85%;height:100%;overflow-y:auto;background:#0f172a;padding:16px;z-index:100}
 .menu-heading{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
 .menu-item{display:block;padding:14px 4px;color:#e2e8f0;text-decoration:none;border-bottom:1px solid #263247;font-size:13px}
-#menuLogout{display:block!important;flex-shrink:0;color:#fecaca!important;background:linear-gradient(135deg,#7f1d1d,#dc2626)!important;border:1px solid #f87171!important;border-radius:10px;margin-top:auto!important;padding:14px 12px;font-weight:800;letter-spacing:1px;box-shadow:0 5px 16px #ef444455,inset 3px 0 0 #fff!important;text-align:center}
-#menuLogout::before{content:'↪';display:inline-block;color:#fff;font-size:25px;font-weight:900;margin-right:10px;vertical-align:-3px;text-shadow:0 0 8px #fff}
-#menuLogout:active{background:#991b1b!important;color:#fff!important;transform:scale(.98)}
+#menuLogout{color:#f87171!important;background:transparent!important;border:0!important;border-bottom:1px solid #263247!important;border-radius:0!important;margin-top:0!important;padding:14px 4px!important;font-weight:400!important;letter-spacing:normal!important;box-shadow:none!important;text-align:left!important}
+#menuLogout::before{content:'⇥';display:inline-block;color:#f87171;font-size:16px;font-weight:bold;margin-right:7px;vertical-align:-1px}
+#menuLogout:active{background:#263247!important;color:#fca5a5!important}
 #popup{display:none;position:fixed;inset:0;background:#000c;z-index:200;align-items:center;justify-content:center;padding:16px}
 .popup-card{width:100%;max-width:340px;background:#111827;border:1px solid #10b981;border-radius:14px;padding:20px}
 .popup-card h3{color:#38bdf8;margin-bottom:12px}
@@ -270,7 +270,7 @@ function openMyAccount(){
 }
 
 function openMenu(){
-  document.getElementById('sidebar').style.display='flex';
+  document.getElementById('sidebar').style.display='block';
   document.getElementById('backdrop').style.display='block';
 }
 function closeMenu(){
