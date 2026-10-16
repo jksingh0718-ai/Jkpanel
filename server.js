@@ -418,6 +418,8 @@ small{color:#a6b2c0}
   <input id="productName" required maxlength="120" placeholder="Product name" style="width:100%"><br>
   <label for="productPrice">Selling price (₹)</label><br>
   <input id="productPrice" required type="number" min="0" max="1000000" step="0.01" placeholder="30" style="width:100%"><br>
+  <label for="productDescription">Product description</label><br>
+  <textarea id="productDescription" maxlength="2000" placeholder="Product ke baare mein likhein" style="width:100%;min-height:80px"></textarea><br>
   <label for="productImageFile">Product photo (phone Gallery se)</label><br>
   <input id="productImageFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif" style="width:100%"><br>
   <input id="productImage" type="hidden">
@@ -532,12 +534,14 @@ async function loadProducts(){
    const card=document.createElement("article");card.className="card";
    const title=document.createElement("h3");title.textContent=product.name;
    const info=document.createElement("p");info.textContent="Price: ₹"+Number(product.price).toFixed(2)+" | "+(product.published?"Published":"Hidden");
+   const description=document.createElement("p");description.textContent=product.description||"No description";
    const img=document.createElement("p");img.textContent=product.image_url||"No image URL";\n   const video=document.createElement("p");video.textContent=product.video_url?"Video: "+product.video_url:"No video uploaded";
    const edit=document.createElement("button");edit.textContent="Edit";
    edit.onclick=()=>{
     document.getElementById("productId").value=product.id;
     document.getElementById("productName").value=product.name;
     document.getElementById("productPrice").value=product.price;
+    document.getElementById("productDescription").value=product.description||"";
     document.getElementById("productImage").value=product.image_url||"";\n    document.getElementById("productVideoUrl").value=product.video_url||"";\n    document.getElementById("productVideoFile").value="";\n    document.getElementById("videoUploadStatus").textContent=product.video_url?"Current video saved. Nayi video select karne par replace hogi.":"";
     document.getElementById("productPublished").checked=Boolean(product.published);
     document.getElementById("productSave").textContent="Save Changes";
@@ -549,7 +553,7 @@ async function loadProducts(){
     try{await api("/api/admin/products/"+encodeURIComponent(product.id),{method:"PATCH",body:JSON.stringify({published:!product.published})});await loadProducts();message.textContent="Product visibility updated.";}
     catch(e){document.getElementById("productMessage").textContent=e.message;}
    };
-   card.append(title,info,img,video,edit,toggle);root.appendChild(card);
+   card.append(title,info,description,img,video,edit,toggle);root.appendChild(card);
   });
  }catch(e){document.getElementById("productMessage").textContent=e.message;}
 }
@@ -602,7 +606,8 @@ document.getElementById("productForm").onsubmit=async e=>{
    price:Number(document.getElementById("productPrice").value),
    image_url:imageUrl||null,
    video_url:videoUrl||null,
-   published:document.getElementById("productPublished").checked
+   published:document.getElementById("productPublished").checked,
+   description:document.getElementById("productDescription").value.trim()
   };
   await api(id?"/api/admin/products/"+encodeURIComponent(id):"/api/admin/products",{
    method:id?"PATCH":"POST",body:JSON.stringify(payload)
@@ -1298,6 +1303,8 @@ app.post("/api/admin/products", isAdmin, async (req, res) => {
   const imageUrl = typeof req.body?.image_url === "string" ? req.body.image_url.trim() : "";
   const videoUrl = typeof req.body?.video_url === "string" ? req.body.video_url.trim() : "";
   const published = req.body?.published === true;
+  const description = typeof req.body?.description === "string" ? req.body.description.trim() : "";
+  if (description.length > 2000) return res.status(400).json({ error: "Description 2000 characters se kam rakhein." });
   if (!name || name.length > 120 || !Number.isFinite(price) || price < 0 || price > 1000000) {
     return res.status(400).json({ error: "Product name aur valid price enter karein." });
   }
@@ -1306,8 +1313,8 @@ app.post("/api/admin/products", isAdmin, async (req, res) => {
   }
   if (videoUrl && (videoUrl.length > 2000 || !/^https:\/\//i.test(videoUrl))) return res.status(400).json({ error: "Video URL https:// se shuru hona chahiye." });
   const { data, error } = await supabase.from("products")
-    .insert({ name, price, image_url: imageUrl || null, video_url: videoUrl || null, published })
-    .select("id, name, price, image_url, video_url, published").single();
+    .insert({ name, price, image_url: imageUrl || null, video_url: videoUrl || null, published, description })
+    .select("id, name, price, image_url, video_url, published, description").single();
   if (error) {
     console.error("Product create failed:", error.message);
     return res.status(500).json({ error: "Product save nahi ho saka." });
@@ -1318,6 +1325,11 @@ app.post("/api/admin/products", isAdmin, async (req, res) => {
 app.patch("/api/admin/products/:id", isAdmin, async (req, res) => {
   if (!supabase) return res.status(503).json({ error: "Database is not configured" });
   const updates = {};
+  if (Object.prototype.hasOwnProperty.call(req.body || {}, "description")) {
+    if (typeof req.body.description !== "string" || req.body.description.trim().length > 2000)
+      return res.status(400).json({ error: "Description 2000 characters se kam rakhein." });
+    updates.description = req.body.description.trim();
+  }
   if (Object.prototype.hasOwnProperty.call(req.body || {}, "name")) {
     if (typeof req.body.name !== "string" || !req.body.name.trim() || req.body.name.trim().length > 120)
       return res.status(400).json({ error: "Valid product name enter karein." });
@@ -1347,7 +1359,7 @@ app.patch("/api/admin/products/:id", isAdmin, async (req, res) => {
   if (!Object.keys(updates).length) return res.status(400).json({ error: "Koi product change nahi mila." });
   updates.updated_at = new Date().toISOString();
   const { data, error } = await supabase.from("products").update(updates)
-    .eq("id", req.params.id).select("id, name, price, image_url, video_url, published").maybeSingle();
+    .eq("id", req.params.id).select("id, name, price, image_url, video_url, published, description").maybeSingle();
   if (error) {
     console.error("Product update failed:", error.message);
     return res.status(500).json({ error: "Product update nahi ho saka." });
