@@ -1082,7 +1082,7 @@ app.patch("/api/admin/deposit-requests/:id", isAdmin, async (req, res) => {
 app.get("/api/products", async (req, res) => {
   if (!supabase) return res.status(503).json({ error: "Database is not configured" });
   const { data, error } = await supabase.from("products")
-    .select("id, name, price, image_url, video_url").eq("published", true).order("created_at", { ascending: false });
+    .select("id, name, price, image_url, video_url, description").eq("published", true).order("created_at", { ascending: false });
   if (error) {
     console.error("Public products load failed:", error.message);
     return res.status(500).json({ error: "Products load nahi ho sake." });
@@ -1213,7 +1213,7 @@ app.post("/api/orders", async (req, res) => {
 app.get("/api/admin/products", isAdmin, async (req, res) => {
   if (!supabase) return res.status(503).json({ error: "Database is not configured" });
   const { data, error } = await supabase.from("products")
-    .select("id, name, price, image_url, video_url, published, created_at, updated_at")
+    .select("id, name, price, image_url, video_url, published, description, created_at, updated_at")
     .order("created_at", { ascending: false });
   if (error) {
     console.error("Admin products load failed:", error.message);
