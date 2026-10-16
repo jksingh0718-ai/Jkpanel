@@ -709,7 +709,7 @@ app.get("/api/admin/orders", isAdmin, async (req, res) => {
 
   const { data, error } = await supabase
     .from("orders")
-    .select('id, created_at, customer_name:"Customer_name", product_name:"Product_name", amount:"Amount", payment_status:"Payment_status", order_status:"Order status"')
+    .select('id, created_at, customer_name:"Customer_name", product_name:"Product_name", amount:"Amount", payment_status:"Payment_status", order_status:"Order status", supplier_status, supplier_duration, supplier_error')
     .order("created_at", { ascending: false }).limit(100);
 
   if (error) {
@@ -720,23 +720,159 @@ app.get("/api/admin/orders", isAdmin, async (req, res) => {
   res.json({ orders: data });
 });
 
+function dripWireDuration(productName) {
+  const name = String(productName || "").trim().toLowerCase();
+  if (name === "drip wire - 6 hours") return "6hrs";
+  if (name === "drip wire - 12 hours") return "12hrs";
+  if (name === "drip wire - 1 day") return "1day";
+  if (name === "drip wire - 7 days") return "7days";
+  return null;
+}
+
+async function purchaseDripWireKey({ orderId, userId, productName, duration }) {
+  const apiKey = process.env.RESELLER_API_KEY;
+  const masterKey = process.env.RESELLER_ACCESS_TOKEN;
+  if (!apiKey || !masterKey) {
+    throw new Error("Supplier API credentials missing in backend environment.");
+  }
+
+  const body = new URLSearchParams({
+    api_key: apiKey,
+    action: "buy",
+    product_id: "150",
+    duration,
+    quantity: "1"
+  });
+  const response = await fetch("https://bantibhaiya.to/api/reseller_v1.php", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "x-master-key": masterKey,
+      "Accept": "application/json"
+    },
+    body,
+    signal: AbortSignal.timeout(25000)
+  });
+  const raw = await response.text();
+  let result;
+  try { result = raw ? JSON.parse(raw) : {}; }
+  catch { throw new Error("Supplier returned an invalid response."); }
+
+  if (!response.ok || result.success === false || result.status === "error" || !Array.isArray(result.keys) || result.keys.length < 1) {
+    const message = typeof result.error === "string" ? result.error :
+      typeof result.message === "string" ? result.message :
+      "Supplier did not return any keys.";
+    throw new Error(message.slice(0, 300));
+  }
+
+  const keys = result.keys.map(item => {
+    if (typeof item === "string") return item.trim();
+    if (item && typeof item === "object") {
+      return String(item.key || item.license_key || item.code || item.key_value || "").trim();
+    }
+    return "";
+  }).filter(Boolean);
+
+  if (!keys.length) throw new Error("Supplier response contained no usable keys.");
+
+  const rows = keys.map(keyValue => ({
+    user_id: userId,
+    product_name: productName,
+    key_value: keyValue,
+    status: "active"
+  }));
+  const { error: keysError } = await supabase.from("customer_keys").insert(rows);
+  if (keysError) throw new Error("Supplier purchase may have succeeded, but saving keys failed. Admin must check supplier order before retrying.");
+
+  const { error: updateError } = await supabase.from("orders").update({
+    supplier_status: "completed",
+    supplier_duration: duration,
+    supplier_error: null,
+    supplier_keys: keys,
+    "Order status": "completed"
+  }).eq("id", orderId);
+  if (updateError) {
+    console.error("Supplier keys saved but order status update failed:", updateError.message);
+    throw new Error("Keys were saved to customer account, but order status update failed.");
+  }
+  return { keyCount: keys.length };
+}
+
 app.patch("/api/admin/orders/:id/payment", isAdmin, async (req, res) => {
   if (!supabase) return res.status(503).json({ error: "Database is not configured" });
   if (req.body?.payment_status !== "paid") {
     return res.status(400).json({ error: "Only verified payment can be marked paid." });
   }
+
+  const { data: existing, error: lookupError } = await supabase.from("orders")
+    .select('id, user_id, "Product_name", "Payment_status", supplier_status')
+    .eq("id", req.params.id).maybeSingle();
+  if (lookupError) {
+    console.error("Order payment lookup failed:", lookupError.message);
+    return res.status(500).json({ error: "Could not verify order payment" });
+  }
+  if (!existing || existing.Payment_status !== "pending") {
+    return res.status(409).json({ error: "Order not found or payment is not pending." });
+  }
+
+  const productName = existing["Product_name"] || "";
+  const duration = dripWireDuration(productName);
+  const isDripWire = /^DRIP Wire - /i.test(productName);
+  const nextSupplierStatus = isDripWire ? (duration ? "processing" : "failed") : "not_applicable";
+
   const { data, error } = await supabase.from("orders")
-    .update({ "Payment_status": "paid" })
+    .update({
+      "Payment_status": "paid",
+      supplier_status: nextSupplierStatus,
+      supplier_duration: duration,
+      supplier_error: isDripWire && !duration ? "Unsupported DRIP Wire duration." : null
+    })
     .eq("id", req.params.id)
     .eq("Payment_status", "pending")
-    .select('id, "Payment_status"')
+    .select('id, "Payment_status", supplier_status, supplier_duration')
     .maybeSingle();
   if (error) {
     console.error("Order payment update failed:", error.message);
     return res.status(500).json({ error: "Could not update payment status" });
   }
   if (!data) return res.status(409).json({ error: "Order not found or payment is not pending." });
-  res.json({ success: true, order: data });
+
+  if (!isDripWire) {
+    return res.json({ success: true, order: data, message: "Payment verified. This product does not use the DRIP Wire supplier." });
+  }
+  if (!duration) {
+    return res.status(422).json({ success: false, order: data, error: "Payment verified, but this DRIP Wire duration is not configured. Contact admin." });
+  }
+
+  try {
+    const delivered = await purchaseDripWireKey({
+      orderId: existing.id,
+      userId: existing.user_id,
+      productName,
+      duration
+    });
+    const { data: finalOrder } = await supabase.from("orders")
+      .select('id, "Payment_status", supplier_status, supplier_duration, "Order status"')
+      .eq("id", existing.id).maybeSingle();
+    return res.json({
+      success: true,
+      order: finalOrder || data,
+      supplier: { status: "completed", keyCount: delivered.keyCount },
+      message: "Payment verified and DRIP Wire key delivered to My Account."
+    });
+  } catch (purchaseError) {
+    const safeMessage = String(purchaseError?.message || "Supplier purchase failed").slice(0, 300);
+    console.error("DRIP Wire supplier purchase failed:", safeMessage);
+    await supabase.from("orders").update({
+      supplier_status: "failed",
+      supplier_error: safeMessage
+    }).eq("id", existing.id);
+    return res.status(502).json({
+      success: false,
+      order: { ...data, supplier_status: "failed" },
+      error: "Payment verified, but supplier key delivery failed. Check supplier status before attempting any retry."
+    });
+  }
 });
 
 app.patch("/api/admin/orders/:id", isAdmin, async (req, res) => {
