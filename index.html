@@ -16,6 +16,9 @@ header{display:flex;align-items:center;justify-content:space-between;gap:8px;bor
 .deposit-btn{background:#dc2626;color:#fff;padding:10px;font-size:11px}
 .brand{color:#38bdf8;font-size:21px;font-weight:bold;margin-top:18px}
 .subtitle{color:#94a3b8;font-size:12px;margin-top:6px}
+.account-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;background:#111827;border:1px solid #263247;border-radius:10px;padding:10px;margin-top:12px;font-size:12px;color:#cbd5e1}
+.account-bar button{padding:9px 10px;background:#10b981;color:#04130b;font-size:11px}
+.account-bar .secondary{background:#1e293b;color:#e2e8f0;border:1px solid #334155}
 .box{background:#111827;border:1px solid #263247;border-radius:12px;padding:14px;margin-top:14px}
 .box h3{font-size:15px;margin-bottom:10px}
 .box p{font-size:12px;color:#94a3b8;line-height:1.6}
@@ -78,6 +81,10 @@ footer{position:fixed;bottom:0;left:0;right:0;text-align:center;background:#1118
 
 <div class="brand">JK PANEL SHOP</div>
 <div class="subtitle">Digital Products & Reseller Dashboard</div>
+<div class="account-bar" id="accountBar">
+  <span id="accountLabel">Customer login zaroori hai</span>
+  <button type="button" onclick="openAuth('login')">LOGIN / REGISTER</button>
+</div>
 
 <div class="box" style="border-color:#10b981">
   <h3>Welcome to JK PANEL SHOP!</h3>
@@ -125,7 +132,7 @@ footer{position:fixed;bottom:0;left:0;right:0;text-align:center;background:#1118
 <div id="popup" onclick="if(event.target===this)closePopup()">
   <div class="popup-card">
     <h3 id="popupTitle">JK PANEL SHOP</h3>
-    <p id="popupMessage"></p>
+    <div id="popupMessage"></div>
     <button onclick="closePopup()">CLOSE</button>
   </div>
 </div>
@@ -133,6 +140,128 @@ footer{position:fixed;bottom:0;left:0;right:0;text-align:center;background:#1118
 <footer>© 2026 JK PANEL SHOP</footer>
 
 <script>
+
+function saveCustomerSession(session){
+  if(!session){return;}
+  localStorage.setItem('jk_customer_access_token',session.access_token);
+  localStorage.setItem('jk_customer_refresh_token',session.refresh_token);
+  localStorage.setItem('jk_customer_expires_at',String(session.expires_at||0));
+}
+function clearCustomerSession(){
+  localStorage.removeItem('jk_customer_access_token');
+  localStorage.removeItem('jk_customer_refresh_token');
+  localStorage.removeItem('jk_customer_expires_at');
+}
+async function customerApi(url,options={},retry=true){
+  const token=localStorage.getItem('jk_customer_access_token');
+  const response=await fetch('https://jkpanel-backend.onrender.com'+url,{
+    ...options,
+    headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{}),...(options.headers||{})}
+  });
+  const raw=await response.text();
+  let data={};
+  try{data=raw?JSON.parse(raw):{};}catch{throw new Error('Server ka response sahi nahi hai.');}
+  if(response.status===401 && retry && localStorage.getItem('jk_customer_refresh_token')){
+    const refreshResponse=await fetch('https://jkpanel-backend.onrender.com/api/auth/refresh',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({refresh_token:localStorage.getItem('jk_customer_refresh_token')})
+    });
+    const refreshRaw=await refreshResponse.text();let refreshed={};
+    try{refreshed=refreshRaw?JSON.parse(refreshRaw):{};}catch{}
+    if(refreshResponse.ok && refreshed.session){
+      saveCustomerSession(refreshed.session);
+      return customerApi(url,options,false);
+    }
+    clearCustomerSession();
+  }
+  if(!response.ok)throw new Error(data.error||'Request failed');
+  return data;
+}
+function updateAccountBar(email){
+  const bar=document.getElementById('accountBar');
+  bar.replaceChildren();
+  const label=document.createElement('span');
+  label.textContent=email?'Logged in: '+email:'Customer login zaroori hai';
+  bar.appendChild(label);
+  const buttons=document.createElement('div');buttons.style.display='flex';buttons.style.gap='6px';buttons.style.flexWrap='wrap';
+  if(email){
+    const account=document.createElement('button');account.textContent='MY ACCOUNT';account.onclick=openMyAccount;
+    const logout=document.createElement('button');logout.textContent='LOGOUT';logout.className='secondary';logout.onclick=logoutCustomer;
+    buttons.append(account,logout);
+  }else{
+    const login=document.createElement('button');login.textContent='LOGIN / REGISTER';login.onclick=()=>openAuth('login');buttons.appendChild(login);
+  }
+  bar.appendChild(buttons);
+}
+function openAuth(mode='login'){
+  closeMenu();
+  const root=document.getElementById('popupMessage');
+  document.getElementById('popupTitle').textContent=mode==='register'?'Create Customer Account':'Customer Login';
+  root.innerHTML=
+    '<label for="authEmail" style="display:block;margin-bottom:5px">Email address</label>'+
+    '<input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com" style="width:100%;padding:12px;border-radius:8px;border:1px solid #475569;margin-bottom:12px;color:#111827">'+
+    '<label for="authPassword" style="display:block;margin-bottom:5px">6-digit numeric password</label>'+
+    '<input id="authPassword" type="password" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="'+(mode==='register'?'new-password':'current-password')+'" placeholder="••••••" style="width:100%;padding:12px;border-radius:8px;border:1px solid #475569;color:#111827">'+
+    '<p style="margin-top:8px;color:#fbbf24;font-size:12px">Security note: 6 digits weak hote hain. Apna UPI/bank PIN yahan use na karein.</p>'+
+    '<p id="authStatus" style="margin-top:8px;color:#cbd5e1;font-size:12px"></p>'+
+    '<button class="action" type="button" onclick="'+(mode==='register'?'registerCustomer()':'loginCustomer()')+'">'+(mode==='register'?'CREATE ACCOUNT':'LOGIN')+'</button>'+
+    '<button class="action blue" type="button" onclick="openAuth(\''+(mode==='register'?'login':'register')+'\')">'+(mode==='register'?'Already account hai? Login':'New customer? Register')+'</button>';
+  document.getElementById('popup').style.display='flex';
+}
+async function registerCustomer(){
+  const email=document.getElementById('authEmail').value.trim();
+  const password=document.getElementById('authPassword').value;
+  const status=document.getElementById('authStatus');
+  if(!email||!/^\d{6}$/.test(password)){status.textContent='Valid email aur exactly 6 digits enter karein.';return;}
+  status.textContent='Account ban raha hai...';
+  try{
+    const data=await customerApi('/api/auth/register',{method:'POST',body:JSON.stringify({email,password})},false);
+    if(data.session){saveCustomerSession(data.session);updateAccountBar(data.user?.email||email);closePopup();await loadMyAccountSummary();}
+    else{status.textContent='Registration request ho gayi. Email verification link check karein, phir login karein.';}
+  }catch(e){status.textContent=e.message;}
+}
+async function loginCustomer(){
+  const email=document.getElementById('authEmail').value.trim();
+  const password=document.getElementById('authPassword').value;
+  const status=document.getElementById('authStatus');
+  if(!email||!/^\d{6}$/.test(password)){status.textContent='Valid email aur exactly 6 digits enter karein.';return;}
+  status.textContent='Login ho raha hai...';
+  try{
+    const data=await customerApi('/api/auth/login',{method:'POST',body:JSON.stringify({email,password})},false);
+    saveCustomerSession(data.session);updateAccountBar(data.user.email);closePopup();await loadMyAccountSummary();
+  }catch(e){status.textContent=e.message;}
+}
+async function logoutCustomer(){
+  clearCustomerSession();updateAccountBar('');showPopup('Logout','Aap logout ho gaye hain.');
+}
+async function loadMyAccountSummary(){
+  try{
+    const data=await customerApi('/api/my-account');
+    updateAccountBar(data.user.email);
+  }catch(e){
+    if(e.message==='Login required'){clearCustomerSession();updateAccountBar('');}
+  }
+}
+function openMyAccount(){
+  document.getElementById('popupTitle').textContent='My Account';
+  const root=document.getElementById('popupMessage');root.replaceChildren();
+  const status=document.createElement('p');status.textContent='Account details load ho rahe hain...';root.appendChild(status);
+  document.getElementById('popup').style.display='flex';
+  customerApi('/api/my-account').then(data=>{
+    root.replaceChildren();
+    const summary=document.createElement('p');
+    summary.textContent='Email: '+data.user.email+' | Wallet: ₹'+Number(data.walletBalance||0).toFixed(2)+' | Approved deposits: ₹'+Number(data.totalDeposited||0).toFixed(2)+' | Pending: ₹'+Number(data.pendingDeposits||0).toFixed(2);
+    root.appendChild(summary);
+    const dh=document.createElement('h4');dh.textContent='Deposit History';dh.style.marginTop='12px';root.appendChild(dh);
+    if(!data.deposits.length){const p=document.createElement('p');p.textContent='Abhi koi deposit request nahi hai.';root.appendChild(p);}
+    data.deposits.forEach(d=>{const p=document.createElement('p');p.textContent='₹'+d.amount+' | '+d.status+' | UTR: '+d.transaction_id+' | '+(d.created_at||'');p.style.marginTop='7px';root.appendChild(p);});
+    const kh=document.createElement('h4');kh.textContent='My Keys';kh.style.marginTop='12px';root.appendChild(kh);
+    if(!data.keys.length){const p=document.createElement('p');p.textContent='Abhi koi key assign nahi hui.';root.appendChild(p);}
+    data.keys.forEach(k=>{const p=document.createElement('p');p.textContent=k.product_name+' — KEY: '+k.key_value+' ('+k.status+')';p.style.marginTop='7px';root.appendChild(p);});
+    const close=document.createElement('button');close.textContent='CLOSE';close.onclick=closePopup;root.appendChild(close);
+  }).catch(e=>{root.replaceChildren();const p=document.createElement('p');p.textContent=e.message;root.appendChild(p);});
+}
+
 function openMenu(){
   document.getElementById('sidebar').style.display='block';
   document.getElementById('backdrop').style.display='block';
@@ -152,7 +281,10 @@ function closePopup(){
 
 function deposit(){
   closeMenu();
-
+  if(!localStorage.getItem('jk_customer_access_token')){
+    openAuth('login');
+    return;
+  }
   document.getElementById('popupTitle').textContent = 'Deposit';
 
   document.getElementById('popupMessage').innerHTML =
@@ -205,7 +337,10 @@ async function submitDepositRequest(){
   try {
     const response = await fetch('https://jkpanel-backend.onrender.com/api/deposit-requests', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + (localStorage.getItem('jk_customer_access_token') || '')
+      },
       body: JSON.stringify({
         amount: amount,
         transaction_id: txn
@@ -256,6 +391,8 @@ function feature(name){
 function buyProduct(name){
   showPopup('Buy Keys', name + ' abhi purchase ke liye configure nahi hai. Product price aur order flow admin se configure karna hoga.');
 }
+
+loadMyAccountSummary();
 
 </script>
   
