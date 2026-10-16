@@ -535,14 +535,18 @@ async function loadProducts(){
    const title=document.createElement("h3");title.textContent=product.name;
    const info=document.createElement("p");info.textContent="Price: ₹"+Number(product.price).toFixed(2)+" | "+(product.published?"Published":"Hidden");
    const description=document.createElement("p");description.textContent=product.description||"No description";
-   const img=document.createElement("p");img.textContent=product.image_url||"No image URL";\n   const video=document.createElement("p");video.textContent=product.video_url?"Video: "+product.video_url:"No video uploaded";
+   const img=document.createElement("p");img.textContent=product.image_url||"No image URL";
+   const video=document.createElement("p");video.textContent=product.video_url?"Video: "+product.video_url:"No video uploaded";
    const edit=document.createElement("button");edit.textContent="Edit";
    edit.onclick=()=>{
     document.getElementById("productId").value=product.id;
     document.getElementById("productName").value=product.name;
     document.getElementById("productPrice").value=product.price;
     document.getElementById("productDescription").value=product.description||"";
-    document.getElementById("productImage").value=product.image_url||"";\n    document.getElementById("productVideoUrl").value=product.video_url||"";\n    document.getElementById("productVideoFile").value="";\n    document.getElementById("videoUploadStatus").textContent=product.video_url?"Current video saved. Nayi video select karne par replace hogi.":"";
+    document.getElementById("productImage").value=product.image_url||"";
+    document.getElementById("productVideoUrl").value=product.video_url||"";
+    document.getElementById("productVideoFile").value="";
+    document.getElementById("videoUploadStatus").textContent=product.video_url?"Current video saved. Nayi video select karne par replace hogi.":"";
     document.getElementById("productPublished").checked=Boolean(product.published);
     document.getElementById("productSave").textContent="Save Changes";
     document.getElementById("productMessage").textContent="Editing: "+product.name;
@@ -560,7 +564,13 @@ async function loadProducts(){
 function clearProductForm(){
  document.getElementById("productForm").reset();
  document.getElementById("productId").value="";
- document.getElementById("productPublished").checked=true;\n document.getElementById("productImage").value="";\n document.getElementById("productImageFile").value="";\n document.getElementById("imageUploadStatus").textContent="";\n document.getElementById("productVideoUrl").value="";\n document.getElementById("productVideoFile").value="";\n document.getElementById("videoUploadStatus").textContent="";
+ document.getElementById("productPublished").checked=true;
+ document.getElementById("productImage").value="";
+ document.getElementById("productImageFile").value="";
+ document.getElementById("imageUploadStatus").textContent="";
+ document.getElementById("productVideoUrl").value="";
+ document.getElementById("productVideoFile").value="";
+ document.getElementById("videoUploadStatus").textContent="";
  document.getElementById("productSave").textContent="Add Product";
  document.getElementById("productMessage").textContent="";
 }
