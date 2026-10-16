@@ -39,6 +39,9 @@ header{display:flex;align-items:center;justify-content:space-between;gap:8px;bor
 #sidebar{display:none;position:fixed;top:0;left:0;width:270px;max-width:85%;height:100%;overflow-y:auto;background:#0f172a;padding:16px;z-index:100}
 .menu-heading{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
 .menu-item{display:block;padding:14px 4px;color:#e2e8f0;text-decoration:none;border-bottom:1px solid #263247;font-size:13px}
+#menuLogout{color:#f87171;background:linear-gradient(135deg,#2b1117,#450a0a);border:1px solid #991b1b;border-radius:10px;margin-top:18px;padding:13px 12px;font-weight:700;letter-spacing:.5px;box-shadow:inset 3px 0 0 #ef4444}
+#menuLogout::before{content:'⇥';display:inline-block;color:#ef4444;font-size:20px;font-weight:bold;margin-right:10px;vertical-align:-1px}
+#menuLogout:active{background:#7f1d1d;color:#fff}
 #popup{display:none;position:fixed;inset:0;background:#000c;z-index:200;align-items:center;justify-content:center;padding:16px}
 .popup-card{width:100%;max-width:340px;background:#111827;border:1px solid #10b981;border-radius:14px;padding:20px}
 .popup-card h3{color:#38bdf8;margin-bottom:12px}
@@ -60,8 +63,6 @@ footer{position:fixed;bottom:0;left:0;right:0;text-align:center;background:#1118
   </div>
   <a class="menu-item" href="#" onclick="closeMenu()">Dashboard</a>
   <a class="menu-item" id="menuLogin" href="#" onclick="openAuth(\'login\');return false">LOGIN / REGISTER</a>
-  <a class="menu-item" id="menuLogout" href="#" onclick="logoutCustomer();closeMenu();return false" style="display:none">LOGOUT</a>
-
 <a class="menu-item" href="#" onclick="deposit();return false">Deposit</a>
   
   <a class="menu-item" href="#products" onclick="closeMenu()">Buy Keys / Products</a>
@@ -71,6 +72,7 @@ footer{position:fixed;bottom:0;left:0;right:0;text-align:center;background:#1118
   <a class="menu-item" href="https://wa.me/917645957071" target="_blank" rel="noopener">Contact Support</a>
   <a class="menu-item" href="https://whatsapp.com/channel/0029VbE3msh47Xe5PEWcBW3b" target="_blank" rel="noopener">📢 JOIN WHATSAPP CHANNEL</a>
   <a class="menu-item" href="#" onclick="feature('API And Password');return false">API And Password</a>
+  <a class="menu-item" id="menuLogout" href="#" onclick="logoutCustomer();closeMenu();return false" style="display:none">LOG OUT</a>
 </nav>
 
 <header>
@@ -281,10 +283,6 @@ function showPopup(title,message){
   document.getElementById('popup').style.display='flex';
 }
 function closePopup(){
-  if(!localStorage.getItem('jk_customer_access_token')){
-    openAuth('login');
-    return;
-  }
   document.getElementById('popup').style.display='none';
 }
 
@@ -398,15 +396,18 @@ function feature(name){
   showPopup(name, name + ' section abhi setup nahi hua hai. Is feature ko use karne ke liye admin/backend setup zaroori hai.');
 }
 function buyProduct(name){
+  if(!localStorage.getItem('jk_customer_access_token')){
+    openAuth('login');
+    return;
+  }
   showPopup('Buy Keys', name + ' abhi purchase ke liye configure nahi hai. Product price aur order flow admin se configure karna hoga.');
 }
 
 
-function enforceCustomerLogin(){
+function restoreCustomerSession(){
   const token=localStorage.getItem('jk_customer_access_token');
   if(!token){
     updateAccountBar('');
-    openAuth('login');
     return;
   }
   customerApi('/api/my-account').then(data=>{
@@ -414,11 +415,10 @@ function enforceCustomerLogin(){
   }).catch(()=>{
     clearCustomerSession();
     updateAccountBar('');
-    openAuth('login');
   });
 }
 
-enforceCustomerLogin();
+restoreCustomerSession();
 
 </script>
   
