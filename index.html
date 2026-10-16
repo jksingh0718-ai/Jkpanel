@@ -88,6 +88,11 @@ footer{position:fixed;bottom:0;left:0;right:0;text-align:center;background:#1118
 #popup.auth-screen .auth-main-btn{padding:14px 10px!important;font-size:15px!important;margin:10px 0 18px!important;border-radius:14px!important}
 #popup.auth-screen .auth-google{padding:13px 8px!important;font-size:13px!important;border-radius:15px!important;margin-bottom:14px!important}
 
+
+/* Keep account and other popup content scrollable on mobile */
+#popup:not(.auth-screen){overflow-y:auto;align-items:flex-start;overscroll-behavior:contain}
+#popup:not(.auth-screen) .popup-card{max-height:calc(100dvh - 32px);overflow-y:auto;overscroll-behavior:contain;margin:auto}
+#popup:not(.auth-screen) .popup-card button{flex-shrink:0}
 </style>
 </head>
 <body>
@@ -371,6 +376,7 @@ function openMyAccount(){
   const defaultClose=document.getElementById('popupDefaultClose');if(defaultClose)defaultClose.style.display='block';
   document.getElementById('popupTitle').textContent='My Account';
   const root=document.getElementById('popupMessage');root.replaceChildren();
+  const back=document.createElement('button');back.type='button';back.textContent='← Back to Shop';back.onclick=closePopup;back.style.cssText='width:100%;padding:11px;margin:0 0 14px;background:#263247;color:#e2e8f0;border:1px solid #475569';root.appendChild(back);
   const loading=document.createElement('p');loading.textContent='Account details load ho rahe hain...';root.appendChild(loading);
   document.getElementById('popup').style.display='flex';
   customerApi('/api/my-account').then(data=>{
