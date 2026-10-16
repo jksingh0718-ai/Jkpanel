@@ -50,6 +50,25 @@ header{display:flex;align-items:center;justify-content:space-between;gap:8px;bor
 .whatsapp-float{position:fixed;right:18px;bottom:64px;width:50px;height:50px;border-radius:50%;background:#25d366;color:white;text-decoration:none;display:flex;align-items:center;justify-content:center;font-size:25px;z-index:50}
 footer{position:fixed;bottom:0;left:0;right:0;text-align:center;background:#111827;border-top:1px solid #263247;padding:12px;color:#94a3b8;font-size:11px}
 @media(max-width:360px){.contact-btn,.deposit-btn{padding:8px;font-size:10px}.brand{font-size:19px}}
+
+#popup.auth-screen{background:#07090d;padding:18px;overflow-y:auto;align-items:center}
+#popup.auth-screen .popup-card{position:relative;width:100%;max-width:430px;min-height:min(820px,calc(100dvh - 36px));background:#0d1017;border:1px solid #073d42;border-radius:28px;padding:48px 28px 30px;box-shadow:0 0 22px #00e5f533,inset 0 0 18px #00e5f30a;overflow:hidden}
+#popup.auth-screen .popup-card:before{content:"";position:absolute;left:0;top:22%;bottom:8%;width:4px;background:linear-gradient(#00f0ff,#006e77);box-shadow:0 0 12px #00eaff}
+#popup.auth-screen .popup-card h3{font-size:clamp(25px,7vw,34px);text-align:center;color:#f8fafc;letter-spacing:1.2px;margin:26px 0 4px;text-shadow:0 0 12px #00eaff88}
+#popup.auth-screen .auth-subtitle{text-align:center;color:#a1a1aa;font-size:12px;letter-spacing:4px;margin-bottom:38px}
+#popup.auth-screen .auth-shield{width:90px;height:90px;border:3px dashed #0e8f98;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;font-size:43px;box-shadow:0 0 24px #00eaff22}
+#popup.auth-screen .auth-input{width:100%;padding:18px 20px;background:#03060b;color:#fff;border:2px solid #30343d;border-radius:19px;font-size:16px;margin-bottom:18px;outline:none}
+#popup.auth-screen .auth-input:focus{border-color:#00dff3;box-shadow:0 0 12px #00dff344}
+#popup.auth-screen .auth-main-btn{width:100%;padding:22px 12px;background:linear-gradient(110deg,#08c8ed,#00e8ee);color:#031017;border-radius:18px;font-size:16px;margin:18px 0 28px}
+#popup.auth-screen .auth-divider{display:flex;align-items:center;gap:10px;color:#555963;font-weight:bold;letter-spacing:2px;justify-content:center;margin-bottom:28px;font-size:12px}
+#popup.auth-screen .auth-divider:before,#popup.auth-screen .auth-divider:after{content:"";height:1px;border-top:1px dashed #30343d;flex:1}
+#popup.auth-screen .auth-google{width:100%;padding:19px 8px;background:transparent;color:#f8fafc;border:2px solid #222630;border-radius:18px;font-size:15px;margin:0 0 18px}
+#popup.auth-screen .auth-links{text-align:center;color:#00d8e9;font-size:14px;line-height:2.5;margin-top:28px}
+#popup.auth-screen .auth-links a{color:#00d8e9;text-decoration:none}
+#popup.auth-screen .auth-links .muted{color:#85858d}
+#popup.auth-screen .auth-footer{text-align:center;color:#444750;margin-top:26px;font-size:12px}
+#popup.auth-screen .auth-close{position:absolute;top:12px;right:12px;width:auto;padding:7px 11px;margin:0;background:#202631;color:#cbd5e1;border-radius:9px}
+
 </style>
 </head>
 <body>
@@ -201,16 +220,28 @@ function updateAccountBar(email){
 function openAuth(mode='login'){
   closeMenu();
   const root=document.getElementById('popupMessage');
-  document.getElementById('popupTitle').textContent=mode==='register'?'Create Customer Account':'Customer Login';
+  document.getElementById('popupTitle').textContent='';
+  document.getElementById('popup').classList.add('auth-screen');
+  const isRegister=mode==='register';
   root.innerHTML=
-    '<label for="authEmail" style="display:block;margin-bottom:5px">Email address</label>'+
-    '<input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com" style="width:100%;padding:12px;border-radius:8px;border:1px solid #475569;margin-bottom:12px;color:#111827">'+
-    '<label for="authPassword" style="display:block;margin-bottom:5px">Enter 6 digit password</label>'+
-    '<input id="authPassword" type="password" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="'+(mode==='register'?'new-password':'current-password')+'" placeholder="Enter 6 digit password" style="width:100%;padding:12px;border-radius:8px;border:1px solid #475569;color:#111827">'+
-    (mode==='register' ? '<label for="authConfirmPassword" style="display:block;margin-top:12px;margin-bottom:5px">Confirm password</label>'+'<input id="authConfirmPassword" type="password" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="new-password" placeholder="Confirm 6 digit password" style="width:100%;padding:12px;border-radius:8px;border:1px solid #475569;color:#111827">' : '')+
-    '<p id="authStatus" style="margin-top:8px;color:#cbd5e1;font-size:12px"></p>'+
-    '<button class="action" type="button" onclick="'+(mode==='register'?'registerCustomer()':'loginCustomer()')+'">'+(mode==='register'?'CREATE ACCOUNT':'LOGIN')+'</button>'+
-    '<button class="action blue" type="button" onclick="openAuth(\''+(mode==='register'?'login':'register')+'\')">'+(mode==='register'?'Already account hai? Login':'New customer? Register')+'</button>';
+    '<div class="auth-shield" aria-hidden="true">🛡️</div>'+
+    '<h3><span style="color:#f8fafc">JK</span> <span style="color:#00e5f3">PANEL</span></h3>'+
+    '<div class="auth-subtitle">'+(isRegister?'CREATE ACCOUNT':'AUTHORIZE ACCESS')+'</div>'+
+    '<label for="authEmail" style="display:block;color:#a1a1aa;font-size:12px;margin-bottom:6px">EMAIL ADDRESS</label>'+
+    '<input class="auth-input" id="authEmail" type="email" autocomplete="email" placeholder="EMAIL ADDRESS">'+
+    '<label for="authPassword" style="display:block;color:#a1a1aa;font-size:12px;margin-bottom:6px">PASSWORD</label>'+
+    '<input class="auth-input" id="authPassword" type="password" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="'+(isRegister?'new-password':'current-password')+'" placeholder="6 DIGIT PASSWORD">'+
+    (isRegister?'<label for="authConfirmPassword" style="display:block;color:#a1a1aa;font-size:12px;margin-bottom:6px">CONFIRM PASSWORD</label><input class="auth-input" id="authConfirmPassword" type="password" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="new-password" placeholder="CONFIRM 6 DIGIT PASSWORD">':'')+
+    '<p id="authStatus" aria-live="polite"></p>'+
+    '<button class="auth-main-btn" type="button" onclick="'+(isRegister?'registerCustomer()':'loginCustomer()')+'">'+(isRegister?'CREATE ACCOUNT':'LOGIN NOW')+'</button>'+
+    (!isRegister?'<div class="auth-divider">OR LOGIN WITH</div><button class="auth-google" type="button" onclick="showPopup(\'Google Login\',\'Google sign-in abhi configure nahi hai. Email aur password se login karein.\')"><span style="font-size:21px;color:#4285f4;margin-right:12px">G</span> LOG IN WITH GOOGLE</button>':'')+
+    '<div class="auth-links">'+
+      (!isRegister?'<a href="#" onclick="showPopup(\'Forgot Password?\',\'Password reset ke liye support se sampark karein.\');return false">Forgot Password?</a><span class="muted"> &nbsp;|&nbsp; </span><a href="#" onclick="showPopup(\'Change Gmail\',\'Gmail change karne ke liye support se sampark karein.\');return false">Change Gmail</a><br>':'')+
+      '<span class="muted">'+(isRegister?'Already a user?':'New User ?')+'</span> <a href="#" onclick="openAuth(\''+(isRegister?'login':'register')+'\');return false">'+(isRegister?'Login':'Create Account')+'</a>'+
+    '</div><div class="auth-footer">© 2026 JK PANEL SYSTEM</div>';
+  const card=document.querySelector('#popup .popup-card');
+  const oldClose=card.querySelector('.auth-close');if(oldClose)oldClose.remove();
+  card.insertAdjacentHTML('afterbegin','<button class="auth-close" type="button" onclick="closePopup()">✕</button>');
   document.getElementById('popup').style.display='flex';
 }
 async function registerCustomer(){
@@ -278,12 +309,16 @@ function closeMenu(){
   document.getElementById('backdrop').style.display='none';
 }
 function showPopup(title,message){
+  document.getElementById('popup').classList.remove('auth-screen');
+  const close=document.querySelector('#popup .auth-close');if(close)close.remove();
   document.getElementById('popupTitle').textContent=title;
   document.getElementById('popupMessage').textContent=message;
   document.getElementById('popup').style.display='flex';
 }
 function closePopup(){
   document.getElementById('popup').style.display='none';
+  document.getElementById('popup').classList.remove('auth-screen');
+  const close=document.querySelector('#popup .auth-close');if(close)close.remove();
 }
 
 function deposit(){
