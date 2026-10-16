@@ -184,6 +184,31 @@ app.post("/api/auth/login", async (req, res) => {
   });
 });
 
+app.post("/api/auth/forgot-password", async (req, res) => {
+  if (!authClient) return res.status(503).json({ error: "Authentication is not configured" });
+  const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: "Valid email address enter karein." });
+  const { error } = await authClient.auth.resetPasswordForEmail(email, { redirectTo: "https://jkpanel.shop/" });
+  if (error) { console.error("Password reset request failed:", error.message); return res.status(400).json({ error: "Password reset email nahi bhej paaye. Supabase email settings check karein." }); }
+  return res.json({ success: true, message: "Agar is email par account hai, password reset instructions bhej di jayengi. Inbox aur spam folder check karein." });
+});
+
+app.post("/api/auth/change-email", async (req, res) => {
+  if (!authClient || !supabaseUrl) return res.status(503).json({ error: "Authentication is not configured" });
+  const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
+  const password = typeof req.body?.password === "string" ? req.body.password : "";
+  const newEmail = typeof req.body?.newEmail === "string" ? req.body.newEmail.trim().toLowerCase() : "";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !/^\d{6}$/.test(password) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) return res.status(400).json({ error: "Current email, 6-digit password aur valid new email enter karein." });
+  if (email === newEmail) return res.status(400).json({ error: "New email current email se alag hona chahiye." });
+  const { data: signedIn, error: signInError } = await authClient.auth.signInWithPassword({ email, password });
+  if (signInError || !signedIn?.session?.access_token) return res.status(401).json({ error: "Current email ya password sahi nahi hai." });
+  try {
+    const response = await fetch(supabaseUrl.replace(/\/+$/, "") + "/auth/v1/user", { method: "PUT", headers: { "Content-Type": "application/json", "apikey": supabasePublishableKey, "Authorization": "Bearer " + signedIn.session.access_token }, body: JSON.stringify({ email: newEmail }) });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) { const msg = typeof result.msg === "string" ? result.msg : typeof result.message === "string" ? result.message : typeof result.error_description === "string" ? result.error_description : ""; return res.status(response.status >= 500 ? 502 : 400).json({ error: msg || "Email change request fail hui. New email ya Supabase email settings check karein." }); }
+    return res.json({ success: true, message: "Email change verification request bhej di gayi hai. New email ke inbox aur spam folder mein verification link check karein. Change confirm hone tak purana email kaam karega." });
+  } catch (error) { console.error("Email change request failed:", error.message); return res.status(502).json({ error: "Email verification service abhi available nahi hai." }); }
+});
 app.post("/api/auth/refresh", async (req, res) => {
   if (!authClient) return res.status(503).json({ error: "Authentication is not configured" });
   const refresh_token = typeof req.body?.refresh_token === "string" ? req.body.refresh_token : "";
