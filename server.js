@@ -811,6 +811,16 @@ async function purchaseDripWireKey({ orderId, userId, productName, duration, sup
   catch { throw new Error("Supplier returned an invalid response."); }
 
   if (!response.ok || result.success === false || result.status === "error" || !Array.isArray(result.keys) || result.keys.length < 1) {
+    // Log only response metadata, never credentials or any returned key material.
+    console.error("Supplier API response diagnostic:", JSON.stringify({
+      httpStatus: response.status,
+      responseFields: result && typeof result === "object" ? Object.keys(result).slice(0, 30) : [],
+      success: typeof result?.success === "boolean" ? result.success : null,
+      status: typeof result?.status === "string" ? result.status.slice(0, 80) : null,
+      error: typeof result?.error === "string" ? result.error.slice(0, 200) : null,
+      message: typeof result?.message === "string" ? result.message.slice(0, 200) : null,
+      keysCount: Array.isArray(result?.keys) ? result.keys.length : null
+    }));
     const message = typeof result.error === "string" ? result.error :
       typeof result.message === "string" ? result.message :
       "Supplier did not return any keys.";
