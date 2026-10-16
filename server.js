@@ -1322,7 +1322,7 @@ app.post("/api/admin/product-video", isAdmin, (req, res) => {
       return res.status(201).json({ success: true, video_url: publicUrl.publicUrl });
     } catch (e) {
       console.error("Product video upload failed:", e.message);
-      return res.status(500).json({ error: /maximum allowed size|exceeded.*size|file size|too large/i.test(e.message || "") ? "Supabase video upload limit issue: ${e.message || "Storage limit error"}" : "Video upload fail hua: " + (e.message || "Storage error") });
+      return res.status(500).json({ error: /maximum allowed size|exceeded.*size|file size|too large/i.test(e.message || "") ? "Supabase Storage limit reject kar raha hai: " + (e.message || "upload limit error") : "Video upload fail hua: " + (e.message || "Storage error") });
     }
   });
 });
