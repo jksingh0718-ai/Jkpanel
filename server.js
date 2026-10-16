@@ -400,6 +400,11 @@ small{color:#a6b2c0}
   <input id="productPrice" required type="number" min="0" max="1000000" step="0.01" placeholder="30" style="width:100%"><br>
   <label for="productImage">Image URL (optional)</label><br>
   <input id="productImage" type="url" maxlength="1000" placeholder="https://..." style="width:100%"><br>
+  <label for="productVideoFile">Product video (phone Gallery se)</label><br>
+  <input id="productVideoFile" type="file" accept="video/mp4,video/webm,video/quicktime" style="width:100%"><br>
+  <input id="productVideoUrl" type="hidden">
+  <small>MP4, WebM ya MOV • maximum 50 MB</small>
+  <p id="videoUploadStatus" role="status"></p>
   <label style="display:block;margin:10px 0"><input id="productPublished" type="checkbox" checked> Show on shop</label>
   <button type="submit" id="productSave">Add Product</button>
   <button type="button" id="productCancel" style="background:#475569;color:white">Clear</button>
@@ -490,13 +495,13 @@ async function loadProducts(){
    const card=document.createElement("article");card.className="card";
    const title=document.createElement("h3");title.textContent=product.name;
    const info=document.createElement("p");info.textContent="Price: ₹"+Number(product.price).toFixed(2)+" | "+(product.published?"Published":"Hidden");
-   const img=document.createElement("p");img.textContent=product.image_url||"No image URL";
+   const img=document.createElement("p");img.textContent=product.image_url||"No image URL";\n   const video=document.createElement("p");video.textContent=product.video_url?"Video: "+product.video_url:"No video uploaded";
    const edit=document.createElement("button");edit.textContent="Edit";
    edit.onclick=()=>{
     document.getElementById("productId").value=product.id;
     document.getElementById("productName").value=product.name;
     document.getElementById("productPrice").value=product.price;
-    document.getElementById("productImage").value=product.image_url||"";
+    document.getElementById("productImage").value=product.image_url||"";\n    document.getElementById("productVideoUrl").value=product.video_url||"";\n    document.getElementById("productVideoFile").value="";\n    document.getElementById("videoUploadStatus").textContent=product.video_url?"Current video saved. Nayi video select karne par replace hogi.":"";
     document.getElementById("productPublished").checked=Boolean(product.published);
     document.getElementById("productSave").textContent="Save Changes";
     document.getElementById("productMessage").textContent="Editing: "+product.name;
@@ -507,14 +512,14 @@ async function loadProducts(){
     try{await api("/api/admin/products/"+encodeURIComponent(product.id),{method:"PATCH",body:JSON.stringify({published:!product.published})});await loadProducts();message.textContent="Product visibility updated.";}
     catch(e){document.getElementById("productMessage").textContent=e.message;}
    };
-   card.append(title,info,img,edit,toggle);root.appendChild(card);
+   card.append(title,info,img,video,edit,toggle);root.appendChild(card);
   });
  }catch(e){document.getElementById("productMessage").textContent=e.message;}
 }
 function clearProductForm(){
  document.getElementById("productForm").reset();
  document.getElementById("productId").value="";
- document.getElementById("productPublished").checked=true;
+ document.getElementById("productPublished").checked=true;\n document.getElementById("productVideoUrl").value="";\n document.getElementById("productVideoFile").value="";\n document.getElementById("videoUploadStatus").textContent="";
  document.getElementById("productSave").textContent="Add Product";
  document.getElementById("productMessage").textContent="";
 }
@@ -522,15 +527,31 @@ document.getElementById("productCancel").onclick=clearProductForm;
 document.getElementById("productForm").onsubmit=async e=>{
  e.preventDefault();
  const id=document.getElementById("productId").value;
- const payload={
-  name:document.getElementById("productName").value.trim(),
-  price:Number(document.getElementById("productPrice").value),
-  image_url:document.getElementById("productImage").value.trim()||null,
-  published:document.getElementById("productPublished").checked
- };
  const status=document.getElementById("productMessage");
+ const videoStatus=document.getElementById("videoUploadStatus");
  try{
   status.textContent=id?"Saving changes...":"Adding product...";
+  let videoUrl=document.getElementById("productVideoUrl").value.trim();
+  const videoFile=document.getElementById("productVideoFile").files[0];
+  if(videoFile){
+   if(videoFile.size>50*1024*1024)throw new Error("Video 50 MB se chhoti honi chahiye.");
+   videoStatus.textContent="Gallery video upload ho rahi hai...";
+   const formData=new FormData();formData.append("video",videoFile);
+   const uploadResponse=await fetch("/api/admin/product-video",{method:"POST",body:formData});
+   const uploadText=await uploadResponse.text();let uploadData={};
+   try{uploadData=uploadText?JSON.parse(uploadText):{};}catch{}
+   if(!uploadResponse.ok)throw new Error(uploadData.error||"Video upload fail hua.");
+   videoUrl=uploadData.video_url;
+   document.getElementById("productVideoUrl").value=videoUrl;
+   videoStatus.textContent="Video upload ho gaya.";
+  }
+  const payload={
+   name:document.getElementById("productName").value.trim(),
+   price:Number(document.getElementById("productPrice").value),
+   image_url:document.getElementById("productImage").value.trim()||null,
+   video_url:videoUrl||null,
+   published:document.getElementById("productPublished").checked
+  };
   await api(id?"/api/admin/products/"+encodeURIComponent(id):"/api/admin/products",{
    method:id?"PATCH":"POST",body:JSON.stringify(payload)
   });
