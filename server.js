@@ -318,7 +318,7 @@ app.get("/api/my-account", async (req, res) => {
     return res.status(500).json({ error: "Referral details load nahi ho sake." });
   }
 
-  const [depositsResult, keysResult, walletResult, referralsResult, commissionsResult] = await Promise.all([
+  const [depositsResult, keysResult, walletResult, referralsResult, commissionsResult, ordersResult] = await Promise.all([
     supabase.from("deposit_requests").select("id, amount, transaction_id, status, created_at")
       .eq("user_id", user.id).order("created_at", { ascending: false }).limit(100),
     supabase.from("customer_keys").select("id, product_name, key_value, status, created_at")
@@ -327,10 +327,13 @@ app.get("/api/my-account", async (req, res) => {
     supabase.from("referral_profiles").select("user_id", { count: "exact", head: true }).eq("referred_by", user.id),
     supabase.from("referral_commissions")
       .select("id, referred_user_id, deposit_request_id, deposit_amount, commission_amount, status, created_at")
-      .eq("referrer_user_id", user.id).order("created_at", { ascending: false }).limit(100)
+      .eq("referrer_user_id", user.id).order("created_at", { ascending: false }).limit(100),
+    supabase.from("orders")
+      .select('id, created_at, "Product_name", "Amount", "Payment_status", "Order status"')
+      .eq("user_id", user.id).order("created_at", { ascending: false }).limit(100)
   ]);
-  if (depositsResult.error || keysResult.error || referralsResult.error || commissionsResult.error) {
-    console.error("Customer account query failed:", depositsResult.error?.message || keysResult.error?.message || referralsResult.error?.message || commissionsResult.error?.message);
+  if (depositsResult.error || keysResult.error || referralsResult.error || commissionsResult.error || ordersResult.error) {
+    console.error("Customer account query failed:", depositsResult.error?.message || keysResult.error?.message || referralsResult.error?.message || commissionsResult.error?.message || ordersResult.error?.message);
     return res.status(500).json({ error: "Account data load nahi ho saka." });
   }
   const deposits = depositsResult.data || [];
@@ -341,6 +344,14 @@ app.get("/api/my-account", async (req, res) => {
     totalDeposited: deposits.filter(d => d.status === "approved").reduce((sum, d) => sum + Number(d.amount || 0), 0),
     pendingDeposits: deposits.filter(d => d.status === "pending").reduce((sum, d) => sum + Number(d.amount || 0), 0),
     deposits,
+    orders: (ordersResult.data || []).map(order => ({
+      id: order.id,
+      product_name: order.Product_name,
+      amount: Number(order.Amount || 0),
+      payment_status: order.Payment_status || "pending",
+      order_status: order["Order status"] || "pending",
+      created_at: order.created_at
+    })),
     keys: keysResult.data || [],
     referral: {
       code: referralProfile.referral_code,
