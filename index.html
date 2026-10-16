@@ -527,9 +527,6 @@ async function openReferral(){
   const root=document.getElementById('popupMessage');
   document.getElementById('popupTitle').textContent='Refer and Earn 🎁';
   root.replaceChildren();
-  const loading=document.createElement('p');
-  loading.textContent='Referral details load ho rahi hain...';
-  root.appendChild(loading);
   document.getElementById('popup').classList.remove('auth-screen');
   document.getElementById('popup').style.display='flex';
   if(!localStorage.getItem('jk_customer_access_token')){
@@ -549,7 +546,7 @@ async function openReferral(){
     const referral=data.referral||{};
     root.replaceChildren();
     const intro=document.createElement('p');
-    intro.textContent='Har referred user ke approved deposit par 1% commission aapke wallet mein credit hoga. Naye user se extra paisa nahi katega.';
+    intro.textContent='Har referred user ke approved deposit par 1% commission aapke wallet mein credit hoga.';
     intro.style.cssText='font-size:13px;line-height:1.6;color:#cbd5e1';
     root.appendChild(intro);
     const stats=document.createElement('div');
