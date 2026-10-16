@@ -396,7 +396,7 @@ function openMyAccount(){
   document.getElementById('popupTitle').textContent='My Account';
   const root=document.getElementById('popupMessage');root.replaceChildren();
   const back=document.createElement('button');back.type='button';back.textContent='← Back to Shop';back.onclick=closePopup;back.style.cssText='width:100%;padding:11px;margin:0 0 14px;background:#263247;color:#e2e8f0;border:1px solid #475569';root.appendChild(back);
-  const loading=document.createElement('p');loading.textContent='Account details load ho rahe hain...';root.appendChild(loading);
+  const loading=document.createElement('p');loading.textContent='OPENING...';root.appendChild(loading);
   document.getElementById('popup').style.display='flex';
   customerApi('/api/my-account').then(data=>{
     root.replaceChildren();
@@ -462,7 +462,7 @@ function openKeysPanel(){
   const root=document.getElementById('popupMessage');
   document.getElementById('popupTitle').textContent='Purchased Keys';
   root.replaceChildren();
-  const loading=document.createElement('p');loading.textContent='Purchased keys load ho rahi hain...';root.appendChild(loading);
+  const loading=document.createElement('p');loading.textContent='OPENING...';root.appendChild(loading);
   document.getElementById('popup').classList.remove('auth-screen');
   document.getElementById('popup').style.display='flex';
   customerApi('/api/my-account').then(data=>{
@@ -482,24 +482,42 @@ function openKeysPanel(){
 }
 
 function openProfilePanel(){
-  const defaultClose=document.getElementById('popupDefaultClose');if(defaultClose)defaultClose.style.display='block';
+  const defaultClose=document.getElementById('popupDefaultClose');
+  if(defaultClose)defaultClose.style.display='block';
   const root=document.getElementById('popupMessage');
   document.getElementById('popupTitle').textContent='Profile';
   root.replaceChildren();
-  const loading=document.createElement('p');loading.textContent='Profile load ho raha hai...';root.appendChild(loading);
+  const opening=document.createElement('p');
+  opening.textContent='OPENING...';
+  opening.style.cssText='text-align:center;padding:18px 0;color:#38bdf8;font-size:13px;font-weight:bold;letter-spacing:2px';
+  root.appendChild(opening);
   document.getElementById('popup').classList.remove('auth-screen');
   document.getElementById('popup').style.display='flex';
+
   customerApi('/api/my-account').then(data=>{
     root.replaceChildren();
-    const profile=document.createElement('div');profile.style.cssText='padding:14px;margin:8px 0;background:#0b1220;border:1px solid #334155;border-radius:10px';
-    const title=document.createElement('h4');title.textContent='My Profile';title.style.cssText='margin-bottom:8px;color:#38bdf8';
-    const email=document.createElement('p');email.textContent='Email: '+(data.email||data.user?.email||'Logged-in account');
-    const balance=document.createElement('p');balance.textContent='Wallet Balance: ₹'+Number(data.walletBalance||0).toFixed(2);balance.style.cssText='margin-top:8px;color:#6ee7b7;font-weight:bold';
-    profile.append(title,email,balance);root.appendChild(profile);
-    const add=document.createElement('button');add.textContent='+ ADD BALANCE / DEPOSIT';add.onclick=()=>{closePopup();deposit();};add.style.cssText='width:100%;padding:12px;margin-top:10px;background:#10b981;color:#04130b';root.appendChild(add);
-    const support=document.createElement('a');support.href='https://wa.me/917645957071?text=Hello%20JK%20PANEL%20SHOP%2C%20mujhe%20support%20chahiye.';support.target='_blank';support.rel='noopener';support.textContent='CONTACT SUPPORT';support.style.cssText='display:block;text-align:center;text-decoration:none;width:100%;padding:12px;margin-top:10px;background:#1d4ed8;color:white;border-radius:8px;font-weight:bold;font-size:13px';root.appendChild(support);
-    const details=document.createElement('button');details.textContent='FULL ACCOUNT & WALLET HISTORY';details.onclick=openMyAccount;details.style.cssText='width:100%;padding:12px;margin-top:10px;background:#263247;color:#e2e8f0';root.appendChild(details);
-  }).catch(e=>{root.replaceChildren();const p=document.createElement('p');p.textContent=e.message;root.appendChild(p);});
+    const profile=document.createElement('div');
+    profile.style.cssText='padding:16px;margin:8px 0;background:#0b1220;border:1px solid #334155;border-radius:10px';
+    const title=document.createElement('h4');
+    title.textContent='My Profile';
+    title.style.cssText='margin-bottom:14px;color:#38bdf8';
+    const email=document.createElement('p');
+    email.textContent='Email: '+(data.email||data.user?.email||'Not available');
+    email.style.cssText='overflow-wrap:anywhere;line-height:1.7';
+    const contact=document.createElement('p');
+    contact.textContent='Contact: '+(data.contact||data.phone||data.phone_number||data.mobile||data.user?.contact||data.user?.phone||data.user?.phone_number||data.user?.mobile||'Not added');
+    contact.style.cssText='margin-top:10px;line-height:1.7';
+    const balance=document.createElement('p');
+    balance.textContent='Wallet Balance: ₹'+Number(data.walletBalance??data.wallet_balance??data.balance??0).toFixed(2);
+    balance.style.cssText='margin-top:12px;color:#6ee7b7;font-weight:bold;font-size:18px';
+    profile.append(title,email,contact,balance);
+    root.appendChild(profile);
+  }).catch(e=>{
+    root.replaceChildren();
+    const p=document.createElement('p');
+    p.textContent=e.message||'Profile open nahi ho saka. Dobara try karein.';
+    root.appendChild(p);
+  });
 }
 
 function setBottomNavActive(name){
