@@ -380,7 +380,8 @@ function openMyAccount(){
     const bal=document.createElement('strong');bal.textContent='Current Wallet Balance: ₹'+Number(data.walletBalance||0).toFixed(2);bal.style.cssText='display:block;font-size:20px;color:#6ee7b7';
     const total=document.createElement('p');total.textContent='Total paisa add hua (approved deposits): ₹'+Number(data.totalDeposited||0).toFixed(2);total.style.margin='8px 0 0';
     const pending=document.createElement('p');pending.textContent='Deposit verification pending: ₹'+Number(data.pendingDeposits||0).toFixed(2);pending.style.margin='5px 0 0';
-    balance.append(bal,total,pending);root.appendChild(balance);
+    const withdrawn=document.createElement('p');withdrawn.textContent='Total paisa nikala (completed withdrawals): ₹'+Number(data.totalWithdrawn||0).toFixed(2);withdrawn.style.margin='5px 0 0';
+    balance.append(bal,total,pending,withdrawn);root.appendChild(balance);
     const add=document.createElement('button');add.textContent='+ ADD WALLET BALANCE';add.onclick=()=>{closePopup();deposit();};add.style.cssText='width:100%;margin:6px 0;padding:11px';root.appendChild(add);
 
     const txTitle=document.createElement('h4');txTitle.textContent='Money Added / Deposit History';txTitle.style.marginTop='16px';root.appendChild(txTitle);
@@ -392,6 +393,18 @@ function openMyAccount(){
       const utr=document.createElement('p');utr.textContent='Transaction ID: '+(d.transaction_id||'—');
       const date=document.createElement('small');date.textContent='Date: '+(d.created_at?new Date(d.created_at).toLocaleString('en-IN'):'—');
       card.append(amount,utr,date);root.appendChild(card);
+    });
+
+    const ledgerTitle=document.createElement('h4');ledgerTitle.textContent='Wallet Transaction History';ledgerTitle.style.marginTop='16px';root.appendChild(ledgerTitle);
+    const transactions=Array.isArray(data.transactions)?data.transactions:[];
+    if(!transactions.length){const p=document.createElement('p');p.textContent='Abhi wallet mein koi completed credit/debit transaction nahi hai.';root.appendChild(p);}
+    transactions.forEach(t=>{
+      const card=document.createElement('div');card.style.cssText='margin-top:8px;padding:10px;border:1px solid #334155;border-radius:8px';
+      const isCredit=t.transaction_type==='credit';
+      const amount=document.createElement('p');amount.textContent=(isCredit?'+ ':'−')+'₹'+Number(t.amount||0).toFixed(2)+' · '+String(t.status||'pending').toUpperCase();amount.style.color=t.status==='completed'?(isCredit?'#6ee7b7':'#fca5a5'):'#fbbf24';
+      const description=document.createElement('p');description.textContent=t.description||(isCredit?'Wallet credit':'Wallet debit');
+      const date=document.createElement('small');date.textContent='Date: '+(t.created_at?new Date(t.created_at).toLocaleString('en-IN'):'—');
+      card.append(amount,description,date);root.appendChild(card);
     });
 
     const ordersTitle=document.createElement('h4');ordersTitle.textContent='Purchased Products / Orders';ordersTitle.style.marginTop='16px';root.appendChild(ordersTitle);
