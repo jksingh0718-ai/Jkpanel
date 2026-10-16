@@ -451,6 +451,18 @@ async function loadOrders(){
    id.textContent="Order ID: "+order.id+" | Created: "+(order.created_at||"");
    const payment=document.createElement("p");
    payment.textContent="Payment: "+order.payment_status;
+   const verifyPayment=document.createElement("button");
+   verifyPayment.textContent="Mark payment verified";
+   verifyPayment.disabled=order.payment_status==="paid";
+   verifyPayment.style.marginRight="8px";
+   verifyPayment.onclick=async()=>{
+    if(!confirm("Payment ko bank/UPI statement se verify kiya hai? Sirf confirmed payment par OK karein."))return;
+    try{
+     await api("/api/admin/orders/"+encodeURIComponent(order.id)+"/payment",{method:"PATCH",body:JSON.stringify({payment_status:"paid"})});
+     message.textContent="Payment marked paid after manual verification.";
+     await loadOrders();
+    }catch(e){message.textContent=e.message;}
+   };
    const orderStatus=document.createElement("p");
    orderStatus.textContent="Order status: "+order.order_status;
    const select=document.createElement("select");
@@ -470,7 +482,7 @@ async function loadOrders(){
      await loadOrders();
     }catch(e){message.textContent=e.message;}
    };
-   card.append(title,details,id,payment,orderStatus,document.createElement("br"),select,save);
+   card.append(title,details,id,payment,verifyPayment,orderStatus,document.createElement("br"),select,save);
    root.appendChild(card);
   });
   message.textContent="";
@@ -692,34 +704,53 @@ app.get("/api/admin/orders", isAdmin, async (req, res) => {
   res.json({ orders: data });
 });
 
+app.patch("/api/admin/orders/:id/payment", isAdmin, async (req, res) => {
+  if (!supabase) return res.status(503).json({ error: "Database is not configured" });
+  if (req.body?.payment_status !== "paid") {
+    return res.status(400).json({ error: "Only verified payment can be marked paid." });
+  }
+  const { data, error } = await supabase.from("orders")
+    .update({ "Payment_status": "paid" })
+    .eq("id", req.params.id)
+    .eq("Payment_status", "pending")
+    .select('id, "Payment_status"')
+    .maybeSingle();
+  if (error) {
+    console.error("Order payment update failed:", error.message);
+    return res.status(500).json({ error: "Could not update payment status" });
+  }
+  if (!data) return res.status(409).json({ error: "Order not found or payment is not pending." });
+  res.json({ success: true, order: data });
+});
+
 app.patch("/api/admin/orders/:id", isAdmin, async (req, res) => {
   if (!supabase) {
     return res.status(503).json({ error: "Database is not configured" });
   }
-
   const { order_status } = req.body || {};
   const allowed = ["pending", "processing", "completed", "cancelled"];
-
   if (!allowed.includes(order_status)) {
     return res.status(400).json({ error: "Invalid order status" });
   }
-
-  const { data, error } = await supabase
-    .from("orders")
+  if (["processing", "completed"].includes(order_status)) {
+    const { data: existing, error: lookupError } = await supabase.from("orders")
+      .select('"Payment_status"').eq("id", req.params.id).maybeSingle();
+    if (lookupError) return res.status(500).json({ error: "Could not verify order payment" });
+    if (!existing) return res.status(404).json({ error: "Order not found" });
+    if (existing.Payment_status !== "paid") {
+      return res.status(409).json({ error: "Payment verify hone ke baad hi order processing/completed karein." });
+    }
+  }
+  const { data, error } = await supabase.from("orders")
     .update({ "Order status": order_status })
     .eq("id", req.params.id)
     .select('id, "Order status"')
     .maybeSingle();
-
   if (error) {
     console.error("Order update failed:", error.message);
     return res.status(500).json({ error: "Could not update order" });
   }
-
-  if (!data) {
-    return res.status(404).json({ error: "Order not found" });
-  }
-
+  if (!data) return res.status(404).json({ error: "Order not found" });
   res.json({ order: data });
 });
 
