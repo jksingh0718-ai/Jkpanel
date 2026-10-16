@@ -641,6 +641,28 @@ async function loadCustomers(){
    const info=document.createElement("p");
    info.textContent="Joined: "+(customer.created_at||"")+" | Email verified: "+(customer.confirmed?"Yes":"No")+" | Approved deposits: ₹"+Number(customer.totalDeposited||0).toFixed(2)+" | Pending: ₹"+Number(customer.pendingDeposits||0).toFixed(2);
    card.append(title,info);
+   const creditTitle=document.createElement("h4");creditTitle.textContent="Manual Wallet Credit";card.appendChild(creditTitle);
+   const creditForm=document.createElement("form");
+   const creditAmount=document.createElement("input");creditAmount.type="number";creditAmount.min="1";creditAmount.max="50000";creditAmount.step="0.01";creditAmount.required=true;creditAmount.placeholder="Amount (₹)";creditAmount.style.width="100%";
+   const creditReason=document.createElement("input");creditReason.type="text";creditReason.minLength=3;creditReason.maxLength=200;creditReason.required=true;creditReason.placeholder="Reason (Bonus / Promotion / Correction)";creditReason.style.width="100%";
+   const creditButton=document.createElement("button");creditButton.type="submit";creditButton.textContent="Add Balance";
+   const creditStatus=document.createElement("p");creditStatus.setAttribute("role","status");
+   creditForm.append(creditAmount,creditReason,creditButton,creditStatus);
+   creditForm.onsubmit=async ev=>{
+    ev.preventDefault();
+    const amount=Number(creditAmount.value),reason=creditReason.value.trim();
+    if(!Number.isFinite(amount)||amount<=0||amount>50000||Math.round(amount*100)!==amount*100){creditStatus.textContent="Amount ₹1 se ₹50,000 tak aur maximum 2 decimal places hona chahiye.";return;}
+    if(reason.length<3){creditStatus.textContent="Reason kam se kam 3 characters ka likhein.";return;}
+    if(!confirm(customer.email+" ke wallet mein ₹"+amount.toFixed(2)+" add karna hai?"))return;
+    creditButton.disabled=true;creditStatus.textContent="Balance add ho raha hai...";
+    try{
+     const result=await api("/api/admin/wallet-credit",{method:"POST",body:JSON.stringify({user_id:customer.id,amount,reason})});
+     creditStatus.textContent="Added ₹"+Number(result.credited_amount).toFixed(2)+" | New balance: ₹"+Number(result.wallet_balance).toFixed(2);
+     creditAmount.value="";creditReason.value="";
+    }catch(err){creditStatus.textContent=err.message;}
+    finally{creditButton.disabled=false;}
+   };
+   card.appendChild(creditForm);
    const depositsTitle=document.createElement("h4");depositsTitle.textContent="Deposit history ("+customer.deposits.length+")";card.appendChild(depositsTitle);
    customer.deposits.forEach(d=>{
     const p=document.createElement("p");
@@ -982,6 +1004,35 @@ app.get("/api/admin/customers", isAdmin, async (req, res) => {
   } catch (e) {
     console.error("Admin customer data exception:", e.message);
     res.status(500).json({ error: "Customer data load nahi ho saka." });
+  }
+});
+
+app.post("/api/admin/wallet-credit", isAdmin, async (req, res) => {
+  if (!supabase) return res.status(503).json({ error: "Database is not configured" });
+  const userId = typeof req.body?.user_id === "string" ? req.body.user_id.trim() : "";
+  const amount = Number(req.body?.amount);
+  const reason = typeof req.body?.reason === "string" ? req.body.reason.trim() : "";
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId)) {
+    return res.status(400).json({ error: "Valid customer account required" });
+  }
+  if (!Number.isFinite(amount) || amount <= 0 || amount > 50000 || Math.round(amount * 100) !== amount * 100) {
+    return res.status(400).json({ error: "Amount ₹1 se ₹50,000 tak aur maximum 2 decimal places hona chahiye." });
+  }
+  if (reason.length < 3 || reason.length > 200) {
+    return res.status(400).json({ error: "Reason 3 se 200 characters ka hona chahiye." });
+  }
+  try {
+    const { data, error } = await supabase.rpc("admin_add_wallet_credit", {
+      p_user_id: userId, p_amount: amount, p_reason: reason
+    });
+    if (error) {
+      console.error("Admin wallet credit failed:", error.message);
+      return res.status(500).json({ error: "Wallet credit nahi ho saka. Database function/schema check karein." });
+    }
+    return res.json({ success: true, ...data });
+  } catch (e) {
+    console.error("Admin wallet credit exception:", e.message);
+    return res.status(500).json({ error: "Wallet credit nahi ho saka." });
   }
 });
 
