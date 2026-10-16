@@ -104,7 +104,7 @@ footer{position:fixed;bottom:0;left:0;right:0;text-align:center;background:#1118
 <a class="menu-item" href="#" onclick="deposit();return false">Deposit</a>
   
   <a class="menu-item" href="#products" onclick="closeMenu()">Buy Keys / Products</a>
-  <a class="menu-item" href="#" onclick="feature('Refer and Earn 🎁');return false">Refer and Earn 🎁</a>
+  <a class="menu-item" href="#" onclick="openReferral();return false">Refer and Earn 🎁</a>
   <a class="menu-item" href="#" onclick="feature('My Keys');return false">My Keys</a>
   <a class="menu-item" href="#" onclick="feature('Order History');return false">Order History</a>
   <a class="menu-item" href="https://wa.me/917645957071" target="_blank" rel="noopener">Contact Support</a>
@@ -136,7 +136,7 @@ footer{position:fixed;bottom:0;left:0;right:0;text-align:center;background:#1118
   <div class="stat"><b>₹0.00</b><span>Wallet Balance</span></div>
   <div class="stat"><b>0</b><span>Total Orders</span></div>
   <div class="stat"><b>0</b><span>Available Keys</span></div>
-  <div class="stat"><b>0</b><span>Refer and Earn 🎁</span></div>
+  <div class="stat"><b id="referralStatCount">0</b><span>Refer and Earn 🎁</span></div>
 </div>
 
 <h3 class="section-title">Quick Services</h3>
@@ -272,7 +272,7 @@ async function registerCustomer(){
   if(password!==confirmPassword){status.textContent='Dono password match nahi karte.';return;}
   status.textContent='Account ban raha hai...';
   try{
-    const data=await customerApi('/api/auth/register',{method:'POST',body:JSON.stringify({email,password})},false);
+    const data=await customerApi('/api/auth/register',{method:'POST',body:JSON.stringify({email,password,referralCode:new URLSearchParams(location.search).get('ref')||''})},false);
     if(data.session){saveCustomerSession(data.session);updateAccountBar(data.user?.email||email);closePopup();await loadMyAccountSummary();}
     else{status.textContent=data.message||'Account ban gaya hai. Ab Login karein.';}
   }catch(e){status.textContent=e.message;}
@@ -365,6 +365,8 @@ async function loadMyAccountSummary(){
   try{
     const data=await customerApi('/api/my-account');
     updateAccountBar(data.user.email);
+    const stat=document.getElementById('referralStatCount');
+    if(stat)stat.textContent=String(data.referral?.referredUsers||0);
   }catch(e){
     if(e.message==='Login required'){clearCustomerSession();updateAccountBar('');}
   }
@@ -518,6 +520,80 @@ status.textContent =
 function feature(name){
   closeMenu();
   showPopup(name, name + ' section abhi setup nahi hua hai. Is feature ko use karne ke liye admin/backend setup zaroori hai.');
+}
+
+async function openReferral(){
+  closeMenu();
+  const root=document.getElementById('popupMessage');
+  document.getElementById('popupTitle').textContent='Refer and Earn 🎁';
+  root.replaceChildren();
+  const loading=document.createElement('p');
+  loading.textContent='Referral details load ho rahi hain...';
+  root.appendChild(loading);
+  document.getElementById('popup').classList.remove('auth-screen');
+  document.getElementById('popup').style.display='flex';
+  if(!localStorage.getItem('jk_customer_access_token')){
+    root.replaceChildren();
+    const p=document.createElement('p');
+    p.textContent='Apna referral link aur commission dekhne ke liye pehle login karein.';
+    root.appendChild(p);
+    const login=document.createElement('button');
+    login.textContent='LOGIN / REGISTER';
+    login.style.cssText='width:100%;padding:12px;margin-top:12px;background:#10b981;color:#04130b';
+    login.onclick=()=>openAuth('login');
+    root.appendChild(login);
+    return;
+  }
+  try{
+    const data=await customerApi('/api/my-account');
+    const referral=data.referral||{};
+    root.replaceChildren();
+    const intro=document.createElement('p');
+    intro.textContent='Har referred user ke approved deposit par 1% commission aapke wallet mein credit hoga. Naye user se extra paisa nahi katega.';
+    intro.style.cssText='font-size:13px;line-height:1.6;color:#cbd5e1';
+    root.appendChild(intro);
+    const stats=document.createElement('div');
+    stats.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px';
+    [[String(referral.referredUsers||0),'Referred Users'],['₹'+Number(referral.totalEarned||0).toFixed(2),'Total Commission']].forEach(item=>{
+      const card=document.createElement('div');
+      card.style.cssText='background:#0b1220;border:1px solid #263247;border-radius:10px;padding:12px';
+      const strong=document.createElement('b');strong.textContent=item[0];strong.style.cssText='display:block;font-size:20px;color:#38bdf8;margin-bottom:5px';
+      const label=document.createElement('span');label.textContent=item[1];label.style.cssText='font-size:11px;color:#94a3b8';
+      card.append(strong,label);stats.appendChild(card);
+    });
+    root.appendChild(stats);
+    const codeLabel=document.createElement('p');codeLabel.textContent='Your referral code: '+(referral.code||'');codeLabel.style.cssText='margin-top:14px;color:#e2e8f0;font-size:13px;font-weight:bold';root.appendChild(codeLabel);
+    const link=document.createElement('input');link.value=referral.link||'';link.readOnly=true;link.style.cssText='width:100%;padding:11px;margin-top:8px;border-radius:8px;background:#030712;color:#fff;border:1px solid #334155;font-size:12px';root.appendChild(link);
+    const copy=document.createElement('button');copy.textContent='COPY REFERRAL LINK';copy.style.cssText='width:100%;padding:12px;margin-top:8px;background:#10b981;color:#04130b';
+    copy.onclick=async()=>{
+      try{
+        await navigator.clipboard.writeText(link.value);
+        copy.textContent='LINK COPIED!';
+      }catch(e){
+        link.focus();link.select();
+        try{document.execCommand('copy');copy.textContent='LINK COPIED!';}
+        catch{copy.textContent='Link select karke copy karein';}
+      }
+    };
+    root.appendChild(copy);
+    const historyTitle=document.createElement('h4');historyTitle.textContent='Commission History';historyTitle.style.cssText='margin-top:18px;margin-bottom:8px';root.appendChild(historyTitle);
+    const commissions=Array.isArray(referral.commissions)?referral.commissions:[];
+    if(!commissions.length){
+      const empty=document.createElement('p');empty.textContent='Abhi commission nahi mila. Referred user ka deposit approve hone par yahan dikhega.';empty.style.cssText='font-size:12px;color:#94a3b8;line-height:1.5';root.appendChild(empty);
+    }else{
+      commissions.forEach(item=>{
+        const row=document.createElement('div');
+        row.style.cssText='padding:10px 0;border-bottom:1px solid #263247;font-size:12px;line-height:1.6';
+        row.textContent='Deposit ₹'+Number(item.deposit_amount||0).toFixed(2)+' · Commission ₹'+Number(item.commission_amount||0).toFixed(2)+' · '+new Date(item.created_at).toLocaleDateString('en-IN');
+        root.appendChild(row);
+      });
+    }
+    const close=document.createElement('button');close.textContent='CLOSE';close.style.cssText='width:100%;padding:12px;margin-top:14px;background:#263247;color:#fff';close.onclick=closePopup;root.appendChild(close);
+    const stat=document.getElementById('referralStatCount');if(stat)stat.textContent=String(referral.referredUsers||0);
+  }catch(e){
+    root.replaceChildren();
+    const p=document.createElement('p');p.textContent=e.message||'Referral details load nahi ho sake.';root.appendChild(p);
+  }
 }
 function buyProduct(name){
   if(!localStorage.getItem('jk_customer_access_token')){
