@@ -83,10 +83,7 @@ footer{position:fixed;bottom:0;left:0;right:0;text-align:center;background:#1118
 
 <div class="brand">JK PANEL SHOP</div>
 <div class="subtitle">Digital Products & Reseller Dashboard</div>
-<div class="account-bar" id="accountBar">
-  <span id="accountLabel">Customer login zaroori hai</span>
-  <button type="button" onclick="openAuth('login')">LOGIN / REGISTER</button>
-</div>
+<div class="account-bar" id="accountBar" style="display:none"></div>
 
 <div class="box" style="border-color:#10b981">
   <h3>Welcome to JK PANEL SHOP!</h3>
@@ -400,7 +397,24 @@ function buyProduct(name){
   showPopup('Buy Keys', name + ' abhi purchase ke liye configure nahi hai. Product price aur order flow admin se configure karna hoga.');
 }
 
-loadMyAccountSummary();
+
+function enforceCustomerLogin(){
+  const token=localStorage.getItem('jk_customer_access_token');
+  if(!token){
+    updateAccountBar('');
+    openAuth('login');
+    return;
+  }
+  customerApi('/api/my-account').then(data=>{
+    updateAccountBar(data.user.email);
+  }).catch(()=>{
+    clearCustomerSession();
+    updateAccountBar('');
+    openAuth('login');
+  });
+}
+
+enforceCustomerLogin();
 
 </script>
   
