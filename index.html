@@ -69,6 +69,20 @@ footer{position:fixed;bottom:0;left:0;right:0;text-align:center;background:#1118
 #popup.auth-screen .auth-footer{text-align:center;color:#444750;margin-top:26px;font-size:12px}
 #popup.auth-screen .auth-close{position:absolute;top:12px;right:12px;width:auto;padding:7px 11px;margin:0;background:#202631;color:#cbd5e1;border-radius:9px}
 
+
+/* Compact, polished login card matching the supplied mobile reference */
+#popup.auth-screen{padding:10px;align-items:center;overflow-y:auto}
+#popup.auth-screen .popup-card{width:100%;max-width:390px;min-height:0;padding:32px 22px 22px;border-radius:25px}
+#popup.auth-screen .popup-card h3{font-size:clamp(24px,6.4vw,30px);margin:18px 0 3px}
+#popup.auth-screen .auth-shield{width:76px;height:76px;font-size:37px;margin-bottom:18px}
+#popup.auth-screen .auth-subtitle{font-size:11px;letter-spacing:3px;margin-bottom:28px}
+#popup.auth-screen .auth-input{padding:15px 17px;border-radius:16px;font-size:15px;margin-bottom:14px}
+#popup.auth-screen .auth-main-btn{padding:18px 10px;border-radius:16px;margin:14px 0 23px}
+#popup.auth-screen .auth-divider{margin-bottom:22px}
+#popup.auth-screen .auth-google{padding:16px 8px;font-size:14px}
+#popup.auth-screen .auth-links{margin-top:20px;font-size:13px;line-height:2.3}
+#popup.auth-screen .auth-footer{margin-top:18px}
+
 </style>
 </head>
 <body>
@@ -234,9 +248,9 @@ function openAuth(mode='login'){
     (isRegister?'<label for="authConfirmPassword" style="display:block;color:#a1a1aa;font-size:12px;margin-bottom:6px">CONFIRM PASSWORD</label><input class="auth-input" id="authConfirmPassword" type="password" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="new-password" placeholder="CONFIRM 6 DIGIT PASSWORD">':'')+
     '<p id="authStatus" aria-live="polite"></p>'+
     '<button class="auth-main-btn" type="button" onclick="'+(isRegister?'registerCustomer()':'loginCustomer()')+'">'+(isRegister?'CREATE ACCOUNT':'LOGIN NOW')+'</button>'+
-    (!isRegister?'<div class="auth-divider">OR LOGIN WITH</div><button class="auth-google" type="button" onclick="showPopup(\'Google Login\',\'Google sign-in abhi configure nahi hai. Email aur password se login karein.\')"><span style="font-size:21px;color:#4285f4;margin-right:12px">G</span> LOG IN WITH GOOGLE</button>':'')+
+    (!isRegister?'<div class="auth-divider">OR LOGIN WITH</div><button class="auth-google" type="button" onclick="showPopup(\'Google Login\',\'Google sign-in abhi configure nahi hai. Email aur password se login karein.\')"><svg aria-hidden="true" viewBox="0 0 48 48" width="24" height="24" style="vertical-align:middle;margin-right:12px"><path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.6c3.9-3.6 6.1-8.8 6.1-15Z"/><path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.9l-6.6-5.1c-1.8 1.2-4.1 2-6.9 2-5.3 0-9.8-3.6-11.4-8.4H5.8v5.3A20 20 0 0 0 24 44Z"/><path fill="#FBBC05" d="M12.6 27.6a12 12 0 0 1 0-7.2v-5.3H5.8a20 20 0 0 0 0 17.8l6.8-5.3Z"/><path fill="#EA4335" d="M24 12c3 0 5.7 1 7.8 3.1l5.8-5.8C34.1 6 29.5 4 24 4A20 20 0 0 0 5.8 15.1l6.8 5.3C14.2 15.6 18.7 12 24 12Z"/></svg> LOG IN WITH GOOGLE</button>':'')+
     '<div class="auth-links">'+
-      (!isRegister?'<a href="#" onclick="showPopup(\'Forgot Password?\',\'Password reset ke liye support se sampark karein.\');return false">Forgot Password?</a><span class="muted"> &nbsp;|&nbsp; </span><a href="#" onclick="showPopup(\'Change Gmail\',\'Gmail change karne ke liye support se sampark karein.\');return false">Change Gmail</a><br>':'')+
+      (!isRegister?'<a href="#" onclick="forgotCustomerPassword();return false">Forgot Password?</a><span class="muted"> &nbsp;|&nbsp; </span><a href="#" onclick="openChangeCustomerEmail();return false">Change Gmail</a><br>':'')+
       '<span class="muted">'+(isRegister?'Already a user?':'New User ?')+'</span> <a href="#" onclick="openAuth(\''+(isRegister?'login':'register')+'\');return false">'+(isRegister?'Login':'Create Account')+'</a>'+
     '</div><div class="auth-footer">© 2026 JK PANEL SYSTEM</div>';
   const card=document.querySelector('#popup .popup-card');
@@ -258,6 +272,42 @@ async function registerCustomer(){
     else{status.textContent=data.message||'Account ban gaya hai. Ab Login karein.';}
   }catch(e){status.textContent=e.message;}
 }
+
+async function forgotCustomerPassword(){
+  const email=document.getElementById('authEmail')?.value.trim();
+  const status=document.getElementById('authStatus');
+  if(!email){if(status)status.textContent='Pehle apna registered email address enter karein.';document.getElementById('authEmail')?.focus();return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){if(status)status.textContent='Valid email address enter karein.';return;}
+  if(status)status.textContent='Password reset request bhej rahe hain...';
+  try{
+    const r=await fetch('https://jkpanel-backend.onrender.com/api/auth/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error||'Password reset request nahi bhej paaye.');
+    if(status)status.textContent=d.message||'Agar is email par account hai, reset instructions bhej di jayengi. Inbox aur spam folder check karein.';
+  }catch(e){if(status)status.textContent=e.message||'Abhi request nahi ho paayi. Thodi der baad try karein.';}
+}
+function openChangeCustomerEmail(){
+  const root=document.getElementById('popupMessage');
+  document.getElementById('popupTitle').textContent='';
+  document.getElementById('popup').classList.add('auth-screen');
+  root.innerHTML='<div class="auth-shield" aria-hidden="true">✉️</div><h3><span style="color:#f8fafc">CHANGE</span> <span style="color:#00e5f3">GMAIL</span></h3><div class="auth-subtitle">VERIFY YOUR ACCOUNT</div><label style="display:block;color:#a1a1aa;font-size:12px;margin-bottom:6px" for="changeOldEmail">CURRENT EMAIL</label><input class="auth-input" id="changeOldEmail" type="email" autocomplete="email" placeholder="Current registered email"><label style="display:block;color:#a1a1aa;font-size:12px;margin-bottom:6px" for="changeEmailPassword">CURRENT 6-DIGIT PASSWORD</label><input class="auth-input" id="changeEmailPassword" type="password" inputmode="numeric" maxlength="6" placeholder="Current password"><label style="display:block;color:#a1a1aa;font-size:12px;margin-bottom:6px" for="changeNewEmail">NEW EMAIL</label><input class="auth-input" id="changeNewEmail" type="email" autocomplete="email" placeholder="New email address"><p id="changeEmailStatus" aria-live="polite" style="color:#cbd5e1;font-size:12px;line-height:1.5"></p><button class="auth-main-btn" type="button" onclick="changeCustomerEmail()">SEND VERIFICATION</button><div class="auth-links"><a href="#" onclick="openAuth(\'login\');return false">Back to Login</a></div>';
+}
+async function changeCustomerEmail(){
+  const oldEmail=document.getElementById('changeOldEmail').value.trim();
+  const password=document.getElementById('changeEmailPassword').value;
+  const newEmail=document.getElementById('changeNewEmail').value.trim();
+  const status=document.getElementById('changeEmailStatus');
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(oldEmail)||!/^\\d{6}$/.test(password)||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)){status.textContent='Current email, 6-digit password aur valid new email enter karein.';return;}
+  if(oldEmail.toLowerCase()===newEmail.toLowerCase()){status.textContent='New email current email se alag hona chahiye.';return;}
+  status.textContent='Verification request bhej rahe hain...';
+  try{
+    const r=await fetch('https://jkpanel-backend.onrender.com/api/auth/change-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:oldEmail,password,newEmail})});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error||'Email change request fail hui.');
+    status.textContent=d.message||'Agar verification email bheji gayi hai, naye email ka inbox check karein aur verification link kholein.';
+  }catch(e){status.textContent=e.message||'Abhi request nahi ho paayi.';}
+}
+
 async function loginCustomer(){
   const email=document.getElementById('authEmail').value.trim();
   const password=document.getElementById('authPassword').value;
