@@ -30,7 +30,7 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json({ limit: "20kb" }));
-const videoUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024, files: 1 }, fileFilter: (req, file, cb) => {
+const videoUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 100 * 1024 * 1024, files: 1 }, fileFilter: (req, file, cb) => {
   const allowed = new Set(["video/mp4", "video/webm", "video/quicktime"]);
   cb(allowed.has(file.mimetype) ? null : new Error("Sirf MP4, WebM ya MOV video upload karein."), allowed.has(file.mimetype));
 } });
@@ -534,7 +534,7 @@ document.getElementById("productForm").onsubmit=async e=>{
   let videoUrl=document.getElementById("productVideoUrl").value.trim();
   const videoFile=document.getElementById("productVideoFile").files[0];
   if(videoFile){
-   if(videoFile.size>50*1024*1024)throw new Error("Video 50 MB se chhoti honi chahiye.");
+   if(videoFile.size>50*1024*1024)throw new Error("Video 100 MB se chhoti honi chahiye.");
    videoStatus.textContent="Gallery video upload ho rahi hai...";
    const formData=new FormData();formData.append("video",videoFile);
    const uploadResponse=await fetch("/api/admin/product-video",{method:"POST",body:formData});
@@ -900,10 +900,16 @@ app.post("/api/admin/product-video", isAdmin, (req, res) => {
       if (bucketListError) throw bucketListError;
       if (!(buckets || []).some(item => item.name === bucket)) {
         const { error: createError } = await supabase.storage.createBucket(bucket, {
-          public: true, fileSizeLimit: "50MB",
+          public: true, fileSizeLimit: "100MB",
           allowedMimeTypes: ["video/mp4", "video/webm", "video/quicktime"]
         });
         if (createError && !/already exists/i.test(createError.message || "")) throw createError;
+      } else {
+        const { error: updateBucketError } = await supabase.storage.updateBucket(bucket, {
+          public: true, fileSizeLimit: "100MB",
+          allowedMimeTypes: ["video/mp4", "video/webm", "video/quicktime"]
+        });
+        if (updateBucketError) throw updateBucketError;
       }
       const extByType = { "video/mp4": "mp4", "video/webm": "webm", "video/quicktime": "mov" };
       const fileName = crypto.randomUUID() + "." + extByType[req.file.mimetype];
