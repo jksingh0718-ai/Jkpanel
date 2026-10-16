@@ -50,6 +50,46 @@ const authClient = supabaseUrl
     })
   : null;
 
+
+async function ensureReferralProfile(userId, referralCodeInput = null) {
+  const { data: existing, error: lookupError } = await supabase
+    .from("referral_profiles")
+    .select("user_id, referral_code, referred_by")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (lookupError) throw lookupError;
+  if (existing) return existing;
+
+  let referredBy = null;
+  const incomingCode = typeof referralCodeInput === "string" ? referralCodeInput.trim().toUpperCase() : "";
+  if (incomingCode) {
+    const { data: sponsor } = await supabase
+      .from("referral_profiles")
+      .select("user_id")
+      .eq("referral_code", incomingCode)
+      .maybeSingle();
+    if (sponsor && sponsor.user_id !== userId) referredBy = sponsor.user_id;
+  }
+
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const referralCode = crypto.randomBytes(5).toString("hex").toUpperCase();
+    const { data, error } = await supabase
+      .from("referral_profiles")
+      .insert({ user_id: userId, referral_code: referralCode, referred_by: referredBy })
+      .select("user_id, referral_code, referred_by")
+      .single();
+    if (!error) return data;
+    if (error.code === "23505") {
+      const { data: raced } = await supabase.from("referral_profiles")
+        .select("user_id, referral_code, referred_by").eq("user_id", userId).maybeSingle();
+      if (raced) return raced;
+      continue;
+    }
+    throw error;
+  }
+  throw new Error("Could not create referral profile");
+}
+
 async function getAuthenticatedUser(req) {
   const authHeader = req.headers.authorization || "";
   const match = authHeader.match(/^Bearer\s+(.+)$/i);
@@ -121,6 +161,8 @@ app.post("/api/auth/register", async (req, res) => {
     return res.status(400).json({ error: "Password exactly 6 digits ka hona chahiye." });
   }
 
+  const referralCode = typeof req.body?.referralCode === "string" ? req.body.referralCode : null;
+
   // Create and auto-confirm the account server-side; no OTP/email confirmation step.
   const { data: created, error: createError } = await supabase.auth.admin.createUser({
     email,
@@ -133,6 +175,12 @@ app.post("/api/auth/register", async (req, res) => {
       ? "Is email se account pehle se hai. Login karein."
       : (createError.message || "Registration failed");
     return res.status(400).json({ error: message });
+  }
+
+  try {
+    await ensureReferralProfile(created.user.id, referralCode);
+  } catch (profileError) {
+    console.error("Referral profile creation failed:", profileError.message);
   }
 
   // Sign in immediately so the customer can use the site without a separate login.
@@ -253,25 +301,45 @@ app.get("/api/my-account", async (req, res) => {
   const user = await getAuthenticatedUser(req);
   if (!user) return res.status(401).json({ error: "Login required" });
 
-  const [depositsResult, keysResult, walletResult] = await Promise.all([
+  let referralProfile;
+  try {
+    referralProfile = await ensureReferralProfile(user.id);
+  } catch (profileError) {
+    console.error("Referral profile load failed:", profileError.message);
+    return res.status(500).json({ error: "Referral details load nahi ho sake." });
+  }
+
+  const [depositsResult, keysResult, walletResult, referralsResult, commissionsResult] = await Promise.all([
     supabase.from("deposit_requests").select("id, amount, transaction_id, status, created_at")
       .eq("user_id", user.id).order("created_at", { ascending: false }).limit(100),
     supabase.from("customer_keys").select("id, product_name, key_value, status, created_at")
       .eq("user_id", user.id).order("created_at", { ascending: false }).limit(100),
-    supabase.from("wallets").select("balance").eq("user_id", user.id).maybeSingle()
+    supabase.from("wallets").select("balance").eq("user_id", user.id).maybeSingle(),
+    supabase.from("referral_profiles").select("user_id", { count: "exact", head: true }).eq("referred_by", user.id),
+    supabase.from("referral_commissions")
+      .select("id, referred_user_id, deposit_request_id, deposit_amount, commission_amount, status, created_at")
+      .eq("referrer_user_id", user.id).order("created_at", { ascending: false }).limit(100)
   ]);
-  if (depositsResult.error || keysResult.error) {
-    console.error("Customer account query failed:", depositsResult.error?.message || keysResult.error?.message);
+  if (depositsResult.error || keysResult.error || referralsResult.error || commissionsResult.error) {
+    console.error("Customer account query failed:", depositsResult.error?.message || keysResult.error?.message || referralsResult.error?.message || commissionsResult.error?.message);
     return res.status(500).json({ error: "Account data load nahi ho saka." });
   }
   const deposits = depositsResult.data || [];
+  const commissions = commissionsResult.data || [];
   res.json({
     user: { id: user.id, email: user.email },
     walletBalance: Number(walletResult.data?.balance || 0),
     totalDeposited: deposits.filter(d => d.status === "approved").reduce((sum, d) => sum + Number(d.amount || 0), 0),
     pendingDeposits: deposits.filter(d => d.status === "pending").reduce((sum, d) => sum + Number(d.amount || 0), 0),
     deposits,
-    keys: keysResult.data || []
+    keys: keysResult.data || [],
+    referral: {
+      code: referralProfile.referral_code,
+      link: "https://jkpanel.shop/?ref=" + encodeURIComponent(referralProfile.referral_code),
+      referredUsers: Number(referralsResult.count || 0),
+      totalEarned: commissions.reduce((sum, item) => sum + Number(item.commission_amount || 0), 0),
+      commissions
+    }
   });
 });
 
@@ -655,26 +723,39 @@ app.patch("/api/admin/deposit-requests/:id", isAdmin, async (req, res) => {
     return res.status(400).json({ error: "Invalid status" });
   }
 
-  const { data, error } = await supabase
-    .from("deposit_requests")
-    .update({ status })
-    .eq("id", req.params.id)
-    .eq("status", "pending")
-    .select("id, amount, status")
-    .maybeSingle();
+  if (status === "rejected") {
+    const { data, error } = await supabase
+      .from("deposit_requests")
+      .update({ status: "rejected" })
+      .eq("id", req.params.id)
+      .eq("status", "pending")
+      .select("id, amount, status")
+      .maybeSingle();
 
+    if (error) {
+      console.error("Deposit rejection failed:", error.message);
+      return res.status(500).json({ error: "Could not update deposit" });
+    }
+    if (!data) return res.status(404).json({ error: "Pending request not found" });
+    return res.json({ success: true, request: data });
+  }
+
+  const { data, error } = await supabase.rpc("approve_deposit_with_referral", {
+    p_deposit_id: req.params.id
+  });
   if (error) {
-    console.error("Deposit update failed:", error.message);
-    return res.status(500).json({ error: "Could not update deposit" });
+    console.error("Deposit approval failed:", error.message);
+    if (/Pending request not found/i.test(error.message || "")) {
+      return res.status(404).json({ error: "Pending request not found" });
+    }
+    return res.status(500).json({ error: "Could not approve deposit or credit referral commission" });
   }
-
-  if (!data) {
-    return res.status(404).json({
-      error: "Pending request not found"
-    });
-  }
-
-  res.json({ success: true, request: data });
+  res.json({
+    success: true,
+    request: data.request,
+    commission: Number(data.commission || 0),
+    commissionCredited: Boolean(data.commissionCredited)
+  });
 });
 
 app.listen(PORT, () => {
