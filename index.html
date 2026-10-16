@@ -693,11 +693,7 @@ function restoreCustomerSession(){
     updateAccountBar('');
     return;
   }
-  customerApi('/api/my-account').then(data=>{
-    updateAccountBar(data.user.email);
-    const referralStat=document.getElementById('referralStatCount');
-    if(referralStat) referralStat.textContent=String((data.referral && data.referral.referredUsers) || 0);
-  }).catch(()=>{
+  loadMyAccountSummary().catch(()=>{
     clearCustomerSession();
     updateAccountBar('');
   });
