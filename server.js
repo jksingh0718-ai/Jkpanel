@@ -819,10 +819,12 @@ async function purchaseDripWireKey({ orderId, userId, productName, duration, sup
       status: typeof result?.status === "string" ? result.status.slice(0, 80) : null,
       error: typeof result?.error === "string" ? result.error.slice(0, 200) : null,
       message: typeof result?.message === "string" ? result.message.slice(0, 200) : null,
+      msg: typeof result?.msg === "string" ? result.msg.slice(0, 200) : null,
       keysCount: Array.isArray(result?.keys) ? result.keys.length : null
     }));
     const message = typeof result.error === "string" ? result.error :
       typeof result.message === "string" ? result.message :
+      typeof result.msg === "string" ? result.msg :
       "Supplier did not return any keys.";
     throw new Error(message.slice(0, 300));
   }
