@@ -204,7 +204,7 @@ async function submitDepositRequest(){
   status.textContent = 'Request submit ho rahi hai...';
 
   try {
-    const response = await fetch('/api/deposit-requests', {
+    const response = await fetch('https://jkpanel-backend.onrender.com/api/deposit-requests', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
