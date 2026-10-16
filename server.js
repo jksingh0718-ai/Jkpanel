@@ -722,10 +722,10 @@ app.get("/api/admin/orders", isAdmin, async (req, res) => {
 
 function dripWireDuration(productName) {
   const name = String(productName || "").trim().toLowerCase();
-  if (name === "drip wire - 6 hours") return "6hrs";
-  if (name === "drip wire - 12 hours") return "12hrs";
-  if (name === "drip wire - 1 day") return "1day";
-  if (name === "drip wire - 7 days") return "7days";
+  if (name === "drip wire - 6 hours") return "6 Hours";
+  if (name === "drip wire - 12 hours") return "12 Hours";
+  if (name === "drip wire - 1 day") return "1 Day";
+  if (name === "drip wire - 7 days") return "7 Days";
   return null;
 }
 
