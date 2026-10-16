@@ -528,10 +528,11 @@ function feature(name){
 
 async function openReferral(){
   closeMenu();
-  const defaultClose=document.getElementById('popupDefaultClose');if(defaultClose)defaultClose.style.display='none';
+  const defaultClose=document.getElementById('popupDefaultClose');if(defaultClose)defaultClose.style.display='block';
   const root=document.getElementById('popupMessage');
   document.getElementById('popupTitle').textContent='Refer and Earn 🎁';
   root.replaceChildren();
+  const opening=document.createElement('p');opening.textContent='OPENING...';opening.style.cssText='text-align:center;padding:18px 0;color:#38bdf8;font-size:13px;font-weight:bold;letter-spacing:2px';root.appendChild(opening);
   document.getElementById('popup').classList.remove('auth-screen');
   document.getElementById('popup').style.display='flex';
   if(!localStorage.getItem('jk_customer_access_token')){
@@ -590,8 +591,6 @@ async function openReferral(){
         root.appendChild(row);
       });
     }
-    const openingLabel=document.createElement('p');openingLabel.textContent='OPENING';openingLabel.style.cssText='margin-top:14px;text-align:center;color:#94a3b8;font-size:11px;font-weight:bold;letter-spacing:2px';root.appendChild(openingLabel);
-    const close=document.createElement('button');close.textContent='CLOSE';close.style.cssText='width:100%;padding:12px;margin-top:6px;background:#263247;color:#fff';close.onclick=closePopup;root.appendChild(close);
     const stat=document.getElementById('referralStatCount');if(stat)stat.textContent=String(referral.referredUsers||0);
   }catch(e){
     root.replaceChildren();
