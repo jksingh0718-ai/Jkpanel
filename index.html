@@ -350,7 +350,7 @@ async function changeCustomerEmail(){
   const password=document.getElementById('changeEmailPassword').value;
   const newEmail=document.getElementById('changeNewEmail').value.trim();
   const status=document.getElementById('changeEmailStatus');
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(oldEmail)||!/^\\d{6}$/.test(password)||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)){status.textContent='Current email, 6-digit password aur valid new email enter karein.';return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(oldEmail)||!/^\d{6}$/.test(password)||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)){status.textContent='Current email, 6-digit password aur valid new email enter karein.';return;}
   if(oldEmail.toLowerCase()===newEmail.toLowerCase()){status.textContent='New email current email se alag hona chahiye.';return;}
   status.textContent='Verification request bhej rahe hain...';
   try{
