@@ -815,11 +815,19 @@ async function buyProduct(product){
       method:'POST',
       body:JSON.stringify({product_id:product.id})
     });
-    showPopup('Order submitted',
-      'Order request submit ho gayi!\nOrder ID: '+result.order.id+
-      '\nProduct: '+result.order.product_name+
-      '\nAmount: ₹'+Number(result.order.amount).toFixed(2)+
-      '\nStatus: Pending admin review. Payment verified hone tak order complete nahi hoga.');
+    if(result.order?.supplier_status==='completed'){
+      showPopup('Purchase successful',
+        'Wallet se ₹'+Number(result.order.amount).toFixed(2)+' deduct hue.\\nProduct: '+result.order.product_name+
+        '\\nOrder ID: '+result.order.id+
+        '\\nKey automatic My Account → Keys mein deliver ho gayi.\\nWallet balance: ₹'+Number(result.order.wallet_balance||0).toFixed(2));
+      if(typeof loadMyAccountSummary==='function') loadMyAccountSummary().catch(()=>{});
+    }else{
+      showPopup('Order submitted',
+        'Order request submit ho gayi!\\nOrder ID: '+result.order.id+
+        '\\nProduct: '+result.order.product_name+
+        '\\nAmount: ₹'+Number(result.order.amount).toFixed(2)+
+        '\\nStatus: Pending admin review. Payment verified hone tak order complete nahi hoga.');
+    }
   }catch(error){
     showPopup('Order failed',error.message||'Order submit nahi ho saka. Dobara try karein.');
   }finally{
