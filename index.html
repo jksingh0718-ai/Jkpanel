@@ -185,24 +185,51 @@ function downloadDepositQR(){
   link.remove();
 }
 
-function submitDepositRequest(){
+
+async function submitDepositRequest(){
   const amount = Number(document.getElementById('depositAmount').value);
   const txn = document.getElementById('depositTxn').value.trim();
   const status = document.getElementById('depositStatus');
 
-  if(!Number.isInteger(amount) || amount < 1 || amount > 50000){
-    status.textContent = '₹1 se ₹50,000 tak valid amount enter karein.';
+  if(!Number.isInteger(amount) || amount < 1 || amount > 10000){
+    status.textContent = '₹1 se ₹10,000 tak valid amount enter karein.';
     return;
   }
 
-  if(txn.length < 6){
+  if(txn.length < 6 || txn.length > 100){
     status.textContent = 'Valid Transaction ID / UTR enter karein.';
     return;
   }
 
-  status.textContent =
-    'Details check ho gayi hain, lekin request save karne ke liye secure backend connection abhi zaroori hai. Wallet balance abhi add nahi hua.';
+  status.textContent = 'Request submit ho rahi hai...';
+
+  try {
+    const response = await fetch('/api/deposit-requests', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        amount: amount,
+        transaction_id: txn
+      })
+    });
+
+    const data = await response.json();
+
+    if(!response.ok){
+      throw new Error(data.error || 'Request submit nahi hui.');
+    }
+
+    status.textContent =
+      'Deposit request submit ho gayi! Request ID: ' +
+      data.request.id +
+      '. Payment verification pending hai.';
+
+  } catch(error) {
+    status.textContent =
+      'Request submit nahi hui: ' + error.message;
+  }
 }
+  
   
 </script>
   
