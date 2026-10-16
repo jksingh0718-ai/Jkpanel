@@ -213,21 +213,39 @@ async function submitDepositRequest(){
       })
     });
 
-    const data = await response.json();
+    const text = await response.text();
+let data = {};
 
-    if(!response.ok){
-      throw new Error(data.error || 'Request submit nahi hui.');
-    }
+try {
+  data = text ? JSON.parse(text) : {};
+} catch {
+  throw new Error(
+    `Server ne invalid response diya (HTTP ${response.status}). Render Logs check karo.`
+  );
+}
 
-    status.textContent =
-      'Deposit request submit ho gayi! Request ID: ' +
-      data.request.id +
-      '. Payment verification pending hai.';
+if (!response.ok) {
+  throw new Error(
+    data.error || `Server error (HTTP ${response.status})`
+  );
+}
 
-  } catch(error) {
-    status.textContent =
-      'Request submit nahi hui: ' + error.message;
-  }
+if (!data.request || !data.request.id) {
+  throw new Error(
+    `Server response incomplete (HTTP ${response.status}). Render Logs check karo.`
+  );
+}
+
+status.textContent =
+  'Deposit request submit ho gayi! Request ID: ' +
+  data.request.id +
+  '. Payment verification pending hai.';
+
+} catch(error) {
+  status.textContent =
+    'Request submit nahi hui: ' + error.message;
+}
+}
 }
   
   
