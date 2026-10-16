@@ -614,7 +614,7 @@ async function loadShopProducts(){
    const price=document.createElement('p');price.textContent='Price: ₹'+Number(product.price).toFixed(2);
    info.append(title,price);
    const buy=document.createElement('button');buy.className='buy';buy.textContent='BUY KEYS';
-   buy.onclick=()=>buyProduct(product.name);
+   buy.onclick=()=>buyProduct(product);
    card.append(info,buy);root.appendChild(card);
   });
  }catch(e){
@@ -622,12 +622,32 @@ async function loadShopProducts(){
  }
 }
 
-function buyProduct(name){
+async function buyProduct(product){
+  if(!product || !product.id){
+    showPopup('Order failed','Product details nahi mile. Page refresh karke dobara try karein.');
+    return;
+  }
   if(!localStorage.getItem('jk_customer_access_token')){
     openAuth('login');
     return;
   }
-  showPopup('Buy Keys', name + ' abhi purchase ke liye configure nahi hai. Product price aur order flow admin se configure karna hoga.');
+  const buttons=document.querySelectorAll('#shopProducts button.buy');
+  buttons.forEach(button=>button.disabled=true);
+  try{
+    const result=await customerApi('/api/orders',{
+      method:'POST',
+      body:JSON.stringify({product_id:product.id})
+    });
+    showPopup('Order submitted',
+      'Order request submit ho gayi!\nOrder ID: '+result.order.id+
+      '\nProduct: '+result.order.product_name+
+      '\nAmount: ₹'+Number(result.order.amount).toFixed(2)+
+      '\nStatus: Pending admin review. Payment verified hone tak order complete nahi hoga.');
+  }catch(error){
+    showPopup('Order failed',error.message||'Order submit nahi ho saka. Dobara try karein.');
+  }finally{
+    buttons.forEach(button=>button.disabled=false);
+  }
 }
 
 
