@@ -96,7 +96,6 @@ footer{position:fixed;bottom:0;left:0;right:0;text-align:center;background:#1118
 <h3 class="section-title">Quick Services</h3>
 <div class="box">
   <button class="action" onclick="deposit()">WALLET RECHARGE</button>
-  <button class="action purple" onclick="feature('My Resellers')">RESELLER PANEL</button>
   <button class="action blue" onclick="feature('Order History')">ORDER HISTORY</button>
 </div>
 
@@ -104,15 +103,15 @@ footer{position:fixed;bottom:0;left:0;right:0;text-align:center;background:#1118
 
 <div class="product">
   <div class="product-info"><h4>Digital Product 1</h4><p>Price: To be announced</p></div>
-  <button class="buy" onclick="buyProduct('Digital Product 1')">BUY NOW</button>
+  <button class="buy" onclick="buyProduct('Digital Product 1')">BUY KEYS</button>
 </div>
 <div class="product">
   <div class="product-info"><h4>Digital Product 2</h4><p>Price: To be announced</p></div>
-  <button class="buy" onclick="buyProduct('Digital Product 2')">BUY NOW</button>
+  <button class="buy" onclick="buyProduct('Digital Product 2')">BUY KEYS</button>
 </div>
 <div class="product">
   <div class="product-info"><h4>Digital Product 3</h4><p>Price: To be announced</p></div>
-  <button class="buy" onclick="buyProduct('Digital Product 3')">BUY NOW</button>
+  <button class="buy" onclick="buyProduct('Digital Product 3')">BUY KEYS</button>
 </div>
 
 <div class="box">
@@ -121,7 +120,7 @@ footer{position:fixed;bottom:0;left:0;right:0;text-align:center;background:#1118
   <a class="action" href="https://wa.me/917645957071?text=Hello%20JK%20PANEL%20SHOP%2C%20mujhe%20help%20chahiye." target="_blank" rel="noopener">CONTACT ON WHATSAPP</a>
 </div>
 
-<a class="whatsapp-float" href="https://wa.me/917645957071" target="_blank" rel="noopener" aria-label="WhatsApp">☎</a>
+<a class="whatsapp-float" href="https://wa.me/917645957071" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M16 3.2A12.6 12.6 0 0 0 5.2 22.3L3.5 28.5l6.4-1.7A12.6 12.6 0 1 0 16 3.2Zm0 22.9a10.2 10.2 0 0 1-5.2-1.4l-.4-.2-3.8 1 1-3.7-.3-.4A10.2 10.2 0 1 1 16 26.1Zm5.6-7.6c-.3-.2-1.8-.9-2.1-1s-.5-.2-.7.2-.8 1-.9 1.1-.3.2-.6.1a8.3 8.3 0 0 1-2.5-1.5 9.2 9.2 0 0 1-1.7-2.1c-.2-.3 0-.5.1-.6l.5-.6c.2-.2.2-.3.3-.5s0-.4 0-.5-.7-1.7-1-2.3c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4s-1.1 1.1-1.1 2.6 1.1 3 1.2 3.2a11.8 11.8 0 0 0 4.5 4c.6.3 1.1.5 1.5.6.6.2 1.2.2 1.7.1.5-.1 1.8-.7 2-1.4s.3-1.3.2-1.4-.2-.2-.5-.4Z"/></svg></a>
 
 <div id="popup" onclick="if(event.target===this)closePopup()">
   <div class="popup-card">
@@ -255,7 +254,7 @@ function feature(name){
   showPopup(name, name + ' section abhi setup nahi hua hai. Is feature ko use karne ke liye admin/backend setup zaroori hai.');
 }
 function buyProduct(name){
-  showPopup('Buy Product', name + ' abhi purchase ke liye configure nahi hai. Product price aur order flow admin se configure karna hoga.');
+  showPopup('Buy Keys', name + ' abhi purchase ke liye configure nahi hai. Product price aur order flow admin se configure karna hoga.');
 }
 
 </script>
