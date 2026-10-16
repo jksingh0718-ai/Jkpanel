@@ -200,9 +200,9 @@ function openAuth(mode='login'){
   root.innerHTML=
     '<label for="authEmail" style="display:block;margin-bottom:5px">Email address</label>'+
     '<input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com" style="width:100%;padding:12px;border-radius:8px;border:1px solid #475569;margin-bottom:12px;color:#111827">'+
-    '<label for="authPassword" style="display:block;margin-bottom:5px">6-digit numeric password</label>'+
-    '<input id="authPassword" type="password" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="'+(mode==='register'?'new-password':'current-password')+'" placeholder="••••••" style="width:100%;padding:12px;border-radius:8px;border:1px solid #475569;color:#111827">'+
-    '<p style="margin-top:8px;color:#fbbf24;font-size:12px">Security note: 6 digits weak hote hain. Apna UPI/bank PIN yahan use na karein.</p>'+
+    '<label for="authPassword" style="display:block;margin-bottom:5px">Enter 6 digit password</label>'+
+    '<input id="authPassword" type="password" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="'+(mode==='register'?'new-password':'current-password')+'" placeholder="Enter 6 digit password" style="width:100%;padding:12px;border-radius:8px;border:1px solid #475569;color:#111827">'+
+    (mode==='register' ? '<label for="authConfirmPassword" style="display:block;margin-top:12px;margin-bottom:5px">Confirm password</label>'+'<input id="authConfirmPassword" type="password" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="new-password" placeholder="Confirm 6 digit password" style="width:100%;padding:12px;border-radius:8px;border:1px solid #475569;color:#111827">' : '')+
     '<p id="authStatus" style="margin-top:8px;color:#cbd5e1;font-size:12px"></p>'+
     '<button class="action" type="button" onclick="'+(mode==='register'?'registerCustomer()':'loginCustomer()')+'">'+(mode==='register'?'CREATE ACCOUNT':'LOGIN')+'</button>'+
     '<button class="action blue" type="button" onclick="openAuth(\''+(mode==='register'?'login':'register')+'\')">'+(mode==='register'?'Already account hai? Login':'New customer? Register')+'</button>';
@@ -211,8 +211,10 @@ function openAuth(mode='login'){
 async function registerCustomer(){
   const email=document.getElementById('authEmail').value.trim();
   const password=document.getElementById('authPassword').value;
+  const confirmPassword=document.getElementById('authConfirmPassword')?.value || '';
   const status=document.getElementById('authStatus');
   if(!email||!/^\d{6}$/.test(password)){status.textContent='Valid email aur exactly 6 digits enter karein.';return;}
+  if(password!==confirmPassword){status.textContent='Dono password match nahi karte.';return;}
   status.textContent='Account ban raha hai...';
   try{
     const data=await customerApi('/api/auth/register',{method:'POST',body:JSON.stringify({email,password})},false);
