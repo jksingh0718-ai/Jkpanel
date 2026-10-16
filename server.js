@@ -923,6 +923,7 @@ app.post("/api/orders", async (req, res) => {
   }
 
   const { data: order, error: orderError } = await supabase.from("orders").insert({
+    user_id: user.id,
     "Customer_name": user.email || "Customer",
     "Product_name": product.name,
     "Amount": amount,
