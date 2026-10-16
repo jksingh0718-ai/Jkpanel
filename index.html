@@ -147,18 +147,7 @@ footer{position:fixed;bottom:0;left:0;right:0;text-align:center;background:#1118
 
 <h3 class="section-title" id="products">Our Products</h3>
 
-<div class="product">
-  <div class="product-info"><h4>Digital Product 1</h4><p>Price: To be announced</p></div>
-  <button class="buy" onclick="buyProduct('Digital Product 1')">BUY KEYS</button>
-</div>
-<div class="product">
-  <div class="product-info"><h4>Digital Product 2</h4><p>Price: To be announced</p></div>
-  <button class="buy" onclick="buyProduct('Digital Product 2')">BUY KEYS</button>
-</div>
-<div class="product">
-  <div class="product-info"><h4>Digital Product 3</h4><p>Price: To be announced</p></div>
-  <button class="buy" onclick="buyProduct('Digital Product 3')">BUY KEYS</button>
-</div>
+<div id="shopProducts"><p style="color:#94a3b8;font-size:12px;margin-top:10px">Products load ho rahe hain...</p></div>
 
 <div class="box">
   <h3>Need Help?</h3>
@@ -597,6 +586,38 @@ async function openReferral(){
     const p=document.createElement('p');p.textContent=e.message||'Referral details load nahi ho sake.';root.appendChild(p);
   }
 }
+
+async function loadShopProducts(){
+ const root=document.getElementById('shopProducts');
+ if(!root)return;
+ try{
+  const response=await fetch('https://jkpanel-backend.onrender.com/api/products');
+  const data=await response.json();
+  if(!response.ok)throw new Error(data.error||'Products load nahi ho sake.');
+  root.replaceChildren();
+  if(!Array.isArray(data.products)||!data.products.length){
+   const empty=document.createElement('p');empty.textContent='Abhi products available nahi hain.';empty.style.cssText='color:#94a3b8;font-size:12px;margin-top:10px';root.appendChild(empty);return;
+  }
+  data.products.forEach(product=>{
+   const card=document.createElement('div');card.className='product';
+   if(product.image_url){
+    const img=document.createElement('img');img.src=product.image_url;img.alt=product.name;img.loading='lazy';
+    img.style.cssText='width:58px;height:58px;object-fit:contain;border-radius:8px;background:#0b0f19';
+    img.onerror=()=>img.remove();card.appendChild(img);
+   }
+   const info=document.createElement('div');info.className='product-info';
+   const title=document.createElement('h4');title.textContent=product.name;
+   const price=document.createElement('p');price.textContent='Price: ₹'+Number(product.price).toFixed(2);
+   info.append(title,price);
+   const buy=document.createElement('button');buy.className='buy';buy.textContent='BUY KEYS';
+   buy.onclick=()=>buyProduct(product.name);
+   card.append(info,buy);root.appendChild(card);
+  });
+ }catch(e){
+  root.replaceChildren();const p=document.createElement('p');p.textContent=e.message||'Products load nahi ho sake.';p.style.cssText='color:#fca5a5;font-size:12px;margin-top:10px';root.appendChild(p);
+ }
+}
+
 function buyProduct(name){
   if(!localStorage.getItem('jk_customer_access_token')){
     openAuth('login');
@@ -623,6 +644,7 @@ function restoreCustomerSession(){
 }
 
 restoreCustomerSession();
+loadShopProducts();
 
 </script>
   
