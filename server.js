@@ -925,6 +925,7 @@ app.post("/api/admin/products", isAdmin, async (req, res) => {
   const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
   const price = Number(req.body?.price);
   const imageUrl = typeof req.body?.image_url === "string" ? req.body.image_url.trim() : "";
+  const videoUrl = typeof req.body?.video_url === "string" ? req.body.video_url.trim() : "";
   const published = req.body?.published === true;
   if (!name || name.length > 120 || !Number.isFinite(price) || price < 0 || price > 1000000) {
     return res.status(400).json({ error: "Product name aur valid price enter karein." });
@@ -932,9 +933,10 @@ app.post("/api/admin/products", isAdmin, async (req, res) => {
   if (imageUrl && (imageUrl.length > 1000 || !/^https:\/\//i.test(imageUrl))) {
     return res.status(400).json({ error: "Image URL https:// se shuru hona chahiye." });
   }
+  if (videoUrl && (videoUrl.length > 2000 || !/^https:\/\//i.test(videoUrl))) return res.status(400).json({ error: "Video URL https:// se shuru hona chahiye." });
   const { data, error } = await supabase.from("products")
-    .insert({ name, price, image_url: imageUrl || null, published })
-    .select("id, name, price, image_url, published").single();
+    .insert({ name, price, image_url: imageUrl || null, video_url: videoUrl || null, published })
+    .select("id, name, price, image_url, video_url, published").single();
   if (error) {
     console.error("Product create failed:", error.message);
     return res.status(500).json({ error: "Product save nahi ho saka." });
@@ -961,6 +963,11 @@ app.patch("/api/admin/products/:id", isAdmin, async (req, res) => {
     if (imageUrl && (imageUrl.length > 1000 || !/^https:\/\//i.test(imageUrl)))
       return res.status(400).json({ error: "Image URL https:// se shuru hona chahiye." });
     updates.image_url = imageUrl || null;
+  }
+  if (Object.prototype.hasOwnProperty.call(req.body || {}, "video_url")) {
+    const videoUrl = typeof req.body.video_url === "string" ? req.body.video_url.trim() : "";
+    if (videoUrl && (videoUrl.length > 2000 || !/^https:\/\//i.test(videoUrl))) return res.status(400).json({ error: "Video URL https:// se shuru hona chahiye." });
+    updates.video_url = videoUrl || null;
   }
   if (Object.prototype.hasOwnProperty.call(req.body || {}, "published")) {
     if (typeof req.body.published !== "boolean") return res.status(400).json({ error: "Invalid published value." });
