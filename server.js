@@ -1107,6 +1107,76 @@ app.post("/api/orders", async (req, res) => {
     return res.status(400).json({ error: "Is product ki price admin panel mein sahi set karein." });
   }
 
+  if (/^DRIP Wire - /i.test(product.name || "")) {
+    const duration = dripWireDuration(product.name);
+    if (!duration) return res.status(400).json({ error: "DRIP Wire duration configured nahi hai." });
+
+    const { data: purchase, error: walletError } = await supabase.rpc("create_wallet_product_order", {
+      p_user_id: user.id,
+      p_product_id: product.id
+    });
+    if (walletError) {
+      const message = String(walletError.message || "");
+      if (message.includes("INSUFFICIENT_WALLET_BALANCE")) {
+        return res.status(402).json({ error: "Wallet balance kam hai. Pehle wallet mein deposit karein." });
+      }
+      if (message.includes("WALLET_NOT_FOUND")) {
+        return res.status(402).json({ error: "Wallet nahi mila. Pehle wallet mein deposit add karein." });
+      }
+      if (message.includes("PRODUCT_UNAVAILABLE")) return res.status(404).json({ error: "Product ab available nahi hai." });
+      console.error("Wallet purchase order creation failed:", message);
+      return res.status(500).json({ error: "Wallet order create nahi hua. Balance check karke hi dobara try karein." });
+    }
+
+    const orderId = purchase?.order_id;
+    if (!orderId) {
+      console.error("Wallet purchase RPC returned no order id");
+      return res.status(500).json({ error: "Order confirm nahi hua. Support se contact karein." });
+    }
+    try {
+      const delivered = await purchaseDripWireKey({
+        orderId,
+        userId: user.id,
+        productName: product.name,
+        duration
+      });
+      const { data: finalOrder } = await supabase.from("orders")
+        .select('id, created_at, "Product_name", "Amount", "Payment_status", "Order status", supplier_status')
+        .eq("id", orderId).maybeSingle();
+      return res.status(201).json({
+        success: true,
+        order: {
+          id: orderId,
+          product_name: product.name,
+          amount,
+          payment_status: "paid",
+          order_status: finalOrder?.["Order status"] || "completed",
+          supplier_status: "completed",
+          key_count: delivered.keyCount,
+          wallet_balance: Number(purchase.wallet_balance),
+          created_at: finalOrder?.created_at || new Date().toISOString()
+        },
+        message: "Wallet se payment ho gayi aur key My Account mein deliver kar di gayi."
+      });
+    } catch (supplierError) {
+      const safeMessage = String(supplierError?.message || "Supplier delivery failed").slice(0, 250);
+      console.error("DRIP Wire wallet purchase delivery failed:", safeMessage);
+      const { data: refunded, error: refundError } = await supabase.rpc("refund_wallet_product_order", {
+        p_order_id: orderId,
+        p_user_id: user.id,
+        p_reason: safeMessage
+      });
+      if (refundError) console.error("Wallet refund failed; admin must reconcile:", refundError.message);
+      return res.status(502).json({
+        success: false,
+        refunded: refunded === true,
+        error: refunded === true
+          ? "Supplier key nahi de saka. Paisa wallet mein wapas kar diya gaya."
+          : "Supplier delivery fail hui. Wallet/order status admin se verify karwayein; abhi dobara buy na karein."
+      });
+    }
+  }
+
   const { data: order, error: orderError } = await supabase.from("orders").insert({
     user_id: user.id,
     "Customer_name": user.email || "Customer",
