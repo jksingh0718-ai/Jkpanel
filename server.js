@@ -30,7 +30,7 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json({ limit: "20kb" }));
-const videoUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 100 * 1024 * 1024, files: 1 }, fileFilter: (req, file, cb) => {
+const videoUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 30 * 1024 * 1024, files: 1 }, fileFilter: (req, file, cb) => {
   const allowed = new Set(["video/mp4", "video/webm", "video/quicktime"]);
   cb(allowed.has(file.mimetype) ? null : new Error("Sirf MP4, WebM ya MOV video upload karein."), allowed.has(file.mimetype));
 } });
@@ -900,13 +900,13 @@ app.post("/api/admin/product-video", isAdmin, (req, res) => {
       if (bucketListError) throw bucketListError;
       if (!(buckets || []).some(item => item.name === bucket)) {
         const { error: createError } = await supabase.storage.createBucket(bucket, {
-          public: true, fileSizeLimit: "100MB",
+          public: true, fileSizeLimit: "30MB",
           allowedMimeTypes: ["video/mp4", "video/webm", "video/quicktime"]
         });
         if (createError && !/already exists/i.test(createError.message || "")) throw createError;
       } else {
         const { error: updateBucketError } = await supabase.storage.updateBucket(bucket, {
-          public: true, fileSizeLimit: "100MB",
+          public: true, fileSizeLimit: "30MB",
           allowedMimeTypes: ["video/mp4", "video/webm", "video/quicktime"]
         });
         if (updateBucketError) throw updateBucketError;
@@ -921,7 +921,7 @@ app.post("/api/admin/product-video", isAdmin, (req, res) => {
       return res.status(201).json({ success: true, video_url: publicUrl.publicUrl });
     } catch (e) {
       console.error("Product video upload failed:", e.message);
-      return res.status(500).json({ error: "Video upload nahi hua. Supabase Storage settings check karein." });
+      return res.status(500).json({ error: /maximum allowed size|exceeded.*size|file size|too large/i.test(e.message || "") ? "Video 30 MB limit se bada hai ya Supabase ki global upload limit kam hai. Video 30 MB se chhoti rakhein." : "Video upload fail hua: " + (e.message || "Storage error") });
     }
   });
 });
