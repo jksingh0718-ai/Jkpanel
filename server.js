@@ -193,6 +193,28 @@ app.post("/api/auth/forgot-password", async (req, res) => {
   return res.json({ success: true, message: "Agar is email par account hai, password reset instructions bhej di jayengi. Inbox aur spam folder check karein." });
 });
 
+app.post("/api/auth/verify-reset-otp", async (req, res) => {
+  if (!authClient) return res.status(503).json({ error: "Authentication is not configured" });
+  const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
+  const token = typeof req.body?.token === "string" ? req.body.token.trim() : "";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !/^\d{6}$/.test(token)) return res.status(400).json({ error: "Valid email aur 6-digit OTP enter karein." });
+  const { data, error } = await authClient.auth.verifyOtp({ email, token, type: "recovery" });
+  if (error || !data?.session?.access_token) return res.status(400).json({ error: "OTP galat hai ya expire ho gaya. Naya OTP mangwayein." });
+  return res.json({ success: true, access_token: data.session.access_token });
+});
+
+app.post("/api/auth/complete-password-reset", async (req, res) => {
+  if (!authClient) return res.status(503).json({ error: "Authentication is not configured" });
+  const accessToken = typeof req.body?.accessToken === "string" ? req.body.accessToken : "";
+  const password = typeof req.body?.password === "string" ? req.body.password : "";
+  if (!accessToken || !/^\d{6}$/.test(password)) return res.status(400).json({ error: "Verified OTP session aur 6-digit naya password required hai." });
+  const { data: userData, error: userError } = await authClient.auth.getUser(accessToken);
+  if (userError || !userData?.user) return res.status(401).json({ error: "OTP verification session expire ho gaya. Dobara OTP verify karein." });
+  const response = await fetch(supabaseUrl.replace(/\/+$/, "") + "/auth/v1/user", { method: "PUT", headers: { "Content-Type": "application/json", "apikey": supabasePublishableKey, "Authorization": "Bearer " + accessToken }, body: JSON.stringify({ password }) });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) { const msg = typeof result.msg === "string" ? result.msg : typeof result.message === "string" ? result.message : ""; return res.status(response.status >= 500 ? 502 : 400).json({ error: msg || "Naya password save nahi hua." }); }
+  return res.json({ success: true, message: "Password successfully reset ho gaya." });
+});
 app.post("/api/auth/change-email", async (req, res) => {
   if (!authClient || !supabaseUrl) return res.status(503).json({ error: "Authentication is not configured" });
   const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
