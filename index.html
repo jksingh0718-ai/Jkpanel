@@ -59,6 +59,8 @@ footer{position:fixed;bottom:0;left:0;right:0;text-align:center;background:#1118
     <button onclick="closeMenu()" style="background:#263247;color:white;padding:8px">✕</button>
   </div>
   <a class="menu-item" href="#" onclick="closeMenu()">Dashboard</a>
+  <a class="menu-item" id="menuLogin" href="#" onclick="openAuth(\'login\');return false">LOGIN / REGISTER</a>
+  <a class="menu-item" id="menuLogout" href="#" onclick="logoutCustomer();closeMenu();return false" style="display:none">LOGOUT</a>
 
 <a class="menu-item" href="#" onclick="deposit();return false">Deposit</a>
   
@@ -178,6 +180,10 @@ async function customerApi(url,options={},retry=true){
   return data;
 }
 function updateAccountBar(email){
+  const menuLogin=document.getElementById('menuLogin');
+  const menuLogout=document.getElementById('menuLogout');
+  if(menuLogin){menuLogin.textContent=email?'MY ACCOUNT':'LOGIN / REGISTER';menuLogin.onclick=()=>{closeMenu();if(email)openMyAccount();else openAuth('login');return false;};}
+  if(menuLogout)menuLogout.style.display=email?'block':'none';
   const bar=document.getElementById('accountBar');
   bar.replaceChildren();
   const label=document.createElement('span');
@@ -219,7 +225,7 @@ async function registerCustomer(){
   try{
     const data=await customerApi('/api/auth/register',{method:'POST',body:JSON.stringify({email,password})},false);
     if(data.session){saveCustomerSession(data.session);updateAccountBar(data.user?.email||email);closePopup();await loadMyAccountSummary();}
-    else{status.textContent='Registration request ho gayi. Email verification link check karein, phir login karein.';}
+    else{status.textContent=data.message||'Account ban gaya hai. Ab Login karein.';}
   }catch(e){status.textContent=e.message;}
 }
 async function loginCustomer(){
