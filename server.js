@@ -403,7 +403,7 @@ small{color:#a6b2c0}
   <label for="productVideoFile">Product video (phone Gallery se)</label><br>
   <input id="productVideoFile" type="file" accept="video/mp4,video/webm,video/quicktime" style="width:100%"><br>
   <input id="productVideoUrl" type="hidden">
-  <small>MP4, WebM ya MOV • maximum 50 MB</small>
+  <small>MP4, WebM ya MOV • maximum 100 MB</small>
   <p id="videoUploadStatus" role="status"></p>
   <label style="display:block;margin:10px 0"><input id="productPublished" type="checkbox" checked> Show on shop</label>
   <button type="submit" id="productSave">Add Product</button>
@@ -534,7 +534,7 @@ document.getElementById("productForm").onsubmit=async e=>{
   let videoUrl=document.getElementById("productVideoUrl").value.trim();
   const videoFile=document.getElementById("productVideoFile").files[0];
   if(videoFile){
-   if(videoFile.size>50*1024*1024)throw new Error("Video 100 MB se chhoti honi chahiye.");
+   if(videoFile.size>100*1024*1024)throw new Error("Video 100 MB se chhoti honi chahiye.");
    videoStatus.textContent="Gallery video upload ho rahi hai...";
    const formData=new FormData();formData.append("video",videoFile);
    const uploadResponse=await fetch("/api/admin/product-video",{method:"POST",body:formData});
