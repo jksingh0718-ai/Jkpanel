@@ -30,6 +30,10 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json({ limit: "20kb" }));
+const imageUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 8 * 1024 * 1024, files: 1 }, fileFilter: (req, file, cb) => {
+  const allowed = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+  cb(allowed.has(file.mimetype) ? null : new Error("Sirf JPG, PNG, WebP ya GIF image upload karein."), allowed.has(file.mimetype));
+} });
 const videoUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 100 * 1024 * 1024, files: 1 }, fileFilter: (req, file, cb) => {
   const allowed = new Set(["video/mp4", "video/webm", "video/quicktime"]);
   cb(allowed.has(file.mimetype) ? null : new Error("Sirf MP4, WebM ya MOV video upload karein."), allowed.has(file.mimetype));
@@ -398,8 +402,11 @@ small{color:#a6b2c0}
   <input id="productName" required maxlength="120" placeholder="Product name" style="width:100%"><br>
   <label for="productPrice">Selling price (₹)</label><br>
   <input id="productPrice" required type="number" min="0" max="1000000" step="0.01" placeholder="30" style="width:100%"><br>
-  <label for="productImage">Image URL (optional)</label><br>
-  <input id="productImage" type="url" maxlength="1000" placeholder="https://..." style="width:100%"><br>
+  <label for="productImageFile">Product photo (phone Gallery se)</label><br>
+  <input id="productImageFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif" style="width:100%"><br>
+  <input id="productImage" type="hidden">
+  <small>JPG, PNG, WebP ya GIF • maximum 8 MB</small>
+  <p id="imageUploadStatus" role="status"></p>
   <label for="productVideoFile">Product video (phone Gallery se)</label><br>
   <input id="productVideoFile" type="file" accept="video/mp4,video/webm,video/quicktime" style="width:100%"><br>
   <input id="productVideoUrl" type="hidden">
@@ -519,7 +526,7 @@ async function loadProducts(){
 function clearProductForm(){
  document.getElementById("productForm").reset();
  document.getElementById("productId").value="";
- document.getElementById("productPublished").checked=true;\n document.getElementById("productVideoUrl").value="";\n document.getElementById("productVideoFile").value="";\n document.getElementById("videoUploadStatus").textContent="";
+ document.getElementById("productPublished").checked=true;\n document.getElementById("productImage").value="";\n document.getElementById("productImageFile").value="";\n document.getElementById("imageUploadStatus").textContent="";\n document.getElementById("productVideoUrl").value="";\n document.getElementById("productVideoFile").value="";\n document.getElementById("videoUploadStatus").textContent="";
  document.getElementById("productSave").textContent="Add Product";
  document.getElementById("productMessage").textContent="";
 }
@@ -531,6 +538,21 @@ document.getElementById("productForm").onsubmit=async e=>{
  const videoStatus=document.getElementById("videoUploadStatus");
  try{
   status.textContent=id?"Saving changes...":"Adding product...";
+  let imageUrl=document.getElementById("productImage").value.trim();
+  const imageStatus=document.getElementById("imageUploadStatus");
+  const imageFile=document.getElementById("productImageFile").files[0];
+  if(imageFile){
+   if(imageFile.size>8*1024*1024)throw new Error("Photo 8 MB se chhoti honi chahiye.");
+   imageStatus.textContent="Gallery photo upload ho rahi hai...";
+   const imageForm=new FormData();imageForm.append("image",imageFile);
+   const imageResponse=await fetch("/api/admin/product-image",{method:"POST",body:imageForm});
+   const imageText=await imageResponse.text();let imageData={};
+   try{imageData=imageText?JSON.parse(imageText):{};}catch{}
+   if(!imageResponse.ok)throw new Error(imageData.error||"Photo upload fail hua.");
+   imageUrl=imageData.image_url;
+   document.getElementById("productImage").value=imageUrl;
+   imageStatus.textContent="Photo upload ho gayi.";
+  }
   let videoUrl=document.getElementById("productVideoUrl").value.trim();
   const videoFile=document.getElementById("productVideoFile").files[0];
   if(videoFile){
@@ -548,7 +570,7 @@ document.getElementById("productForm").onsubmit=async e=>{
   const payload={
    name:document.getElementById("productName").value.trim(),
    price:Number(document.getElementById("productPrice").value),
-   image_url:document.getElementById("productImage").value.trim()||null,
+   image_url:imageUrl||null,
    video_url:videoUrl||null,
    published:document.getElementById("productPublished").checked
   };
@@ -887,6 +909,43 @@ app.get("/api/admin/products", isAdmin, async (req, res) => {
     return res.status(500).json({ error: "Products load nahi ho sake." });
   }
   res.json({ products: data || [] });
+});
+
+app.post("/api/admin/product-image", isAdmin, (req, res) => {
+  imageUpload.single("image")(req, res, async (uploadError) => {
+    if (uploadError) return res.status(400).json({ error: uploadError.message || "Photo upload failed." });
+    if (!supabase) return res.status(503).json({ error: "Database is not configured" });
+    if (!req.file) return res.status(400).json({ error: "Phone Gallery se photo select karein." });
+    try {
+      const bucket = "product-images";
+      const { data: buckets, error: bucketListError } = await supabase.storage.listBuckets();
+      if (bucketListError) throw bucketListError;
+      if (!(buckets || []).some(item => item.name === bucket)) {
+        const { error: createError } = await supabase.storage.createBucket(bucket, {
+          public: true, fileSizeLimit: "8MB",
+          allowedMimeTypes: ["image/jpeg", "image/png", "image/webp", "image/gif"]
+        });
+        if (createError && !/already exists/i.test(createError.message || "")) throw createError;
+      } else {
+        const { error: updateBucketError } = await supabase.storage.updateBucket(bucket, {
+          public: true, fileSizeLimit: "8MB",
+          allowedMimeTypes: ["image/jpeg", "image/png", "image/webp", "image/gif"]
+        });
+        if (updateBucketError) throw updateBucketError;
+      }
+      const extByType = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif" };
+      const fileName = crypto.randomUUID() + "." + extByType[req.file.mimetype];
+      const { error: uploadError } = await supabase.storage.from(bucket).upload(fileName, req.file.buffer, {
+        contentType: req.file.mimetype, upsert: false
+      });
+      if (uploadError) throw uploadError;
+      const { data: publicUrl } = supabase.storage.from(bucket).getPublicUrl(fileName);
+      return res.status(201).json({ success: true, image_url: publicUrl.publicUrl });
+    } catch (e) {
+      console.error("Product image upload failed:", e.message);
+      return res.status(500).json({ error: /maximum allowed size|exceeded.*size|file size|too large/i.test(e.message || "") ? "Photo 8 MB se chhoti rakhein; Supabase ki global upload limit bhi check karein." : "Photo upload fail hua: " + (e.message || "Storage error") });
+    }
+  });
 });
 
 app.post("/api/admin/product-video", isAdmin, (req, res) => {
