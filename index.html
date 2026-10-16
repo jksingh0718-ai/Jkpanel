@@ -845,8 +845,8 @@ async function loadShopProducts(){
   }
 
   const products=data.products;
-  const dripProducts=products.filter(product=>/^DRIP Wire\\s*-\\s*/i.test(product.name||''));
-  const otherProducts=products.filter(product=>!/^DRIP Wire\\s*-\\s*/i.test(product.name||''));
+  const dripProducts=products.filter(product=>/^DRIP Wire\s*-\s*/i.test(product.name||''));
+  const otherProducts=products.filter(product=>!/^DRIP Wire\s*-\s*/i.test(product.name||''));
 
   if(dripProducts.length){
    const card=document.createElement('article');
@@ -877,7 +877,7 @@ async function loadShopProducts(){
     purchase.textContent=open?'HIDE DURATIONS':'PURCHASE KEY';
    };
    dripProducts.forEach(product=>{
-    const duration=(product.name||'DRIP Wire').replace(/^DRIP Wire\\s*-\\s*/i,'').trim()||'Duration';
+    const duration=(product.name||'DRIP Wire').replace(/^DRIP Wire\s*-\s*/i,'').trim()||'Duration';
     const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid #263247';
     const details=document.createElement('div');details.style.cssText='min-width:0;flex:1';
     const durationLabel=document.createElement('p');durationLabel.textContent=duration;durationLabel.style.cssText='font-size:14px;font-weight:bold;color:#f8fafc';
