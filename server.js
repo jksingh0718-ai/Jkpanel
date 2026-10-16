@@ -746,7 +746,20 @@ function dripWireDuration(productName) {
   return null;
 }
 
-async function purchaseDripWireKey({ orderId, userId, productName, duration }) {
+function aimHackDuration(productName) {
+  const name = String(productName || "").trim().toLowerCase().replace(/\s+/g, " ");
+  if (name === "aim hack ff" || name === "aim hack ff - 1 hour") return "1 Hour";
+  if (name === "aim hack ff - 3 hours") return "3 Hours";
+  if (name === "aim hack ff - 6 hours") return "6 Hours";
+  if (name === "aim hack ff - 12 hours") return "12 Hours";
+  if (name === "aim hack ff - 1 day") return "1 Day";
+  if (name === "aim hack ff - 3 days") return "3 Days";
+  if (name === "aim hack ff - 7 days") return "7 Days";
+  if (name === "aim hack ff - 30 days") return "30 Days";
+  return null;
+}
+
+async function purchaseDripWireKey({ orderId, userId, productName, duration, supplierProductId = "150" }) {
   const apiKey = process.env.RESELLER_API_KEY;
   const masterKey = process.env.RESELLER_ACCESS_TOKEN;
   if (!apiKey || !masterKey) {
@@ -756,7 +769,7 @@ async function purchaseDripWireKey({ orderId, userId, productName, duration }) {
   const body = new URLSearchParams({
     api_key: apiKey,
     action: "buy",
-    product_id: "150",
+    product_id: String(supplierProductId),
     duration,
     quantity: "1"
   });
@@ -834,16 +847,19 @@ app.patch("/api/admin/orders/:id/payment", isAdmin, async (req, res) => {
   }
 
   const productName = existing["Product_name"] || "";
-  const duration = dripWireDuration(productName);
   const isDripWire = /^DRIP Wire - /i.test(productName);
-  const nextSupplierStatus = isDripWire ? (duration ? "processing" : "failed") : "not_applicable";
+  const isAimHack = /^AIM HACK FF(?: - |$)/i.test(productName);
+  const duration = isDripWire ? dripWireDuration(productName) : (isAimHack ? aimHackDuration(productName) : null);
+  const usesSupplier = isDripWire || isAimHack;
+  const supplierProductId = isAimHack ? "133" : "150";
+  const nextSupplierStatus = usesSupplier ? (duration ? "processing" : "failed") : "not_applicable";
 
   const { data, error } = await supabase.from("orders")
     .update({
       "Payment_status": "paid",
       supplier_status: nextSupplierStatus,
       supplier_duration: duration,
-      supplier_error: isDripWire && !duration ? "Unsupported DRIP Wire duration." : null
+      supplier_error: usesSupplier && !duration ? "Unsupported supplier product duration." : null
     })
     .eq("id", req.params.id)
     .eq("Payment_status", "pending")
@@ -855,11 +871,11 @@ app.patch("/api/admin/orders/:id/payment", isAdmin, async (req, res) => {
   }
   if (!data) return res.status(409).json({ error: "Order not found or payment is not pending." });
 
-  if (!isDripWire) {
-    return res.json({ success: true, order: data, message: "Payment verified. This product does not use the DRIP Wire supplier." });
+  if (!usesSupplier) {
+    return res.json({ success: true, order: data, message: "Payment verified. This product does not use the automatic supplier." });
   }
   if (!duration) {
-    return res.status(422).json({ success: false, order: data, error: "Payment verified, but this DRIP Wire duration is not configured. Contact admin." });
+    return res.status(422).json({ success: false, order: data, error: "Payment verified, but this supplier duration is not configured. Contact admin." });
   }
 
   try {
@@ -867,7 +883,8 @@ app.patch("/api/admin/orders/:id/payment", isAdmin, async (req, res) => {
       orderId: existing.id,
       userId: existing.user_id,
       productName,
-      duration
+      duration,
+      supplierProductId
     });
     const { data: finalOrder } = await supabase.from("orders")
       .select('id, "Payment_status", supplier_status, supplier_duration, "Order status"')
@@ -876,7 +893,7 @@ app.patch("/api/admin/orders/:id/payment", isAdmin, async (req, res) => {
       success: true,
       order: finalOrder || data,
       supplier: { status: "completed", keyCount: delivered.keyCount },
-      message: "Payment verified and DRIP Wire key delivered to My Account."
+      message: "Payment verified and key delivered to My Account."
     });
   } catch (purchaseError) {
     const safeMessage = String(purchaseError?.message || "Supplier purchase failed").slice(0, 300);
@@ -1123,9 +1140,12 @@ app.post("/api/orders", async (req, res) => {
     return res.status(400).json({ error: "Is product ki price admin panel mein sahi set karein." });
   }
 
-  if (/^DRIP Wire - /i.test(product.name || "")) {
-    const duration = dripWireDuration(product.name);
-    if (!duration) return res.status(400).json({ error: "DRIP Wire duration configured nahi hai." });
+  const isDripWire = /^DRIP Wire - /i.test(product.name || "");
+  const isAimHack = /^AIM HACK FF(?: - |$)/i.test(product.name || "");
+  if (isDripWire || isAimHack) {
+    const duration = isDripWire ? dripWireDuration(product.name) : aimHackDuration(product.name);
+    const supplierProductId = isAimHack ? "133" : "150";
+    if (!duration) return res.status(400).json({ error: "Product duration configured nahi hai." });
 
     const { data: purchase, error: walletError } = await supabase.rpc("create_wallet_product_order", {
       p_user_id: user.id,
@@ -1154,7 +1174,8 @@ app.post("/api/orders", async (req, res) => {
         orderId,
         userId: user.id,
         productName: product.name,
-        duration
+        duration,
+        supplierProductId
       });
       const { data: finalOrder } = await supabase.from("orders")
         .select('id, created_at, "Product_name", "Amount", "Payment_status", "Order status", supplier_status')
