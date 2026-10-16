@@ -375,6 +375,16 @@ function openMyAccount(){
     const dh=document.createElement('h4');dh.textContent='Deposit History';dh.style.marginTop='12px';root.appendChild(dh);
     if(!data.deposits.length){const p=document.createElement('p');p.textContent='Abhi koi deposit request nahi hai.';root.appendChild(p);}
     data.deposits.forEach(d=>{const p=document.createElement('p');p.textContent='₹'+d.amount+' | '+d.status+' | UTR: '+d.transaction_id+' | '+(d.created_at||'');p.style.marginTop='7px';root.appendChild(p);});
+    const oh=document.createElement('h4');oh.textContent='My Orders';oh.style.marginTop='12px';root.appendChild(oh);
+    if(!data.orders || !data.orders.length){const p=document.createElement('p');p.textContent='Abhi koi order nahi hai.';root.appendChild(p);}
+    (data.orders||[]).forEach(o=>{
+      const card=document.createElement('div');card.style.cssText='margin-top:8px;padding:10px;border:1px solid #334155;border-radius:8px';
+      const title=document.createElement('p');title.textContent=o.product_name+' — ₹'+Number(o.amount||0).toFixed(2);
+      const payment=document.createElement('p');payment.textContent='Payment: '+o.payment_status;
+      const status=document.createElement('p');status.textContent='Order status: '+o.order_status;
+      const date=document.createElement('small');date.textContent='Order ID: '+o.id+' | '+(o.created_at||'');
+      card.append(title,payment,status,date);root.appendChild(card);
+    });
     const kh=document.createElement('h4');kh.textContent='My Keys';kh.style.marginTop='12px';root.appendChild(kh);
     if(!data.keys.length){const p=document.createElement('p');p.textContent='Abhi koi key assign nahi hui.';root.appendChild(p);}
     data.keys.forEach(k=>{const p=document.createElement('p');p.textContent=k.product_name+' — KEY: '+k.key_value+' ('+k.status+')';p.style.marginTop='7px';root.appendChild(p);});
