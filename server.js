@@ -3,6 +3,7 @@
 const express = require("express");
 const path = require("path");
 const crypto = require("crypto");
+const multer = require("multer");
 const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
@@ -29,6 +30,10 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json({ limit: "20kb" }));
+const videoUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024, files: 1 }, fileFilter: (req, file, cb) => {
+  const allowed = new Set(["video/mp4", "video/webm", "video/quicktime"]);
+  cb(allowed.has(file.mimetype) ? null : new Error("Sirf MP4, WebM ya MOV video upload karein."), allowed.has(file.mimetype));
+} });
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -843,7 +848,7 @@ app.patch("/api/admin/deposit-requests/:id", isAdmin, async (req, res) => {
 app.get("/api/products", async (req, res) => {
   if (!supabase) return res.status(503).json({ error: "Database is not configured" });
   const { data, error } = await supabase.from("products")
-    .select("id, name, price, image_url").eq("published", true).order("created_at", { ascending: false });
+    .select("id, name, price, image_url, video_url").eq("published", true).order("created_at", { ascending: false });
   if (error) {
     console.error("Public products load failed:", error.message);
     return res.status(500).json({ error: "Products load nahi ho sake." });
@@ -854,13 +859,44 @@ app.get("/api/products", async (req, res) => {
 app.get("/api/admin/products", isAdmin, async (req, res) => {
   if (!supabase) return res.status(503).json({ error: "Database is not configured" });
   const { data, error } = await supabase.from("products")
-    .select("id, name, price, image_url, published, created_at, updated_at")
+    .select("id, name, price, image_url, video_url, published, created_at, updated_at")
     .order("created_at", { ascending: false });
   if (error) {
     console.error("Admin products load failed:", error.message);
     return res.status(500).json({ error: "Products load nahi ho sake." });
   }
   res.json({ products: data || [] });
+});
+
+app.post("/api/admin/product-video", isAdmin, (req, res) => {
+  videoUpload.single("video")(req, res, async (uploadError) => {
+    if (uploadError) return res.status(400).json({ error: uploadError.message || "Video upload failed." });
+    if (!supabase) return res.status(503).json({ error: "Database is not configured" });
+    if (!req.file) return res.status(400).json({ error: "Gallery se video select karein." });
+    try {
+      const bucket = "product-videos";
+      const { data: buckets, error: bucketListError } = await supabase.storage.listBuckets();
+      if (bucketListError) throw bucketListError;
+      if (!(buckets || []).some(item => item.name === bucket)) {
+        const { error: createError } = await supabase.storage.createBucket(bucket, {
+          public: true, fileSizeLimit: "50MB",
+          allowedMimeTypes: ["video/mp4", "video/webm", "video/quicktime"]
+        });
+        if (createError && !/already exists/i.test(createError.message || "")) throw createError;
+      }
+      const extByType = { "video/mp4": "mp4", "video/webm": "webm", "video/quicktime": "mov" };
+      const fileName = crypto.randomUUID() + "." + extByType[req.file.mimetype];
+      const { error: uploadError } = await supabase.storage.from(bucket).upload(fileName, req.file.buffer, {
+        contentType: req.file.mimetype, upsert: false
+      });
+      if (uploadError) throw uploadError;
+      const { data: publicUrl } = supabase.storage.from(bucket).getPublicUrl(fileName);
+      return res.status(201).json({ success: true, video_url: publicUrl.publicUrl });
+    } catch (e) {
+      console.error("Product video upload failed:", e.message);
+      return res.status(500).json({ error: "Video upload nahi hua. Supabase Storage settings check karein." });
+    }
+  });
 });
 
 app.post("/api/admin/products", isAdmin, async (req, res) => {
@@ -912,7 +948,7 @@ app.patch("/api/admin/products/:id", isAdmin, async (req, res) => {
   if (!Object.keys(updates).length) return res.status(400).json({ error: "Koi product change nahi mila." });
   updates.updated_at = new Date().toISOString();
   const { data, error } = await supabase.from("products").update(updates)
-    .eq("id", req.params.id).select("id, name, price, image_url, published").maybeSingle();
+    .eq("id", req.params.id).select("id, name, price, image_url, video_url, published").maybeSingle();
   if (error) {
     console.error("Product update failed:", error.message);
     return res.status(500).json({ error: "Product update nahi ho saka." });
