@@ -107,28 +107,58 @@ app.get("/", (req, res) => {
 
 
 app.post("/api/auth/register", async (req, res) => {
-  if (!authClient) return res.status(503).json({ error: "Authentication is not configured" });
+  if (!supabase || !authClient) {
+    return res.status(503).json({ error: "Authentication is not configured" });
+  }
+
   const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
   const password = typeof req.body?.password === "string" ? req.body.password : "";
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+
+  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
     return res.status(400).json({ error: "Valid email address enter karein." });
   }
-  if (!/^\d{6}$/.test(password)) {
+  if (!/^\\d{6}$/.test(password)) {
     return res.status(400).json({ error: "Password exactly 6 digits ka hona chahiye." });
   }
-  const { data, error } = await authClient.auth.signUp({ email, password });
-  if (error) {
-    return res.status(400).json({ error: error.message || "Registration failed" });
+
+  // Create and auto-confirm the account server-side; no OTP/email confirmation step.
+  const { data: created, error: createError } = await supabase.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true
+  });
+
+  if (createError) {
+    const message = /already|registered|exists/i.test(createError.message || "")
+      ? "Is email se account pehle se hai. Login karein."
+      : (createError.message || "Registration failed");
+    return res.status(400).json({ error: message });
   }
-  res.status(201).json({
+
+  // Sign in immediately so the customer can use the site without a separate login.
+  const { data: signedIn, error: signInError } = await authClient.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (signInError || !signedIn?.session) {
+    return res.status(201).json({
+      success: true,
+      user: created.user ? { id: created.user.id, email: created.user.email } : null,
+      session: null,
+      message: "Account ban gaya hai. Ab Login karein."
+    });
+  }
+
+  return res.status(201).json({
     success: true,
-    user: data.user ? { id: data.user.id, email: data.user.email } : null,
-    session: data.session ? {
-      access_token: data.session.access_token,
-      refresh_token: data.session.refresh_token,
-      expires_at: data.session.expires_at
-    } : null,
-    requiresEmailConfirmation: !data.session
+    user: { id: signedIn.user.id, email: signedIn.user.email },
+    session: {
+      access_token: signedIn.session.access_token,
+      refresh_token: signedIn.session.refresh_token,
+      expires_at: signedIn.session.expires_at
+    },
+    requiresEmailConfirmation: false
   });
 });
 
