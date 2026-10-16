@@ -779,6 +779,7 @@ async function purchaseDripWireKey({ orderId, userId, productName, duration }) {
 
   const rows = keys.map(keyValue => ({
     user_id: userId,
+    order_id: orderId,
     product_name: productName,
     key_value: keyValue,
     status: "active"
