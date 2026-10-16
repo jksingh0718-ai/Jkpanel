@@ -172,7 +172,7 @@ footer{position:fixed;bottom:0;left:0;right:0;text-align:center;background:#1118
   <div class="popup-card">
     <h3 id="popupTitle">JK PANEL SHOP</h3>
     <div id="popupMessage"></div>
-    <button onclick="closePopup()">CLOSE</button>
+    <button id="popupDefaultClose" onclick="closePopup()">CLOSE</button>
   </div>
 </div>
 
@@ -237,6 +237,7 @@ function updateAccountBar(email){
   bar.appendChild(buttons);
 }
 function openAuth(mode='login'){
+  const defaultClose=document.getElementById('popupDefaultClose');if(defaultClose)defaultClose.style.display='block';
   closeMenu();
   const root=document.getElementById('popupMessage');
   document.getElementById('popupTitle').textContent='';
@@ -372,6 +373,7 @@ async function loadMyAccountSummary(){
   }
 }
 function openMyAccount(){
+  const defaultClose=document.getElementById('popupDefaultClose');if(defaultClose)defaultClose.style.display='block';
   document.getElementById('popupTitle').textContent='My Account';
   const root=document.getElementById('popupMessage');root.replaceChildren();
   const status=document.createElement('p');status.textContent='Account details load ho rahe hain...';root.appendChild(status);
@@ -400,6 +402,7 @@ function closeMenu(){
   document.getElementById('backdrop').style.display='none';
 }
 function showPopup(title,message){
+  const defaultClose=document.getElementById('popupDefaultClose');if(defaultClose)defaultClose.style.display='block';
   document.getElementById('popup').classList.remove('auth-screen');
   const close=document.querySelector('#popup .auth-close');if(close)close.remove();
   document.getElementById('popupTitle').textContent=title;
@@ -413,6 +416,7 @@ function closePopup(){
 }
 
 function deposit(){
+  const defaultClose=document.getElementById('popupDefaultClose');if(defaultClose)defaultClose.style.display='block';
   closeMenu();
   if(!localStorage.getItem('jk_customer_access_token')){
     openAuth('login');
@@ -524,6 +528,7 @@ function feature(name){
 
 async function openReferral(){
   closeMenu();
+  const defaultClose=document.getElementById('popupDefaultClose');if(defaultClose)defaultClose.style.display='none';
   const root=document.getElementById('popupMessage');
   document.getElementById('popupTitle').textContent='Refer and Earn 🎁';
   root.replaceChildren();
@@ -585,7 +590,8 @@ async function openReferral(){
         root.appendChild(row);
       });
     }
-    const close=document.createElement('button');close.textContent='CLOSE';close.style.cssText='width:100%;padding:12px;margin-top:14px;background:#263247;color:#fff';close.onclick=closePopup;root.appendChild(close);
+    const openingLabel=document.createElement('p');openingLabel.textContent='OPENING';openingLabel.style.cssText='margin-top:14px;text-align:center;color:#94a3b8;font-size:11px;font-weight:bold;letter-spacing:2px';root.appendChild(openingLabel);
+    const close=document.createElement('button');close.textContent='CLOSE';close.style.cssText='width:100%;padding:12px;margin-top:6px;background:#263247;color:#fff';close.onclick=closePopup;root.appendChild(close);
     const stat=document.getElementById('referralStatCount');if(stat)stat.textContent=String(referral.referredUsers||0);
   }catch(e){
     root.replaceChildren();
