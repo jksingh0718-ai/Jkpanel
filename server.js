@@ -782,8 +782,8 @@ function aimHackDuration(productName) {
 }
 
 async function purchaseDripWireKey({ orderId, userId, productName, duration, supplierProductId = "150" }) {
-  const apiKey = process.env.RESELLER_API_KEY;
-  const masterKey = process.env.RESELLER_ACCESS_TOKEN;
+  const apiKey = String(process.env.RESELLER_API_KEY || "").trim();
+  const masterKey = String(process.env.RESELLER_ACCESS_TOKEN || "").trim();
   if (!apiKey || !masterKey) {
     throw new Error("Supplier API credentials missing in backend environment.");
   }
