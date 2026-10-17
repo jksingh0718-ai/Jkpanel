@@ -405,6 +405,9 @@ small{color:#a6b2c0}
 #adminMenu button.active{background:#10251b;color:#39f58b}
 #adminMenu button[data-action="logout"]{color:#fca5a5}
 #refreshCustomers{padding:7px 10px;font-size:12px;border-radius:6px}
+.admin-bottom-nav{display:none}
+@media(max-width:700px){body{padding-bottom:95px}#adminTitle{gap:10px}.admin-bottom-nav{position:fixed;z-index:9999;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;background:#0d141e;border-top:1px solid #334155;padding:7px 4px calc(7px + env(safe-area-inset-bottom));box-shadow:0 -4px 18px #0008}.admin-bottom-nav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;margin:0;padding:5px 2px;background:transparent;color:#a6b2c0;font-size:11px;border-radius:8px}.admin-bottom-nav button .nav-icon{font-size:21px;line-height:1}.admin-bottom-nav button.active{color:#39f58b;background:#10251b}}
+@media(min-width:701px){.admin-bottom-nav{display:flex;gap:8px;margin:14px 0}.admin-bottom-nav button{display:flex;align-items:center;gap:7px;padding:10px 14px;background:#1e293b;color:#e2e8f0;border-radius:7px}.admin-bottom-nav button.active{background:#39f58b;color:#062012}.admin-bottom-nav .nav-icon{font-size:18px}}
 .admin-tabs button{padding:12px 6px;background:#1e293b;color:#e2e8f0;border:1px solid #334155}
 .admin-tabs button.active{background:#39f58b;color:#062012}
 .admin-section{display:none}.admin-section.active{display:block}
@@ -422,7 +425,6 @@ small{color:#a6b2c0}
 </form>
 </section>
 <section id="dashboard" hidden>
-<div class="admin-tabs" aria-label="Admin sections"><button type="button" class="active" data-tab="users">Home</button><button type="button" data-tab="products">Products</button><button type="button" data-tab="keys">Keys Management</button><button type="button" data-tab="profile">Profile</button></div>
 <nav id="adminMenu" aria-label="Admin navigation"><button type="button" class="active" data-tab="users">Home</button><button type="button" data-tab="products">Products</button><button type="button" data-tab="keys">Keys Management</button><button type="button" data-tab="profile">Profile</button><button type="button" data-action="logout">Logout</button></nav>
 <button id="logout" hidden>Logout</button>
 <section id="tab-users" class="admin-section active">
@@ -486,7 +488,7 @@ small{color:#a6b2c0}
  <h3 style="margin-top:18px">Orders / Key Requests</h3><div id="orders"></div>
 </section>
 <section id="tab-profile" class="admin-section"><h2>Admin Profile</h2><div class="card"><p>JK PANEL SHOP Admin</p><small>Admin dashboard account</small><p>Account security ke liye kaam khatam hone par Logout karein.</p><button type="button" onclick="document.getElementById('logout').click()">Logout</button></div></section>
-
+<nav class="admin-bottom-nav" aria-label="Bottom navigation"><button type="button" class="active" data-tab="users"><span class="nav-icon">⌂</span><span>Home</span></button><button type="button" data-tab="products"><span class="nav-icon">▣</span><span>Products</span></button><button type="button" data-tab="keys"><span class="nav-icon">⚿</span><span>Keys</span></button><button type="button" data-tab="profile"><span class="nav-icon">♙</span><span>Profile</span></button></nav>
 </section>
 <p id="message" role="status"></p>
 <script>
