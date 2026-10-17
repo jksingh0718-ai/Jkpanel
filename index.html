@@ -557,22 +557,58 @@ function openResellerActivation(){
  const title=document.getElementById('popupTitle');
  const popup=document.getElementById('popup');
  if(!root||!title||!popup)return;
+ if(!localStorage.getItem('jk_customer_access_token')){openAuth('login');return;}
  root.replaceChildren();
- title.textContent='Become a Reseller Partner';
- const message=document.createElement('p');
- message.textContent='Reseller Partner activation fee: ₹99. Activation ke liye support se contact karein. Payment ke baad admin aapka reseller status verify karke activate karega.';
- message.style.cssText='line-height:1.7;color:#cbd5e1;margin:8px 0 14px';
- root.appendChild(message);
- const contact=document.createElement('a');
- contact.href='https://wa.me/917645957071?text='+encodeURIComponent('Hello JK PANEL SHOP, mujhe ₹99 Reseller Partner activation chahiye.');
- contact.target='_blank';contact.rel='noopener';contact.textContent='CONTACT SUPPORT TO ACTIVATE';
- contact.style.cssText='display:block;text-align:center;text-decoration:none;padding:13px;background:#10b981;color:#052e16;font-weight:900;border-radius:10px';
- root.appendChild(contact);
+ title.textContent='MAKE RESELLER · ₹99';
  const note=document.createElement('p');
- note.textContent='Reseller status admin verification ke baad hi active hoga.';
- note.style.cssText='font-size:12px;color:#94a3b8;margin-top:12px';
+ note.textContent='Reseller Partner activation ke liye ₹99 payment karein. Payment gateway par QR/UPI option available ho to wahan se scan karein.';
+ note.style.cssText='line-height:1.6;color:#cbd5e1;margin:4px 0 12px';
  root.appendChild(note);
- popup.classList.remove('auth-screen');popup.style.display='flex';
+ const amount=document.createElement('div');
+ amount.textContent='PAYABLE AMOUNT  ₹99';
+ amount.style.cssText='font-size:22px;font-weight:900;text-align:center;color:#facc15;padding:12px;border:1px solid #854d0e;border-radius:10px;margin-bottom:14px';
+ root.appendChild(amount);
+ const label=document.createElement('label');
+ label.textContent='10-digit mobile number';
+ label.style.cssText='display:block;font-size:12px;color:#cbd5e1;margin-bottom:6px';
+ root.appendChild(label);
+ const mobile=document.createElement('input');
+ mobile.id='resellerPayMobile';mobile.type='tel';mobile.inputMode='numeric';mobile.maxLength=10;mobile.placeholder='e.g. 9876543210';
+ mobile.style.cssText='width:100%;padding:13px;border:1px solid #475569;border-radius:9px;background:#0f172a;color:#fff;margin-bottom:10px';
+ root.appendChild(mobile);
+ const status=document.createElement('p');status.id='resellerPayStatus';status.style.cssText='font-size:12px;color:#cbd5e1;line-height:1.5;margin:8px 0';root.appendChild(status);
+ const pay=document.createElement('button');pay.type='button';pay.textContent='PAY ₹99 & ACTIVATE';pay.style.cssText='display:block;width:100%;padding:14px;background:#facc15;color:#1c1917;font-weight:900;border-radius:10px';
+ pay.onclick=()=>startResellerPayment();root.appendChild(pay);
+ const check=document.createElement('button');check.type='button';check.textContent='CHECK PAYMENT STATUS';check.style.cssText='display:block;width:100%;padding:12px;margin-top:8px;background:#334155;color:#f8fafc;font-weight:800;border-radius:10px';
+ check.onclick=()=>checkResellerPayment();root.appendChild(check);
+ popup.classList.remove('auth-screen','history-screen');popup.style.display='flex';
+}
+let resellerPaymentOrderId='';
+async function startResellerPayment(){
+ const mobile=document.getElementById('resellerPayMobile')?.value.trim();
+ const status=document.getElementById('resellerPayStatus');
+ if(!/^[6-9]\d{9}$/.test(mobile||'')){if(status)status.textContent='Valid 10-digit Indian mobile number enter karein.';return;}
+ if(status)status.textContent='₹99 payment order ban raha hai...';
+ try{
+  const result=await customerApi('/api/payments/novapay/create-order',{method:'POST',body:JSON.stringify({purpose:'reseller',amount:99,customer_mobile:mobile})});
+  resellerPaymentOrderId=result.order_id||'';
+  if(!result.payment_url)throw new Error('Payment page link nahi mila.');
+  if(status)status.textContent='Payment page khol raha hai. Payment complete karne ke baad website par wapas aakar CHECK PAYMENT STATUS dabayein.';
+  window.open(result.payment_url,'_blank','noopener');
+ }catch(e){if(status)status.textContent=e.message||'Payment start nahi hua.';}
+}
+async function checkResellerPayment(){
+ const status=document.getElementById('resellerPayStatus');
+ if(!resellerPaymentOrderId){if(status)status.textContent='Pehle PAY ₹99 & ACTIVATE dabakar payment order banayein.';return;}
+ if(status)status.textContent='Payment verify ho raha hai...';
+ try{
+  const result=await customerApi('/api/payments/novapay/check-status',{method:'POST',body:JSON.stringify({order_id:resellerPaymentOrderId})});
+  if(result.paid&&result.isReseller){
+   isResellerCustomer=true;updateResellerUI();
+   if(status)status.textContent='Payment verified! Aap RESELLER PARTNER ban gaye. Page refresh ki zaroorat nahi.';
+   const partner=document.createElement('p');partner.textContent='✓ RESELLER PARTNER ACTIVE';partner.style.cssText='text-align:center;color:#6ee7b7;font-weight:900;margin-top:12px';status?.after(partner);
+  }else if(status)status.textContent=result.message||'Payment abhi confirm nahi hui. Thodi der baad dobara check karein.';
+ }catch(e){if(status)status.textContent=e.message||'Payment status check nahi ho saka.';}
 }
 function openProfilePanel(){
   document.getElementById('popup').classList.add('history-screen');
