@@ -1256,8 +1256,8 @@ async function loadShopProducts(){
   const products=data.products;
   const dripProducts=products.filter(product=>/^DRIP Wire(?:\s*-\s*.*)?$/i.test(String(product.name||'').trim()));
   const aimProducts=products.filter(product=>/^AIM HACK FF(?:\s*-|$)/i.test(product.name||''));
-  const balaProducts=products.filter(product=>/^BALA\s*MODS?\s*~?\s*V?6(?:\b|\s*[-–:]|$)/i.test(String(product.name||'').trim()));
-  const otherProducts=products.filter(product=>!/^DRIP Wire\s*-\s*/i.test(product.name||'')&&!/^AIM HACK FF(?:\s*-|$)/i.test(product.name||'')&&!/^BALA\s*MODS?\s*~?\s*V?6(?:\b|\s*[-–:]|$)/i.test(String(product.name||'').trim()));
+  const balaProducts=products.filter(product=>/^BALA\s*MODS?\s*~?\s*(?:V?6|FF\s+NONROOT)(?:\b|\s*[-–:]|$)/i.test(String(product.name||'').trim()));
+  const otherProducts=products.filter(product=>!/^DRIP Wire\s*-\s*/i.test(product.name||'')&&!/^AIM HACK FF(?:\s*-|$)/i.test(product.name||'')&&!/^BALA\s*MODS?\s*~?\s*(?:V?6|FF\s+NONROOT)(?:\b|\s*[-–:]|$)/i.test(String(product.name||'').trim()));
 
   if(dripProducts.length){
    const card=document.createElement('article');
@@ -1363,7 +1363,7 @@ async function loadShopProducts(){
     card.append(purchase,plans);
     root.appendChild(card);
    }
-  // BALA MODS ~V6: one product card; show its duration and price only after clicking purchase.
+  // BALA MODS ~FF NONROOT: one product card; show its duration and price only after clicking purchase.
   if(balaProducts.length){
    const card=document.createElement('article');
    card.className='bala-product-card';
@@ -1371,18 +1371,18 @@ async function loadShopProducts(){
    card.style.cssText='display:block;margin-top:12px;padding:14px;background:linear-gradient(160deg,#111827,#0b1220);border:1px solid #334155;border-radius:16px;overflow:hidden;box-shadow:0 8px 26px #0003';
    const imageProduct=balaProducts.find(p=>p.image_url);
    if(imageProduct?.image_url){
-    const img=document.createElement('img');img.src=imageProduct.image_url;img.alt='BALA MODS ~V6';img.loading='lazy';
+    const img=document.createElement('img');img.src=imageProduct.image_url;img.alt='BALA MODS ~FF NONROOT';img.loading='lazy';
     img.style.cssText='display:block;width:100%;height:clamp(200px,58vw,340px);object-fit:contain;background:#030712;border-radius:12px;margin-bottom:14px';
     img.onerror=()=>{img.style.display='none';};card.appendChild(img);
    }
-   const title=document.createElement('h4');title.textContent='BALA MODS ~V6';title.style.cssText='font-size:20px;color:#f8fafc;margin:4px 0 8px;overflow-wrap:anywhere';
+   const title=document.createElement('h4');title.textContent='BALA MODS ~FF NONROOT';title.style.cssText='font-size:20px;color:#f8fafc;margin:4px 0 8px;overflow-wrap:anywhere';
    const purchase=document.createElement('button');purchase.type='button';purchase.textContent=isResellerCustomer?'BUY RESELLER KEY':'PURCHASE KEY';purchase.setAttribute('aria-expanded','false');
    purchase.style.cssText='display:block;width:100%;padding:13px;background:#10b981;color:#052e16;font-size:13px;border-radius:10px';
    const plans=document.createElement('div');plans.hidden=true;plans.style.cssText='margin-top:12px;display:none';
    purchase.onclick=()=>{const open=plans.style.display==='none';plans.style.display=open?'block':'none';plans.hidden=!open;purchase.setAttribute('aria-expanded',String(open));};
-   balaProducts.sort((a,b)=>shopDurationRank((a.name||'').replace(/^BALA\s*MODS?\s*~?\s*V?6\s*[-–:]?\s*/i,''))-shopDurationRank((b.name||'').replace(/^BALA\s*MODS?\s*~?\s*V?6\s*[-–:]?\s*/i,'')));
+   balaProducts.sort((a,b)=>shopDurationRank((a.name||'').replace(/^BALA\s*MODS?\s*~?\s*FF\s+NONROOT\s*[-–:]?\s*/i,''))-shopDurationRank((b.name||'').replace(/^BALA\s*MODS?\s*~?\s*FF\s+NONROOT\s*[-–:]?\s*/i,'')));
    balaProducts.forEach(product=>{
-    const duration=(product.name||'BALA MODS ~V6').replace(/^BALA\s*MODS?\s*~?\s*V?6\s*[-–:]?\s*/i,'').trim()||'Duration';
+    const duration=(product.name||'BALA MODS ~FF NONROOT').replace(/^BALA\s*MODS?\s*~?\s*FF\s+NONROOT\s*[-–:]?\s*/i,'').trim()||'Duration';
     const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 0;border-bottom:1px solid #263247';
     const details=document.createElement('div');details.style.cssText='min-width:0;flex:1';
     const durationLabel=document.createElement('p');durationLabel.textContent=duration;durationLabel.style.cssText='font-size:14px;font-weight:bold;color:#f8fafc';
