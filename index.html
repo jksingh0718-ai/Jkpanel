@@ -1151,7 +1151,7 @@ async function loadShopProducts(){
 
   const genericGroups=new Map();
   otherProducts.forEach(product=>{
-   const match=String(product.name||"").match(/^(.*?)\\s*-\\s*(.+)$/);
+   const match=String(product.name||"").match(/^(.*?)\s*-\s*(.+)$/);
    const base=match?match[1].trim():String(product.name||"");
    if(!genericGroups.has(base))genericGroups.set(base,[]);
    genericGroups.get(base).push(product);
@@ -1180,7 +1180,7 @@ async function loadShopProducts(){
     const plans=document.createElement('div');plans.hidden=true;plans.style.cssText='display:none;margin-top:10px';
     purchase.onclick=()=>{const open=plans.style.display==='none';plans.style.display=open?'block':'none';plans.hidden=!open;purchase.setAttribute('aria-expanded',String(open));};
     group.forEach(product=>{
-     const duration=String(product.name||'').slice(base.length).replace(/^\\s*-\\s*/,'').trim();
+     const duration=String(product.name||'').slice(base.length).replace(/^\s*-\s*/,'').trim();
      const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid #263247';
      const details=document.createElement('div');details.style.cssText='min-width:0;flex:1';
      const label=document.createElement('p');label.textContent=duration||'Standard';label.style.cssText='font-size:14px;font-weight:bold;color:#f8fafc';
