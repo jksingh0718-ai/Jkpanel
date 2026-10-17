@@ -771,12 +771,13 @@ async function runNovapayAutoVerification(){
   if(!localStorage.getItem('jk_customer_access_token')) return;
   novapayAutoVerifyRunning = true;
   try{
-    // Poll automatically for up to 5 minutes; no manual button dependency.
+    // Check immediately, then every second for the first 5 seconds, then every 5 seconds
+    // while the gateway is finalizing payment. Wallet credit remains server-verified.
     for(let attempt=0;attempt<60;attempt++){
       if(!localStorage.getItem('jk_novapay_pending_order')) break;
       await checkNovapayPayment();
       if(!localStorage.getItem('jk_novapay_pending_order')) break;
-      if(attempt<59) await new Promise(resolve=>setTimeout(resolve,5000));
+      if(attempt<59) await new Promise(resolve=>setTimeout(resolve,attempt<4?1000:5000));
     }
   }finally{
     novapayAutoVerifyRunning = false;
@@ -1221,36 +1222,7 @@ function restoreCustomerSession(){
   });
 }
 
-async function autoVerifyReturnedNovapayPayment(orderId){
-  const token = localStorage.getItem('jk_customer_access_token') || '';
-  if(!token || !/^JK\d{13}[A-F0-9]{8}$/.test(orderId)) return;
-  localStorage.setItem('jk_novapay_pending_order', orderId);
-  const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
-  for(let attempt=0; attempt<10; attempt++){
-    try{
-      const response = await fetch('https://jkpanel-backend.onrender.com/api/payments/novapay/check-status',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-        body:JSON.stringify({order_id:orderId})
-      });
-      const data = await response.json().catch(()=>({}));
-      if(response.ok && data.paid){
-        localStorage.removeItem('jk_novapay_pending_order');
-        if(typeof loadMyAccountSummary==='function') await loadMyAccountSummary().catch(()=>{});
-        showPopup('Deposit successful','Payment verify ho gaya. Aapka wallet balance update kar diya gaya hai.');
-        return;
-      }
-      if(!response.ok && response.status===401) return;
-    }catch(error){}
-    await wait(4000);
-  }
-}
-const paymentReturnParams = new URLSearchParams(window.location.search);
-const returnedPaymentOrder = paymentReturnParams.get('order_id');
-if(paymentReturnParams.get('payment')==='success' && returnedPaymentOrder){
-  window.history.replaceState({}, document.title, window.location.pathname);
-  setTimeout(()=>autoVerifyReturnedNovapayPayment(returnedPaymentOrder), 700);
-}
+// Payment-return handling is centralized in the pageshow listener above to avoid duplicate polling.
 restoreCustomerSession();
 loadShopProducts();
 
