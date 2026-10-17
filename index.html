@@ -425,14 +425,31 @@ async function loadMyAccountSummary(){
   }
 }
 function openMyAccount(){
+  const popup=document.getElementById('popup');
+  popup.classList.add('history-screen');
+  popup.classList.remove('auth-screen');
   const defaultClose=document.getElementById('popupDefaultClose');if(defaultClose)defaultClose.style.display='block';
   document.getElementById('popupTitle').textContent='My Account';
   const root=document.getElementById('popupMessage');root.replaceChildren();
   const back=document.createElement('button');back.type='button';back.textContent='← Back to Shop';back.onclick=closePopup;back.style.cssText='width:100%;padding:11px;margin:0 0 14px;background:#263247;color:#e2e8f0;border:1px solid #475569';root.appendChild(back);
-  const loading=document.createElement('p');loading.textContent='OPENING...';root.appendChild(loading);
-  document.getElementById('popup').style.display='flex';
+  const loading=document.createElement('div');
+  loading.style.cssText='display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:28px 8px;color:#94a3b8;text-align:center';
+  const spinner=document.createElement('div');
+  spinner.style.cssText='width:32px;height:32px;border:3px solid #334155;border-top-color:#38bdf8;border-radius:50%;animation:jkSpin .8s linear infinite';
+  const loadingText=document.createElement('p');loadingText.textContent='Loading My Account...';
+  loading.append(spinner,loadingText);root.appendChild(loading);
+  popup.style.display='flex';
   customerApi('/api/my-account').then(data=>{
     root.replaceChildren();
+    const avatarWrap=document.createElement('div');
+    avatarWrap.style.cssText='display:flex;align-items:center;gap:13px;padding:14px;margin:0 0 14px;background:linear-gradient(135deg,#111c35,#172554 60%,#0f766e);border:1px solid #38bdf877;border-radius:14px;box-shadow:0 8px 24px #0284c722';
+    const avatar=document.createElement('div');
+    avatar.textContent='JK';
+    avatar.style.cssText='display:flex;align-items:center;justify-content:center;flex:0 0 58px;width:58px;height:58px;border-radius:18px;background:linear-gradient(145deg,#38bdf8,#2563eb 55%,#312e81);border:2px solid #bae6fd;color:white;font-weight:900;font-size:22px;letter-spacing:1px;box-shadow:0 0 18px #38bdf855';
+    const avatarInfo=document.createElement('div');
+    const avatarTitle=document.createElement('div');avatarTitle.textContent='JK PANEL SHOP';avatarTitle.style.cssText='font-weight:900;font-size:17px;letter-spacing:.4px;color:#f8fafc';
+    const avatarSub=document.createElement('div');avatarSub.textContent='My Account';avatarSub.style.cssText='font-size:13px;margin-top:4px;color:#7dd3fc';
+    avatarInfo.append(avatarTitle,avatarSub);avatarWrap.append(avatar,avatarInfo);root.appendChild(avatarWrap);
     const heading=document.createElement('h3');heading.textContent='Wallet Overview';root.appendChild(heading);
     const balance=document.createElement('div');balance.style.cssText='padding:14px;margin:8px 0;background:#0b2b22;border:1px solid #10b981;border-radius:10px';
     const bal=document.createElement('strong');bal.textContent='Current Wallet Balance: ₹'+Number(data.walletBalance||0).toFixed(2);bal.style.cssText='display:block;font-size:20px;color:#6ee7b7';
