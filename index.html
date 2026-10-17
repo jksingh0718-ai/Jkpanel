@@ -759,8 +759,10 @@ function openMenu(){
   document.getElementById('backdrop').style.display='block';
 }
 function closeMenu(){
-  document.getElementById('sidebar').style.display='none';
-  document.getElementById('backdrop').style.display='none';
+  const sidebar=document.getElementById('sidebar');
+  const backdrop=document.getElementById('backdrop');
+  if(sidebar)sidebar.style.display='none';
+  if(backdrop)backdrop.style.display='none';
 }
 function makeProductVideoThumb(video){
   const button=document.createElement('button');button.type='button';button.className='product-video-thumb';button.setAttribute('aria-label','Play product video');
@@ -792,6 +794,7 @@ function showPopup(title,message){
 }
 function closePopup(){
   const popup=document.getElementById('popup');
+  if(!popup)return;
   popup.classList.remove('history-screen','auth-screen');
   const player=document.querySelector('#popupMessage video');
   if(player){player.pause();player.removeAttribute('src');player.load();}
