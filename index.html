@@ -1129,13 +1129,30 @@ function setupShopProductSearch(){
  input.addEventListener('input',()=>{
   const query=input.value.trim().toLocaleLowerCase();
   const cards=Array.from(root.children).filter(card=>!card.hasAttribute('data-search-empty'));
-  let visible=0;
-  cards.forEach(card=>{
-   const show=!query||(card.textContent||'').toLocaleLowerCase().includes(query);
+  const ranked=cards.map((card,index)=>{
+   const text=(card.textContent||'').toLocaleLowerCase();
+   const show=!query||text.includes(query);
    card.hidden=!show;
-   if(show)visible++;
+   if(show&&query){
+    const purchase=Array.from(card.querySelectorAll('button')).find(button=>/PURCHASE KEY|BUY RESELLER KEY/i.test(button.textContent||''));
+    const plans=purchase?.nextElementSibling;
+    if(plans){
+     plans.hidden=false;
+     plans.style.display='block';
+     purchase.setAttribute('aria-expanded','true');
+    }
+   }
+   return {card,index,show,starts:query&&text.startsWith(query)};
   });
+  ranked.sort((a,b)=>{
+   if(!query)return a.index-b.index;
+   if(a.show!==b.show)return a.show?-1:1;
+   if(a.starts!==b.starts)return a.starts?-1:1;
+   return a.index-b.index;
+  });
+  ranked.forEach(item=>root.appendChild(item.card));
   let empty=root.querySelector('[data-search-empty]');
+  const visible=ranked.filter(item=>item.show).length;
   if(query&&visible===0){
    if(!empty){empty=document.createElement('p');empty.dataset.searchEmpty='1';empty.style.cssText='color:#94a3b8;font-size:12px;margin-top:12px';empty.textContent='No products found.';root.appendChild(empty);}
    empty.hidden=false;
