@@ -397,11 +397,14 @@ button{cursor:pointer;background:#39f58b;border:0;font-weight:bold}
 .card{background:#111923;padding:16px;margin:12px 0;border-radius:10px;overflow-wrap:anywhere}
 small{color:#a6b2c0}
 .admin-tabs{display:none;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:18px 0}
-#adminBottomNav{position:fixed;left:0;right:0;bottom:0;z-index:100;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:9px 8px calc(9px + env(safe-area-inset-bottom));background:#0b1220;border-top:1px solid #334155;box-shadow:0 -8px 24px #0007}
-#adminBottomNav button{min-width:0;margin:0;padding:9px 2px;background:transparent;color:#94a3b8;border:1px solid transparent;border-radius:10px;font-size:11px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
-#adminBottomNav button.active{color:#39f58b;background:#10251b;border-color:#17603b}
-#adminBottomNav .nav-icon{font-size:19px;line-height:1.1}
-#dashboard[hidden] #adminBottomNav{display:none}
+#adminMenuWrap{position:relative;margin:10px 0 6px}
+#adminMenuToggle{background:#1e293b;color:#e2e8f0;border:1px solid #334155;padding:8px 11px;font-size:18px;line-height:1;border-radius:8px}
+#adminMenu{display:none;background:#111923;border:1px solid #334155;border-radius:10px;margin-top:7px;padding:5px}
+#adminMenu.open{display:block}
+#adminMenu button{display:block;width:100%;text-align:left;margin:3px 0;padding:11px;background:transparent;color:#e2e8f0;border-radius:7px}
+#adminMenu button.active{background:#10251b;color:#39f58b}
+#refreshCustomers{padding:7px 10px;font-size:12px;border-radius:6px}
+#dashboard[hidden] #adminMenuWrap{display:none}
 .admin-tabs button{padding:12px 6px;background:#1e293b;color:#e2e8f0;border:1px solid #334155}
 .admin-tabs button.active{background:#39f58b;color:#062012}
 .admin-section{display:none}.admin-section.active{display:block}
@@ -419,6 +422,15 @@ small{color:#a6b2c0}
 </form>
 </section>
 <section id="dashboard" hidden>
+<div id="adminMenuWrap">
+ <button type="button" id="adminMenuToggle" aria-label="Open navigation menu" aria-expanded="false">☰</button>
+ <nav id="adminMenu" aria-label="Admin navigation">
+  <button type="button" class="active" data-tab="users">Home</button>
+  <button type="button" data-tab="products">Products</button>
+  <button type="button" data-tab="keys">Keys Management</button>
+  <button type="button" data-tab="profile">Profile</button>
+ </nav>
+</div>
 <button id="logout">Logout</button>
 <div class="admin-tabs" role="tablist">
  <button type="button" class="active" data-tab="users">Users</button>
@@ -486,12 +498,7 @@ small{color:#a6b2c0}
  <h3 style="margin-top:18px">Orders / Key Requests</h3><div id="orders"></div>
 </section>
 <section id="tab-profile" class="admin-section"><h2>Admin Profile</h2><div class="card"><p>JK PANEL SHOP Admin</p><small>Admin dashboard account</small><p>Account security ke liye kaam khatam hone par Logout karein.</p><button type="button" onclick="document.getElementById('logout').click()">Logout</button></div></section>
-<nav id="adminBottomNav" aria-label="Admin navigation">
- <button type="button" class="active" data-tab="users"><span class="nav-icon">⌂</span><span>Home</span></button>
- <button type="button" data-tab="products"><span class="nav-icon">▣</span><span>Product</span></button>
- <button type="button" data-tab="keys"><span class="nav-icon">🔑</span><span>My Keys</span></button>
- <button type="button" data-tab="profile"><span class="nav-icon">♙</span><span>Profile</span></button>
-</nav>
+
 </section>
 <p id="message" role="status"></p>
 <script>
@@ -525,7 +532,14 @@ const message=document.getElementById("message");
 document.querySelectorAll("[data-tab]").forEach(button=>button.addEventListener("click",()=>{
  document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b===button));
  document.querySelectorAll(".admin-section").forEach(section=>section.classList.toggle("active",section.id==="tab-"+button.dataset.tab));
+ const menu=document.getElementById("adminMenu");
+ if(menu){menu.classList.remove("open");document.getElementById("adminMenuToggle").setAttribute("aria-expanded","false");}
 }));
+document.getElementById("adminMenuToggle").addEventListener("click",()=>{
+ const menu=document.getElementById("adminMenu");
+ const open=menu.classList.toggle("open");
+ document.getElementById("adminMenuToggle").setAttribute("aria-expanded",String(open));
+});
 function filterCards(inputId,containerId){
  const input=document.getElementById(inputId),container=document.getElementById(containerId);
  if(!input||!container)return;
@@ -667,7 +681,7 @@ async function loadProducts(){
     document.getElementById("productMessage").textContent="Editing: "+base;
     document.getElementById("productForm").scrollIntoView({behavior:"smooth",block:"center"});
    };
-   const visibility=document.createElement("button");visibility.style.marginLeft="8px";visibility.style.background="#475569";visibility.style.color="white";visibility.textContent="Toggle all options";
+   const visibility=document.createElement("button");visibility.style.marginLeft="8px";visibility.style.background="#475569";visibility.style.color="white";visibility.textContent=items.some(p=>p.published)?"Hide from Shop":"Show in Shop";
    visibility.onclick=async()=>{try{const publish=!items.some(p=>p.published);for(const p of items)await api("/api/admin/products/"+encodeURIComponent(p.id),{method:"PATCH",body:JSON.stringify({published:publish})});await loadProducts();}catch(e){document.getElementById("productMessage").textContent=e.message;}};
    card.append(title,info,options,description,media,edit,visibility);root.appendChild(card);
   });
