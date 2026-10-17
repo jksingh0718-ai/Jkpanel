@@ -375,7 +375,100 @@ app.get("/api/my-account", async (req, res) => {
     }
   });
 });
+// =========================================================
+// BANTI BHAIYA API INTEGRATION (BUY KEY ROUTE)
+// =========================================================
+app.post("/api/buy-key", async (req, res) => {
+  if (!supabase) return res.status(503).json({ error: "Database is not configured" });
+  
+  // 1. User check karo (Login hai ya nahi)
+  const user = await getAuthenticatedUser(req);
+  if (!user) return res.status(401).json({ error: "Login required" });
 
+  const { productId, duration, price, productName } = req.body;
+  const buyPrice = Number(price);
+
+  if (!productId || !duration || !buyPrice) {
+    return res.status(400).json({ error: "Product, duration aur price required hai." });
+  }
+
+  try {
+    // 2. Wallet Check
+    const { data: wallet, error: walletErr } = await supabase
+      .from("wallets")
+      .select("balance")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (walletErr || !wallet) return res.status(400).json({ error: "Wallet not found." });
+    if (Number(wallet.balance) < buyPrice) return res.status(400).json({ error: "Insufficient wallet balance." });
+
+    // 3. Paisa Kato (Temporary Hold)
+    const newBalance = Number(wallet.balance) - buyPrice;
+    await supabase.from("wallets").update({ balance: newBalance }).eq("user_id", user.id);
+
+    // 4. Banti Bhaiya API Call
+    const params = new URLSearchParams();
+    params.append('api_key', process.env.RESELLER_API_KEY); // Tumhari API key
+    params.append('action', 'buy');
+    params.append('product_id', productId);
+    params.append('duration', duration);
+    params.append('quantity', 1);
+    // Agar device bound product hai to android_id chahiye hoga, filhal normal bhej rahe hain
+
+    const apiResponse = await fetch("https://bantibhaiya.to/api/reseller_v1.php", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "x-master-key": process.env.BANTI_MASTER_KEY // Green color wali master key
+      },
+      body: params.toString()
+    });
+
+    const responseData = await apiResponse.json().catch(() => null);
+
+    // 5. Check karo ki key mili ya nahi
+    // API doc ke mutabik agar success hoga to "keys" ka array aayega
+    if (responseData && responseData.keys && responseData.keys.length > 0) {
+      const originalKey = responseData.keys[0];
+
+      // 6. Database mein Key save karo (customer_keys table mein)
+      await supabase.from("customer_keys").insert({
+        user_id: user.id,
+        product_name: productName,
+        key_value: originalKey,
+        status: "active"
+      });
+
+      // Order history mein save karo
+      await supabase.from("orders").insert({
+        user_id: user.id,
+        "Product_name": productName,
+        "Amount": buyPrice,
+        "Payment_status": "completed",
+        "Order status": "completed"
+      });
+
+      return res.json({ success: true, key: originalKey, message: "Key delivered successfully!" });
+
+    } else {
+      // Agar API ne error diya
+      throw new Error(responseData?.message || "No keys received from supplier");
+    }
+
+  } catch (error) {
+    console.error("Supplier API Error:", error.message);
+    
+    // 7. REFUND LOGIC (Agar API fail hui to paisa wapas wallet mein daalo)
+    // Note: Yahan hum original balance wapas update kar rahe hain
+    if (user) {
+        await supabase.from("wallets").update({ balance: wallet.balance }).eq("user_id", user.id);
+    }
+    
+    return res.status(500).json({ error: "Supplier API failed or out of stock. Wallet balance refunded." });
+  }
+});
+// =========================================================
 app.post("/api/auth/logout", (req, res) => {
   res.json({ success: true });
 });
