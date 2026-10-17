@@ -1331,86 +1331,25 @@ async function loadShopProducts(){
    purchase.onclick=()=>{const open=plans.style.display==='none';plans.style.display=open?'block':'none';plans.hidden=!open;purchase.setAttribute('aria-expanded',String(open));purchase.textContent=isResellerCustomer?'BUY RESELLER KEY':'PURCHASE KEY';};
    aimProducts.sort((a,b)=>shopDurationRank(aimHackLabel(a.name))-shopDurationRank(aimHackLabel(b.name)));
     const seen=new Set();
-   aimProducts.forEach(product=>{
-    const duration=aimHackLabel(product.name);
-    const key=duration.toLowerCase();
-    if(seen.has(key))return;seen.add(key);
-    const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 0;border-bottom:1px solid #263247';
-    const details=document.createElement('div');details.style.cssText='min-width:0;flex:1';
-    const durationLabel=document.createElement('p');durationLabel.textContent=duration.toUpperCase();durationLabel.style.cssText='font-size:14px;font-weight:bold;color:#f8fafc';
-    const price=document.createElement('p');price.textContent='₹'+Number(product.price||0).toLocaleString('en-IN',{maximumFractionDigits:0});price.style.cssText='font-size:13px;color:#c4b5fd;margin-top:5px';
-    details.append(durationLabel,price);
-    async function buyProduct(product){
-  if(!product || !product.id){
-    showPopup('Order failed','Product details nahi mile. Page refresh karke dobara try karein.');
-    return;
-  }
-  
-  const token = localStorage.getItem('jk_customer_access_token');
-  if(!token){
-    openAuth('login');
-    return;
-  }
-
-  const buttons=document.querySelectorAll('#shopProducts button.buy');
-  buttons.forEach(button=>button.disabled=true);
-
-  try{
-    // Naya API Call /api/buy-key par
-    const res = await fetch('/api/buy-key', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ 
-        productId: product.id, 
-        duration: product.duration || "1 Days", 
-        price: product.price, 
-        productName: product.name || product.product_name 
-      })
-    });
-    
-    const result = await res.json();
-    
-    if(result.success) {
-      showPopup('Purchase successful', `Order complete!\n\nYour Key: ${result.key}\n\nWallet se ₹${product.price} deduct ho gaye hain.`);
-      
-      if(typeof loadMyAccountSummary==='function') loadMyAccountSummary().catch(()=>{});
-    } else {
-      showPopup('Order failed', result.error || 'Order submit nahi ho saka.');
-    }
-  }catch(error){
-    showPopup('Order failed', 'Network error. Dobara try karein.');
-  }finally{
-    buttons.forEach(button=>button.disabled=false);
-  }
-}
-    const purchase=document.createElement('button');purchase.type='button';purchase.textContent=isResellerCustomer?'BUY RESELLER KEY':'PURCHASE KEY';purchase.setAttribute('aria-expanded','false');purchase.style.cssText='display:block;width:100%;padding:14px;background:#06b6d4;color:#082f49;font-size:14px;border-radius:10px';
-    const plans=document.createElement('div');plans.hidden=true;plans.style.cssText='display:none;margin-top:10px';
-    purchase.onclick=()=>{const open=plans.style.display==='none';plans.style.display=open?'block':'none';plans.hidden=!open;purchase.setAttribute('aria-expanded',String(open));};
-    [...group].sort((a,b)=>{
-      const da=String(a.name||'').slice(base.length).replace(/^\s*-\s*/,'').trim();
-      const db=String(b.name||'').slice(base.length).replace(/^\s*-\s*/,'').trim();
-      return shopDurationRank(da)-shopDurationRank(db);
-     }).forEach(product=>{
-     const duration=String(product.name||'').slice(base.length).replace(/^\s*-\s*/,'').trim();
-     const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid #263247';
+    aimProducts.forEach(product=>{
+     const duration=aimHackLabel(product.name);
+     const key=duration.toLowerCase();
+     if(seen.has(key))return;
+     seen.add(key);
+     const row=document.createElement('div');
+     row.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 0;border-bottom:1px solid #263247';
      const details=document.createElement('div');details.style.cssText='min-width:0;flex:1';
-     const label=document.createElement('p');label.textContent=duration||'Standard';label.style.cssText='font-size:14px;font-weight:bold;color:#f8fafc';
-     const price=document.createElement('p');price.textContent='₹'+Number(product.price||0).toLocaleString('en-IN',{maximumFractionDigits:2});price.style.cssText='font-size:13px;color:#6ee7b7;margin-top:5px';
-     details.append(label,price);const buy=document.createElement('button');buy.type='button';buy.className='buy';buy.textContent='BUY';buy.style.cssText='padding:11px 14px;flex-shrink:0;background:#10b981;color:#052e16;font-size:12px';buy.onclick=()=>buyProduct(product);
+     const durationLabel=document.createElement('p');durationLabel.textContent=duration.toUpperCase();durationLabel.style.cssText='font-size:14px;font-weight:bold;color:#f8fafc';
+     const price=document.createElement('p');price.textContent='₹'+Number(product.price||0).toLocaleString('en-IN',{maximumFractionDigits:0});price.style.cssText='font-size:13px;color:#c4b5fd;margin-top:5px';
+     details.append(durationLabel,price);
+     const buy=document.createElement('button');buy.type='button';buy.className='buy';buy.textContent='BUY';buy.style.cssText='padding:11px 14px;flex-shrink:0;background:#10b981;color:#052e16;font-size:12px';
+     buy.onclick=()=>buyProduct(product);
      row.append(details,buy);plans.appendChild(row);
     });
     card.append(purchase,plans);
-   }else{
-    const product=group[0];const price=document.createElement('p');price.textContent='₹'+Number(product.price||0).toFixed(2);price.style.cssText='font-size:15px;color:#6ee7b7;margin-bottom:12px';card.appendChild(price);
-    if(product.description){const desc=document.createElement('p');desc.textContent=product.description;desc.style.cssText='margin:0 0 12px;color:#cbd5e1;font-size:12px;line-height:1.6;overflow-wrap:anywhere';card.appendChild(desc);}
-    const buy=document.createElement('button');buy.className='buy';buy.textContent='BUY KEYS';buy.style.cssText='display:block;width:100%;padding:13px;background:#10b981;color:#052e16;font-size:13px;border-radius:10px';buy.onclick=()=>buyProduct(product);card.appendChild(buy);
+    root.appendChild(card);
    }
-   root.appendChild(card);
-  });
-  Array.from(root.children).filter(card=>!card.hasAttribute('data-search-empty')).sort((a,b)=>Number(b.dataset.createdAt||0)-Number(a.dataset.createdAt||0)).forEach(card=>root.appendChild(card));
+   Array.from(root.children).filter(card=>!card.hasAttribute('data-search-empty')).sort((a,b)=>Number(b.dataset.createdAt||0)-Number(a.dataset.createdAt||0)).forEach(card=>root.appendChild(card));
   if(document.getElementById('shopProductSearch')?.value.trim())document.getElementById('shopProductSearch').dispatchEvent(new Event('input'));
  }catch(e){
   root.replaceChildren();const p=document.createElement('p');p.textContent=e.message||'Products load nahi ho sake.';p.style.cssText='color:#fca5a5;font-size:12px;margin-top:10px';root.appendChild(p);
