@@ -464,6 +464,8 @@ small{color:#a6b2c0}
  <input id="keySearch" class="search-box" type="search" placeholder="Search key/order records...">
  <button id="refreshKeys">Refresh Key Records</button>
  <div id="keyList"></div>
+ <h3 style="margin-top:18px">Orders / Key Requests</h3>
+ <div id="orders"></div>
 </section>
 </section>
 <p id="message" role="status"></p>
