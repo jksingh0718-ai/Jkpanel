@@ -272,6 +272,7 @@ function updateAccountBar(email){
   if(menuLogin){menuLogin.textContent=email?'PROFILE':'LOGIN / REGISTER';menuLogin.onclick=()=>{closeMenu();if(email)openMyAccount();else openAuth('login');return false;};}
   if(menuLogout)menuLogout.style.display=email?'block':'none';
   const bar=document.getElementById('accountBar');
+  if(!bar)return;
   bar.replaceChildren();
   const label=document.createElement('span');
   label.textContent=email?'Logged in: '+email:'Customer login zaroori hai';
