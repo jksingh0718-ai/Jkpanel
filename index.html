@@ -594,7 +594,7 @@ async function startResellerPayment(){
   resellerPaymentOrderId=result.order_id||'';
   if(!result.payment_url)throw new Error('Payment page link nahi mila.');
   if(status)status.textContent='Payment page khol raha hai. Payment complete karne ke baad website par wapas aakar CHECK PAYMENT STATUS dabayein.';
-  window.open(result.payment_url,'_blank','noopener');
+  window.location.assign(result.payment_url);
  }catch(e){if(status)status.textContent=e.message||'Payment start nahi hua.';}
 }
 async function checkResellerPayment(){
