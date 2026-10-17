@@ -1956,19 +1956,23 @@ app.patch("/api/admin/products/:id", isAdmin, async (req, res) => {
 app.get("/api/admin/resellers", isAdmin, async (req, res) => {
   if (!supabase) return res.status(503).json({ error: "Database is not configured" });
   try {
-    const [usersResult, accountsResult, settingsResult, productsResult] = await Promise.all([
+    const [usersResult, accountsResult, settingsResult, productsResult, resellerPricesResult] = await Promise.all([
       supabase.auth.admin.listUsers({ page: 1, perPage: 1000 }),
       supabase.from("reseller_accounts").select("user_id, is_active, activation_price, activated_at, created_at"),
       supabase.from("reseller_settings").select("activation_price").eq("id", 1).maybeSingle(),
-      supabase.from("products").select("id, name, price, published").order("name")
+      supabase.from("products").select("id, name, price, published").order("name"),
+      supabase.from("reseller_prices").select("product_id, price").is("reseller_user_id", null)
     ]);
     if (usersResult.error) throw new Error("Customer list: " + usersResult.error.message);
     if (accountsResult.error) throw new Error("Reseller table: " + accountsResult.error.message);
     if (settingsResult.error) throw new Error("Reseller settings: " + settingsResult.error.message);
     if (productsResult.error) throw new Error("Products: " + productsResult.error.message);
+    if (resellerPricesResult.error) throw new Error("Reseller prices: " + resellerPricesResult.error.message);
     const accountMap = new Map((accountsResult.data || []).map(a => [a.user_id, a]));
     const customers = (usersResult.data?.users || []).map(u => { const a=accountMap.get(u.id); return {id:u.id,email:u.email||"",name:String(u.user_metadata?.full_name||u.user_metadata?.name||u.email?.split("@")[0]||"Customer"),is_reseller:Boolean(a),reseller_active:Boolean(a?.is_active),activation_price:Number(a?.activation_price||0)}; });
-    res.json({settings:settingsResult.data||{activation_price:0},customers,products:productsResult.data||[]});
+    const resellerPriceMap = new Map((resellerPricesResult.data || []).map(p => [p.product_id, Number(p.price)]));
+    const products = (productsResult.data || []).map(p => ({...p, reseller_price: resellerPriceMap.has(p.id) ? resellerPriceMap.get(p.id) : null}));
+    res.json({settings:settingsResult.data||{activation_price:0},customers,products});
   } catch(e) { console.error("Reseller admin load failed:",e.message); res.status(500).json({error:"Reseller data load nahi hua: "+String(e.message||"Unknown error").slice(0,180)}); }
 });
 app.post("/api/admin/resellers/settings", isAdmin, async (req,res) => {
