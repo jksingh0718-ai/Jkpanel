@@ -66,6 +66,12 @@ header{display:flex;align-items:center;justify-content:space-between;gap:8px;bor
 @keyframes jkMenuShine{0%,65%{left:-70%}85%,100%{left:140%}}
 
 
+.jk-account-avatar{position:relative;isolation:isolate;display:flex;align-items:center;justify-content:center;flex:0 0 64px;width:64px;height:64px;border-radius:20px;background:linear-gradient(145deg,#0f172a,#1e3a8a 60%,#312e81);border:1px solid #7dd3fc;box-shadow:0 0 0 3px #38bdf81c,0 0 22px #2563eb55;animation:jkAvatarGlow 2.8s ease-in-out infinite;overflow:hidden}
+.jk-account-avatar::before{content:"";position:absolute;inset:-45%;background:linear-gradient(110deg,transparent 40%,#ffffff99 50%,transparent 60%);transform:translateX(-100%) rotate(18deg);animation:jkAvatarShine 3.2s ease-in-out infinite;pointer-events:none}
+.jk-account-avatar svg{position:relative;filter:drop-shadow(0 2px 5px #02061799)}
+@keyframes jkAvatarGlow{0%,100%{transform:translateY(0);box-shadow:0 0 0 3px #38bdf81c,0 0 18px #2563eb44}50%{transform:translateY(-2px);box-shadow:0 0 0 5px #38bdf822,0 0 26px #7c3aed88}}
+@keyframes jkAvatarShine{0%,65%{transform:translateX(-100%) rotate(18deg)}90%,100%{transform:translateX(100%) rotate(18deg)}}
+@media(prefers-reduced-motion:reduce){.jk-account-avatar,.jk-account-avatar::before{animation:none!important}}
 .jk-brand-mark{position:relative;isolation:isolate;display:inline-flex;align-items:center;justify-content:center;flex:0 0 44px;width:44px;height:44px;border-radius:14px;color:#fff;background:linear-gradient(140deg,#38bdf8 0%,#2563eb 48%,#312e81 100%);border:1px solid #7dd3fc;box-shadow:0 5px 18px #2563eb55;animation:jkLogoFloat 3s ease-in-out infinite;overflow:hidden}
 .jk-brand-mark::before{content:"";position:absolute;inset:-45%;z-index:-1;background:linear-gradient(110deg,transparent 38%,#ffffff70 49%,transparent 60%);transform:translateX(-85%) rotate(18deg);animation:jkLogoShine 3.4s ease-in-out infinite}
 .jk-brand-mark svg{filter:drop-shadow(0 2px 3px #0f172a99)}
@@ -442,13 +448,14 @@ function openMyAccount(){
   customerApi('/api/my-account').then(data=>{
     root.replaceChildren();
     const avatarWrap=document.createElement('div');
-    avatarWrap.style.cssText='display:flex;align-items:center;gap:13px;padding:14px;margin:0 0 14px;background:linear-gradient(135deg,#111c35,#172554 60%,#0f766e);border:1px solid #38bdf877;border-radius:14px;box-shadow:0 8px 24px #0284c722';
+    avatarWrap.style.cssText='display:flex;align-items:center;gap:13px;padding:14px;margin:0 0 14px;background:#0b1220;border:1px solid #334155;border-radius:14px';
     const avatar=document.createElement('div');
-    avatar.textContent='JK';
-    avatar.style.cssText='display:flex;align-items:center;justify-content:center;flex:0 0 58px;width:58px;height:58px;border-radius:18px;background:linear-gradient(145deg,#38bdf8,#2563eb 55%,#312e81);border:2px solid #bae6fd;color:white;font-weight:900;font-size:22px;letter-spacing:1px;box-shadow:0 0 18px #38bdf855';
+    avatar.className='jk-account-avatar';
+    avatar.setAttribute('aria-label','Animated gaming profile icon');
+    avatar.innerHTML='<svg width="38" height="38" viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M12 18 18 9h12l6 9 4 15-7 5-9-7-9 7-7-5 4-15Z" fill="url(#jkAvatarGrad)" stroke="#dbeafe" stroke-width="1.5"/><path d="M16 23h7m-3.5-3.5v7M29 22h.1M33 26h.1" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/><path d="M20 14h8" stroke="#bfdbfe" stroke-width="2" stroke-linecap="round"/><defs><linearGradient id="jkAvatarGrad" x1="8" y1="8" x2="40" y2="40" gradientUnits="userSpaceOnUse"><stop stop-color="#38bdf8"/><stop offset=".55" stop-color="#2563eb"/><stop offset="1" stop-color="#7c3aed"/></linearGradient></defs></svg>';
     const avatarInfo=document.createElement('div');
-    const avatarTitle=document.createElement('div');avatarTitle.textContent='JK PANEL SHOP';avatarTitle.style.cssText='font-weight:900;font-size:17px;letter-spacing:.4px;color:#f8fafc';
-    const avatarSub=document.createElement('div');avatarSub.textContent='My Account';avatarSub.style.cssText='font-size:13px;margin-top:4px;color:#7dd3fc';
+    const avatarTitle=document.createElement('div');avatarTitle.textContent='My Account';avatarTitle.style.cssText='font-weight:900;font-size:17px;letter-spacing:.4px;color:#f8fafc';
+    const avatarSub=document.createElement('div');avatarSub.textContent='Wallet and account details';avatarSub.style.cssText='font-size:13px;margin-top:4px;color:#7dd3fc';
     avatarInfo.append(avatarTitle,avatarSub);avatarWrap.append(avatar,avatarInfo);root.appendChild(avatarWrap);
     const heading=document.createElement('h3');heading.textContent='Wallet Overview';root.appendChild(heading);
     const balance=document.createElement('div');balance.style.cssText='padding:14px;margin:8px 0;background:#0b2b22;border:1px solid #10b981;border-radius:10px';
