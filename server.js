@@ -398,7 +398,7 @@ button{cursor:pointer;background:#39f58b;border:0;font-weight:bold}
 small{color:#a6b2c0}
 .admin-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:10px 0 18px}.admin-tabs button{padding:12px 6px;background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:7px}.admin-tabs button.active{background:#39f58b;color:#062012}
 #adminTitle{display:flex;align-items:center;gap:10px;margin:8px 0 18px}
-#adminMenuToggle:not([hidden]){display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;background:#1e293b;color:#e2e8f0;border:1px solid #334155;padding:8px 11px;font-size:20px;line-height:1;border-radius:8px;min-width:42px;min-height:40px}#adminMenuToggle[hidden]{display:none!important}
+#adminMenuToggle:not([hidden]){display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;background:#1e293b;color:#e2e8f0;border:1px solid #334155;padding:8px 11px;font-size:20px;line-height:1;border-radius:8px;min-width:42px;min-height:40px}#adminMenuToggle[hidden]{display:none!important}#adminMenuToggle{display:inline-flex!important;align-items:center;justify-content:center;flex:0 0 auto;background:#1e293b;color:#e2e8f0;border:1px solid #334155;padding:8px 11px;font-size:22px;line-height:1;border-radius:8px;min-width:44px;min-height:42px}
 #adminMenu{display:none;background:#111923;border:1px solid #334155;border-radius:10px;margin:0 0 10px;padding:5px}
 #adminMenu.open{display:block}
 #adminMenu button{display:block;width:100%;text-align:left;margin:3px 0;padding:11px;background:transparent;color:#e2e8f0;border-radius:7px}
@@ -416,7 +416,7 @@ small{color:#a6b2c0}
 </style>
 </head>
 <body><main>
-<h1 id="adminTitle"><button type="button" id="adminMenuToggle" aria-label="Open navigation menu" aria-expanded="false" hidden>☰</button> <span>JKPanel <span style="color:#39f58b">Admin</span></span></h1>
+<h1 id="adminTitle"><button type="button" id="adminMenuToggle" aria-label="Open navigation menu" aria-expanded="false">☰</button> <span>JKPanel <span style="color:#39f58b">Admin</span></span></h1>
 <section id="login">
 <h2>Admin Login</h2>
 <form id="loginForm">
@@ -428,7 +428,7 @@ small{color:#a6b2c0}
 <nav id="adminMenu" aria-label="Admin navigation"><button type="button" class="active" data-tab="users">Home</button><button type="button" data-tab="products">Products</button><button type="button" data-tab="keys">Keys Management</button><button type="button" data-tab="profile">Profile</button><button type="button" data-action="logout">Logout</button></nav>
 <button id="logout" hidden>Logout</button>
 <section id="tab-users" class="admin-section active">
- <h2>Registered Users</h2>
+
  <input id="userSearch" class="search-box" type="search" placeholder="Search users by name, email or ID...">
  <button id="refreshCustomers">Refresh Users</button>
  <div id="customerList"></div>
@@ -437,7 +437,8 @@ small{color:#a6b2c0}
  <h2>Products</h2>
  <input id="productSearch" class="search-box" type="search" placeholder="Search products...">
  <button id="refreshProducts">Refresh Products</button>
- <h3 style="margin-top:16px">Add / Edit Product</h3>
+ <button type="button" id="showProductForm" style="margin:10px 0">＋ Add Product</button>
+<div id="productEditor" hidden><h3 style="margin-top:16px">Add / Edit Product</h3>
 <div class="card">
  <form id="productForm">
   <input id="productId" type="hidden">
@@ -463,7 +464,7 @@ small{color:#a6b2c0}
   <button type="button" id="productCancel" style="background:#475569;color:white">Clear</button>
  </form>
  <p id="productMessage" role="status"></p>
-</div>
+</div></div>
 <div id="productList"></div>
 </section>
 <section id="tab-keys" class="admin-section">
@@ -472,7 +473,8 @@ small{color:#a6b2c0}
  <input id="keySearch" class="search-box" type="search" placeholder="Search key/order records...">
  <button id="refreshKeys">Refresh Key Records</button>
  <div id="keyList"></div>
- <h3 style="margin-top:18px">Add / Edit Key Product</h3>
+ <button type="button" id="showKeyForm" style="margin:10px 0">＋ Add Keys</button>
+ <div id="keyEditor" hidden><h3 style="margin-top:18px">Add / Edit Key Product</h3>
  <div class="card">
   <form id="keyGroupForm">
    <label for="keyGroupName">Key name</label><br><input id="keyGroupName" required maxlength="100" value="DRIP Wire" placeholder="DRIP Wire" style="width:100%"><br>
@@ -483,7 +485,7 @@ small{color:#a6b2c0}
    <label style="display:block;margin:12px 0"><input id="keyGroupPublished" type="checkbox" checked> Show on shop</label>
    <button type="submit" id="keyGroupSave">Save Key and Durations</button><button type="button" id="keyGroupClear" style="background:#475569;color:white">Clear</button>
   </form><p id="keyGroupMessage" role="status"></p>
- </div>
+ </div></div>
  <h3 style="margin-top:18px">Saved Key Products</h3><div id="keyGroupList"></div>
  <h3 style="margin-top:18px">Orders / Key Requests</h3><div id="orders"></div>
 </section>
@@ -664,6 +666,7 @@ async function loadProducts(){
     document.getElementById("productPublished").checked=items.some(p=>p.published);
     const rows=document.getElementById("productPlanRows");rows.replaceChildren();
     items.forEach(p=>{const m=String(p.name||"").match(/^(.*?)\\s*-\\s*(.+)$/);addProductPlanRow(m?m[2].trim():"Standard",String(p.price));});
+    document.getElementById("productEditor").hidden=false;
     document.getElementById("productSave").textContent="Update Product and Durations";
     document.getElementById("productMessage").textContent="Editing: "+base;
     document.getElementById("productForm").scrollIntoView({behavior:"smooth",block:"center"});
@@ -696,7 +699,10 @@ function clearProductForm(){
  document.getElementById("productPlanRows").replaceChildren();productPlanSeed.forEach(p=>addProductPlanRow(p.duration,p.price));
  document.getElementById("productSave").textContent="Add Product";
  document.getElementById("productMessage").textContent="";
+ document.getElementById("productEditor").hidden=true;
 }
+document.getElementById("showProductForm").onclick=()=>{const editor=document.getElementById("productEditor");editor.hidden=!editor.hidden;if(!editor.hidden){clearProductForm();document.getElementById("productName").focus();}};
+document.getElementById("showKeyForm").onclick=()=>{const editor=document.getElementById("keyEditor");editor.hidden=!editor.hidden;if(!editor.hidden){clearKeyGroupForm();document.getElementById("keyGroupName").focus();}};
 document.getElementById("addProductPlan").onclick=()=>addProductPlanRow();
 productPlanSeed.forEach(p=>addProductPlanRow(p.duration,p.price));
 document.getElementById("productCancel").onclick=clearProductForm;
@@ -746,6 +752,7 @@ function clearKeyGroupForm(){
  ["keyGroupImageUrl","keyGroupVideoUrl","keyGroupImageFile","keyGroupVideoFile","keyGroupImageStatus","keyGroupVideoStatus"].forEach(id=>{const e=document.getElementById(id);if(e)e.value!==undefined?e.value="":e.textContent="";});
  document.getElementById("keyGroupPublished").checked=true;document.getElementById("keyPlanRows").replaceChildren();keyPlanSeed.forEach(p=>addKeyPlanRow(p.duration,p.price));
  document.getElementById("keyGroupSave").textContent="Save Key and Durations";document.getElementById("keyGroupMessage").textContent="";
+ document.getElementById("keyEditor").hidden=true;
 }
 async function uploadKeyGroupMedia(){
  let imageUrl=document.getElementById("keyGroupImageUrl").value.trim(),videoUrl=document.getElementById("keyGroupVideoUrl").value.trim();
@@ -769,6 +776,7 @@ async function loadKeyGroups(){
     document.getElementById("keyGroupImageStatus").textContent=document.getElementById("keyGroupImageUrl").value?"Current photo saved. Nayi photo select karne par replace hogi.":"";
     document.getElementById("keyGroupVideoStatus").textContent=document.getElementById("keyGroupVideoUrl").value?"Current video saved. Nayi video select karne par replace hogi.":"";
     document.getElementById("keyGroupPublished").checked=active.length>0;document.getElementById("keyPlanRows").replaceChildren();active.forEach(p=>addKeyPlanRow(String(p.name).slice(base.length).replace(/^\\s*-\\s*/,""),String(p.price)));
+    document.getElementById("keyEditor").hidden=false;
     document.getElementById("keyGroupSave").textContent="Update Key and Durations";document.getElementById("keyGroupMessage").textContent="Editing: "+base;document.getElementById("keyGroupForm").scrollIntoView({behavior:"smooth",block:"center"});};
    card.append(title,info,options,edit);root.appendChild(card);});
  }catch(e){root.textContent=e.message||"Key products load nahi ho sake.";}
