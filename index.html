@@ -1363,26 +1363,40 @@ async function loadShopProducts(){
     card.append(purchase,plans);
     root.appendChild(card);
    }
-  // BALA MODS ~FF NONROOT: one product card; show its duration and price only after clicking purchase.
+  // BALA MODS ~FF NONROOT: one card, with duration/price options inside the purchase toggle.
   if(balaProducts.length){
    const card=document.createElement('article');
    card.className='bala-product-card';
    card.dataset.createdAt=String(Math.max(...balaProducts.map(p=>Date.parse(p.created_at||'')||0)));
    card.style.cssText='display:block;margin-top:12px;padding:14px;background:linear-gradient(160deg,#111827,#0b1220);border:1px solid #334155;border-radius:16px;overflow:hidden;box-shadow:0 8px 26px #0003';
    const imageProduct=balaProducts.find(p=>p.image_url);
+   const videoProduct=balaProducts.find(p=>p.video_url);
    if(imageProduct?.image_url){
-    const img=document.createElement('img');img.src=imageProduct.image_url;img.alt='BALA MODS ~FF NONROOT';img.loading='lazy';
-    img.style.cssText='display:block;width:100%;height:clamp(200px,58vw,340px);object-fit:contain;background:#030712;border-radius:12px;margin-bottom:14px';
-    img.onerror=()=>{img.style.display='none';};card.appendChild(img);
+    if(videoProduct?.video_url){
+     const thumb=document.createElement('button');thumb.type='button';thumb.className='product-video-thumb';thumb.setAttribute('aria-label','Play BALA MODS FF NONROOT video');thumb.onclick=()=>openProductVideo(videoProduct.video_url,'BALA MODS ~FF NONROOT');
+     const img=document.createElement('img');img.src=imageProduct.image_url;img.alt='BALA MODS ~FF NONROOT video preview';img.loading='eager';img.onerror=()=>{img.style.display='none';};
+     const play=document.createElement('span');play.className='product-video-play';play.textContent='▶';
+     const hint=document.createElement('span');hint.className='product-video-hint';hint.textContent='TAP TO PLAY VIDEO';
+     thumb.append(img,play,hint);card.appendChild(thumb);
+    }else{
+     const img=document.createElement('img');img.src=imageProduct.image_url;img.alt='BALA MODS ~FF NONROOT';img.loading='eager';
+     img.style.cssText='display:block;width:100%;height:clamp(200px,58vw,340px);object-fit:contain;background:#030712;border-radius:12px;margin-bottom:14px';
+     img.onerror=()=>{img.style.display='none';};card.appendChild(img);
+    }
+   }else if(videoProduct?.video_url){
+    const video=document.createElement('video');video.src=videoProduct.video_url;video.controls=true;video.preload='metadata';video.playsInline=true;
+    video.style.cssText='display:block;width:100%;height:clamp(220px,62vw,360px);object-fit:contain;background:#030712;border-radius:12px;margin-bottom:14px';
+    card.appendChild(video);
    }
    const title=document.createElement('h4');title.textContent='BALA MODS ~FF NONROOT';title.style.cssText='font-size:20px;color:#f8fafc;margin:4px 0 8px;overflow-wrap:anywhere';
    const purchase=document.createElement('button');purchase.type='button';purchase.textContent=isResellerCustomer?'BUY RESELLER KEY':'PURCHASE KEY';purchase.setAttribute('aria-expanded','false');
    purchase.style.cssText='display:block;width:100%;padding:13px;background:#10b981;color:#052e16;font-size:13px;border-radius:10px';
    const plans=document.createElement('div');plans.hidden=true;plans.style.cssText='margin-top:12px;display:none';
    purchase.onclick=()=>{const open=plans.style.display==='none';plans.style.display=open?'block':'none';plans.hidden=!open;purchase.setAttribute('aria-expanded',String(open));};
-   balaProducts.sort((a,b)=>shopDurationRank((a.name||'').replace(/^BALA\s*MODS?\s*~?\s*FF\s+NONROOT\s*[-–:]?\s*/i,''))-shopDurationRank((b.name||'').replace(/^BALA\s*MODS?\s*~?\s*FF\s+NONROOT\s*[-–:]?\s*/i,'')));
+   const balaDuration=(product)=>String(product.name||'').replace(/^BALA\s*MODS?\s*~?\s*FF\s+NONROOT\s*[-–:]?\s*/i,'').trim()||'Duration';
+   balaProducts.sort((a,b)=>shopDurationRank(balaDuration(a))-shopDurationRank(balaDuration(b)));
    balaProducts.forEach(product=>{
-    const duration=(product.name||'BALA MODS ~FF NONROOT').replace(/^BALA\s*MODS?\s*~?\s*FF\s+NONROOT\s*[-–:]?\s*/i,'').trim()||'Duration';
+    const duration=balaDuration(product);
     const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 0;border-bottom:1px solid #263247';
     const details=document.createElement('div');details.style.cssText='min-width:0;flex:1';
     const durationLabel=document.createElement('p');durationLabel.textContent=duration;durationLabel.style.cssText='font-size:14px;font-weight:bold;color:#f8fafc';
