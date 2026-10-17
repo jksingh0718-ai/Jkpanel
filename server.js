@@ -409,7 +409,7 @@ app.post("/api/buy-key", async (req, res) => {
 
     // 4. Banti Bhaiya API Call
     const params = new URLSearchParams();
-    params.append('api_key', process.env.RESELLER_API_KEY); // Tumhari API key
+    params.append('api_key', process.env.RESELLER_ACCESS_TOKEN);
     params.append('action', 'buy');
     params.append('product_id', productId);
     params.append('duration', duration);
