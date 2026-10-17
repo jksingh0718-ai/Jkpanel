@@ -718,6 +718,8 @@ function setBottomNavActive(name){
 function navigateBottom(name){
   closePopup();
   closeMenu();
+  const depositPage=document.getElementById('jkDepositPage');
+  if(depositPage)depositPage.style.display='none';
   if(name==='home'){
     setBottomNavActive('home');
     window.scrollTo({top:0,behavior:'smooth'});
@@ -820,10 +822,14 @@ function deposit(){
       '<div id="depositStatus" class="jk-deposit-status" aria-live="polite"></div>'+
       '<div class="jk-deposit-foot"><span>🔐</span><span>Your payment is processed by the payment gateway.</span></div></div>'+
       '<div class="jk-deposit-benefits"><div><b>⚡</b><span>Fast checkout</span></div><div><b>🛡️</b><span>Secure payment</span></div><div><b>👛</b><span>Wallet balance</span></div></div>';
-    const header=document.querySelector('header');
-    if(header)header.insertAdjacentElement('afterend',page);
+    const home=document.querySelector('header');
+    const mainContent=document.querySelector('main')||document.querySelector('#mainContent')||document.querySelector('.container');
+    if(mainContent)mainContent.insertAdjacentElement('beforebegin',page);
+    else if(home)home.insertAdjacentElement('afterend',page);
     else document.body.insertBefore(page,document.body.firstChild);
   }
+  const mainContent=document.querySelector('main')||document.querySelector('#mainContent')||document.querySelector('.container');
+  if(mainContent)mainContent.style.display='none';
   page.style.display='block';
   page.scrollIntoView({behavior:'smooth',block:'start'});
   setBottomNavActive('deposit');
@@ -839,6 +845,8 @@ function setDepositAmount(amount){
 function closeDepositPage(){
   const page=document.getElementById('jkDepositPage');
   if(page)page.style.display='none';
+  const mainContent=document.querySelector('main')||document.querySelector('#mainContent')||document.querySelector('.container');
+  if(mainContent)mainContent.style.display='';
   setBottomNavActive('home');
   window.scrollTo({top:0,behavior:'smooth'});
 }
