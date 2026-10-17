@@ -562,21 +562,34 @@ async function loadOrders(){
   });
   message.textContent="";
  }catch(e){
-  document.getElementById("dashboard").hidden=true;
-  document.getElementById("login").hidden=false;
+  // Keep the current screen visible when an individual data request fails.
+  // Only a failed login should leave the admin on the login screen.
   message.textContent=e.message;
  }
 }
 document.getElementById("loginForm").onsubmit=async e=>{
- e.preventDefault();message.textContent="";
+ e.preventDefault();
+ message.textContent="";
+ const passwordInput=document.getElementById("password");
+ const loginButton=document.querySelector("#loginForm button");
+ loginButton.disabled=true;
+ loginButton.textContent="Logging in...";
  try{
-  await api("/api/admin/login",{method:"POST",body:JSON.stringify({password:document.getElementById("password").value})});
-  document.getElementById("password").value="";
-  await loadOrders();
-  await loadCustomers();
-  await loadProducts();
-  await loadKeyGroups();
- }catch(err){message.textContent=err.message;}
+  await api("/api/admin/login",{method:"POST",body:JSON.stringify({password:passwordInput.value})});
+  passwordInput.value="";
+  document.getElementById("login").hidden=true;
+  document.getElementById("dashboard").hidden=false;
+  message.textContent="Login successful. Admin panel loading...";
+  await Promise.all([loadOrders(),loadCustomers(),loadProducts(),loadKeyGroups()]);
+  if(!message.textContent) message.textContent="Admin panel ready.";
+ }catch(err){
+  message.textContent=err.message||"Login failed. Password aur Render environment setting check karein.";
+  document.getElementById("dashboard").hidden=true;
+  document.getElementById("login").hidden=false;
+ }finally{
+  loginButton.disabled=false;
+  loginButton.textContent="Login";
+ }
 };
 
 
