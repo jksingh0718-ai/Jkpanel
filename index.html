@@ -132,6 +132,7 @@ footer{display:none}
   <a class="menu-item" href="#products" onclick="closeMenu()">Buy Keys / Products</a>
   <a class="menu-item" href="#" onclick="openReferral();return false">Refer and Earn 🎁</a>
   <a class="menu-item" href="#" onclick="feature('My Keys');return false">My Keys</a>
+  <a class="menu-item" href="#" onclick="openDepositHistoryPanel();return false">Deposit History</a>
   <a class="menu-item" href="#" onclick="openOrderHistoryPanel();return false">Order History</a>
   <a class="menu-item" href="https://wa.me/917645957071" target="_blank" rel="noopener">Contact Support</a>
   <a class="menu-item" href="https://whatsapp.com/channel/0029VbE3msh47Xe5PEWcBW3b" target="_blank" rel="noopener">📢 JOIN WHATSAPP CHANNEL</a>
@@ -723,6 +724,73 @@ function feature(name){
   closeMenu();
   if(name==='Order History'){openOrderHistoryPanel();return;}
   showPopup(name, name + ' section abhi setup nahi hua hai. Is feature ko use karne ke liye admin/backend setup zaroori hai.');
+}
+
+async function openDepositHistoryPanel(){
+  closeMenu();
+  const defaultClose=document.getElementById('popupDefaultClose');
+  if(defaultClose)defaultClose.style.display='block';
+  const root=document.getElementById('popupMessage');
+  document.getElementById('popupTitle').textContent='Deposit History';
+  root.replaceChildren();
+  document.getElementById('popup').classList.remove('auth-screen');
+  document.getElementById('popup').style.display='flex';
+  if(!localStorage.getItem('jk_customer_access_token')){
+    const p=document.createElement('p');
+    p.textContent='Apni deposit history dekhne ke liye pehle login karein.';
+    root.appendChild(p);
+    const login=document.createElement('button');
+    login.textContent='LOGIN / REGISTER';
+    login.style.cssText='width:100%;padding:12px;margin-top:12px;background:#10b981;color:#04130b';
+    login.onclick=()=>openAuth('login');
+    root.appendChild(login);
+    return;
+  }
+  const loading=document.createElement('p');
+  loading.textContent='Deposit history load ho rahi hai...';
+  loading.style.cssText='padding:14px 0;color:#94a3b8;text-align:center';
+  root.appendChild(loading);
+  try{
+    const data=await customerApi('/api/my-account');
+    root.replaceChildren();
+    const deposits=Array.isArray(data.novapayPayments)?data.novapayPayments:[];
+    const manual=Array.isArray(data.deposits)?data.deposits:[];
+    const items=[
+      ...deposits.map(item=>({id:item.provider_order_id||item.id,amount:Number(item.amount||0),status:item.status||'pending',created_at:item.created_at,transaction_id:item.provider_payment_id||''})),
+      ...manual.map(item=>({id:item.id,amount:Number(item.amount||0),status:item.status||'pending',created_at:item.created_at,transaction_id:item.transaction_id||''}))
+    ].sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
+    if(!items.length){
+      const empty=document.createElement('p');
+      empty.textContent='Abhi koi deposit record nahi hai.';
+      empty.style.cssText='padding:18px 0;color:#94a3b8;text-align:center';
+      root.appendChild(empty);
+      return;
+    }
+    items.forEach(item=>{
+      const card=document.createElement('div');
+      card.style.cssText='margin-top:10px;padding:13px;background:#0b1220;border:1px solid #334155;border-radius:10px;overflow-wrap:anywhere';
+      const title=document.createElement('h4');
+      title.textContent='Deposit ₹'+Number(item.amount).toFixed(2);
+      title.style.cssText='color:#38bdf8;font-size:15px;margin-bottom:8px';
+      const id=document.createElement('p');
+      id.textContent='Order / Request ID: '+String(item.id||'—');
+      id.style.cssText='font-size:11px;color:#cbd5e1;line-height:1.6';
+      const status=document.createElement('p');
+      status.textContent='Status: '+String(item.status||'pending').toUpperCase();
+      status.style.cssText='font-size:12px;color:'+(String(item.status).toLowerCase()==='paid'||String(item.status).toLowerCase()==='approved'?'#34d399':'#fbbf24')+';margin-top:5px;font-weight:bold';
+      const date=document.createElement('p');
+      date.textContent='Date: '+(item.created_at?new Date(item.created_at).toLocaleString('en-IN'):'—');
+      date.style.cssText='font-size:11px;color:#94a3b8;margin-top:5px';
+      card.append(title,id,status,date);
+      if(item.transaction_id){const tx=document.createElement('p');tx.textContent='Payment ID: '+item.transaction_id;tx.style.cssText='font-size:11px;color:#94a3b8;margin-top:5px;overflow-wrap:anywhere';card.appendChild(tx);}
+      root.appendChild(card);
+    });
+  }catch(error){
+    root.replaceChildren();
+    const p=document.createElement('p');
+    p.textContent=error.message||'Deposit history load nahi ho saki.';
+    root.appendChild(p);
+  }
 }
 
 async function openOrderHistoryPanel(){
