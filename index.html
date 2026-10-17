@@ -198,6 +198,12 @@ footer{display:none}
 .jk-deposit-benefits b{font-size:18px;color:#67e8f9}
 @media(min-width:600px){.jk-deposit-page{max-width:620px;margin:24px auto;padding:25px}.jk-deposit-form-card{padding:24px}.jk-deposit-hero h2{font-size:34px}}
 
+
+/* Deposit screen must be the only page content visible while active. */
+body.jk-deposit-only > :not(#jkDepositPage):not(#bottomNav) { display:none !important; }
+body.jk-deposit-only { padding-bottom:90px; }
+#jkDepositPage { position:relative; z-index:2; }
+
 </style>
 </head>
 <body>
@@ -842,6 +848,7 @@ function deposit(){
     if(header)header.insertAdjacentElement('afterend',page);
     else document.body.insertBefore(page,document.body.firstChild);
   }
+  document.body.classList.add('jk-deposit-only');
   page.style.display='block';
   page.scrollIntoView({behavior:'smooth',block:'start'});
   setBottomNavActive('deposit');
@@ -857,6 +864,7 @@ function setDepositAmount(amount){
 function closeDepositPage(){
   const page=document.getElementById('jkDepositPage');
   if(page)page.style.display='none';
+  document.body.classList.remove('jk-deposit-only');
   setBottomNavActive('home');
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -1241,7 +1249,7 @@ async function loadShopProducts(){
   isResellerCustomer=Boolean(data.isReseller);
   updateResellerUI();
   const products=data.products;
-  const dripProducts=products.filter(product=>/^DRIP Wire\s*-\s*/i.test(product.name||''));
+  const dripProducts=products.filter(product=>/^DRIP Wire(?:\s*-\s*.*)?$/i.test(String(product.name||'').trim()));
   const aimProducts=products.filter(product=>/^AIM HACK FF(?:\s*-|$)/i.test(product.name||''));
   const otherProducts=products.filter(product=>!/^DRIP Wire\s*-\s*/i.test(product.name||'')&&!/^AIM HACK FF(?:\s*-|$)/i.test(product.name||''));
 
@@ -1285,7 +1293,7 @@ async function loadShopProducts(){
    };
    dripProducts.sort((a,b)=>shopDurationRank((a.name||'').replace(/^DRIP Wire\s*-\s*/i,''))-shopDurationRank((b.name||'').replace(/^DRIP Wire\s*-\s*/i,'')));
     dripProducts.forEach(product=>{
-    const duration=(product.name||'DRIP Wire').replace(/^DRIP Wire\s*-\s*/i,'').trim()||'Duration';
+    const duration=(product.name||'DRIP Wire').replace(/^DRIP Wire\s*-\s*/i,'').trim()||String(product.name||'Duration').trim();
     const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 0;border-bottom:1px solid #263247';
     const details=document.createElement('div');details.style.cssText='min-width:0;flex:1';
     const durationLabel=document.createElement('p');durationLabel.textContent=duration;durationLabel.style.cssText='font-size:14px;font-weight:bold;color:#f8fafc';
@@ -1349,6 +1357,24 @@ async function loadShopProducts(){
     card.append(purchase,plans);
     root.appendChild(card);
    }
+  // Render every product not belonging to the two grouped product families.
+  otherProducts.forEach(product=>{
+   const card=document.createElement('article');
+   card.className='shop-product-card';
+   card.dataset.createdAt=String(Date.parse(product.created_at||'')||0);
+   card.style.cssText='display:block;margin-top:12px;padding:14px;background:linear-gradient(160deg,#111827,#0b1220);border:1px solid #334155;border-radius:16px;overflow:hidden;box-shadow:0 8px 26px #0003';
+   if(product.image_url){
+    const img=document.createElement('img');img.src=product.image_url;img.alt=String(product.name||'Product');img.loading='lazy';
+    img.style.cssText='display:block;width:100%;height:clamp(200px,58vw,340px);object-fit:contain;background:#030712;border-radius:12px;margin-bottom:14px';
+    img.onerror=()=>{img.style.display='none';};card.appendChild(img);
+   }
+   const title=document.createElement('h4');title.textContent=String(product.name||'Product');title.style.cssText='font-size:20px;color:#f8fafc;margin:4px 0 8px;overflow-wrap:anywhere';
+   const price=document.createElement('p');price.textContent='₹'+Number(product.price||0).toLocaleString('en-IN',{maximumFractionDigits:2});price.style.cssText='font-size:14px;color:#6ee7b7;margin:0 0 12px';
+   const buy=document.createElement('button');buy.type='button';buy.className='buy';buy.textContent='BUY';buy.style.cssText='display:block;width:100%;padding:13px;background:#10b981;color:#052e16;font-size:13px';
+   buy.onclick=()=>buyProduct(product);
+   card.append(title,price,buy);
+   root.appendChild(card);
+  });
    Array.from(root.children).filter(card=>!card.hasAttribute('data-search-empty')).sort((a,b)=>Number(b.dataset.createdAt||0)-Number(a.dataset.createdAt||0)).forEach(card=>root.appendChild(card));
   if(document.getElementById('shopProductSearch')?.value.trim())document.getElementById('shopProductSearch').dispatchEvent(new Event('input'));
  }catch(e){
