@@ -952,75 +952,56 @@ async function openDepositHistoryPanel(){
 
 async function openOrderHistoryPanel(){
   closeMenu();
-  document.getElementById('popup').classList.add('history-screen');
+  const popup=document.getElementById('popup');
+  popup.classList.add('history-screen');
   const defaultClose=document.getElementById('popupDefaultClose');
   if(defaultClose)defaultClose.style.display='block';
   const root=document.getElementById('popupMessage');
   document.getElementById('popupTitle').textContent='Order History';
   root.replaceChildren();
-  document.getElementById('popup').classList.remove('auth-screen');
-  document.getElementById('popup').style.display='flex';
+  popup.classList.remove('auth-screen');
+  popup.style.display='flex';
   if(!localStorage.getItem('jk_customer_access_token')){
-    const p=document.createElement('p');
-    p.textContent='Apni order history dekhne ke liye pehle login karein.';
-    root.appendChild(p);
-    const login=document.createElement('button');
-    login.textContent='LOGIN / REGISTER';
-    login.style.cssText='width:100%;padding:12px;margin-top:12px;background:#10b981;color:#04130b';
-    login.onclick=()=>openAuth('login');
-    root.appendChild(login);
-    return;
+    const p=document.createElement('p');p.textContent='Order history dekhne ke liye pehle login karein.';root.appendChild(p);
+    const login=document.createElement('button');login.textContent='LOGIN / REGISTER';login.style.cssText='width:100%;padding:12px;margin-top:12px;background:#10b981;color:#04130b';login.onclick=()=>openAuth('login');root.appendChild(login);return;
   }
-  const loading=document.createElement('div');
-  loading.style.cssText='display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:28px 8px;color:#94a3b8;text-align:center';
-  const spinner=document.createElement('div');
-  spinner.setAttribute('aria-label','Loading');
-  spinner.style.cssText='width:32px;height:32px;border:3px solid #334155;border-top-color:#38bdf8;border-radius:50%;animation:jkSpin .8s linear infinite';
-  const loadingText=document.createElement('p');
-  loadingText.textContent='Loading Order History...';
-  loadingText.style.cssText='color:#94a3b8;text-align:center';
-  loading.append(spinner,loadingText);
-  root.appendChild(loading);
+  const loading=document.createElement('p');loading.textContent='Order history load ho rahi hai...';loading.style.cssText='padding:18px 0;text-align:center;color:#94a3b8';root.appendChild(loading);
   try{
     const data=await customerApi('/api/my-account');
     root.replaceChildren();
     const orders=Array.isArray(data.orders)?data.orders:[];
-    if(!orders.length){
-      const empty=document.createElement('p');
-      empty.textContent='Abhi koi order nahi hai.';
-      empty.style.cssText='padding:18px 0;color:#94a3b8;text-align:center';
-      root.appendChild(empty);
-      return;
-    }
-    orders.forEach(order=>{
-      const card=document.createElement('div');
-      card.style.cssText='margin-top:10px;padding:13px;background:#0b1220;border:1px solid #334155;border-radius:10px;overflow-wrap:anywhere';
-      const title=document.createElement('h4');
-      title.textContent=order.product_name||'Product order';
-      title.style.cssText='color:#e2e8f0;font-size:14px;margin-bottom:8px';
-      const amount=document.createElement('p');
-      amount.textContent='Amount: ₹'+Number(order.amount||0).toFixed(2);
-      amount.style.cssText='font-size:13px;color:#38bdf8;margin-bottom:6px';
-      const paymentStatus=String(order.payment_status||'pending').toUpperCase();
-      const orderStatus=String(order.order_status||'pending').toUpperCase();
-      const status=document.createElement('p');
-      status.textContent='Payment: '+paymentStatus+' · Order: '+orderStatus;
-      status.style.cssText='font-size:12px;color:'+(orderStatus==='COMPLETED'?'#6ee7b7':(orderStatus==='REJECTED'?'#fca5a5':'#fbbf24'))+';margin-bottom:7px';
-      const date=document.createElement('small');
-      date.textContent='Date: '+(order.created_at?new Date(order.created_at).toLocaleString('en-IN'):'—');
-      date.style.cssText='display:block;color:#94a3b8;font-size:11px;line-height:1.6';
-      const id=document.createElement('small');
-      id.textContent='Order ID: '+(order.id||'—');
-      id.style.cssText='display:block;color:#64748b;font-size:10px;line-height:1.6;overflow-wrap:anywhere';
-      card.append(title,amount,status,date,id);
-      root.appendChild(card);
+    const money=value=>'₹'+Number(value||0).toFixed(2);
+    const successful=orders.filter(o=>['completed','success','successful','delivered'].includes(String(o.order_status||'').toLowerCase()));
+    const sum=list=>list.reduce((total,o)=>total+Number(o.amount||0),0);
+    const now=new Date();
+    const sameDay=d=>d&&d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth()&&d.getDate()===now.getDate();
+    const sameMonth=d=>d&&d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth();
+    const stats=document.createElement('div');stats.style.cssText='display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:2px 0 18px';
+    [['TOTAL SPENT',sum(successful)],['THIS MONTH',sum(successful.filter(o=>sameMonth(o.created_at?new Date(o.created_at):null)))],['TODAY',sum(successful.filter(o=>sameDay(o.created_at?new Date(o.created_at):null))) ]].forEach(([label,value])=>{
+      const card=document.createElement('div');card.style.cssText='min-width:0;padding:11px 7px;background:#0b1220;border:1px solid #155e75;border-radius:10px;text-align:center';
+      const amount=document.createElement('b');amount.textContent=money(value);amount.style.cssText='display:block;color:#22d3ee;font-size:clamp(13px,3.7vw,18px);overflow-wrap:anywhere;margin-bottom:7px';
+      const caption=document.createElement('span');caption.textContent=label;caption.style.cssText='font-size:8px;color:#a1a1aa;letter-spacing:.4px';
+      card.append(amount,caption);stats.appendChild(card);
+    });
+    root.appendChild(stats);
+    const heading=document.createElement('h4');heading.textContent='ORDER HISTORY';heading.style.cssText='font-size:12px;letter-spacing:1px;color:#e2e8f0;margin:0 0 8px';root.appendChild(heading);
+    if(!orders.length){const empty=document.createElement('p');empty.textContent='Abhi koi order record nahi hai.';empty.style.cssText='padding:18px 0;color:#94a3b8;text-align:center';root.appendChild(empty);return;}
+    orders.slice().sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0)).forEach(order=>{
+      const card=document.createElement('div');card.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;padding:13px 11px;background:#0b0d12;border:1px solid #27272a;border-radius:10px;overflow-wrap:anywhere';
+      const left=document.createElement('div');left.style.cssText='min-width:0;flex:1';
+      const title=document.createElement('b');title.textContent=order.product_name||'Product order';title.style.cssText='display:block;font-size:13px;color:#f8fafc;margin-bottom:6px;overflow-wrap:anywhere';
+      const amount=document.createElement('b');amount.textContent=money(order.amount);amount.style.cssText='display:block;font-size:15px;color:#22d3ee;margin-bottom:5px';
+      const date=document.createElement('small');date.textContent=order.created_at?new Date(order.created_at).toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'}):'Date/time unavailable';date.style.cssText='display:block;color:#a1a1aa;font-size:10px;line-height:1.5';
+      left.append(title,amount,date);
+      const orderStatus=String(order.order_status||'pending').toLowerCase();
+      const label=['completed','success','successful','delivered'].includes(orderStatus)?'SUCCESS':['failed','rejected','cancelled','canceled'].includes(orderStatus)?'FAILED':'PENDING';
+      const status=document.createElement('span');status.textContent=label;status.style.cssText='flex:0 0 auto;font-size:10px;font-weight:800;padding:6px 8px;border-radius:6px;background:'+(label==='SUCCESS'?'#052e16':label==='PENDING'?'#422006':'#450a0a')+';color:'+(label==='SUCCESS'?'#4ade80':label==='PENDING'?'#fbbf24':'#f87171');
+      card.append(left,status);
+      const detail=document.createElement('details');detail.style.cssText='margin-top:6px;color:#64748b;font-size:10px';
+      const summary=document.createElement('summary');summary.textContent='Order details';summary.style.cssText='cursor:pointer;padding:4px 0';const id=document.createElement('div');id.textContent='Order ID: '+(order.id||'—');id.style.cssText='overflow-wrap:anywhere;padding:5px 0';detail.append(summary,id);card.style.flexWrap='wrap';card.appendChild(detail);root.appendChild(card);
     });
   }catch(error){
-    root.replaceChildren();
-    const p=document.createElement('p');
-    p.textContent=error.message||'Order history load nahi ho saki.';
-    p.style.cssText='color:#fca5a5;padding:12px 0';
-    root.appendChild(p);
+    root.replaceChildren();const p=document.createElement('p');p.textContent=error.message||'Order history load nahi ho saki.';p.style.cssText='color:#fca5a5;padding:12px 0';root.appendChild(p);
   }
 }
 
