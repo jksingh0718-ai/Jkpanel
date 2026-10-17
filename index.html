@@ -658,7 +658,7 @@ function openProfilePanel(){
     const emailEl=document.getElementById('profileEmail');if(emailEl)emailEl.textContent=email;
     const avatar=document.getElementById('profileAvatar');if(avatar)avatar.textContent=(email.split('@')[0].replace(/[^a-z0-9]/gi,'').slice(0,2)||'JK').toUpperCase();
     const id=document.getElementById('profileUserId');if(id)id.textContent=data.user?.id?'User ID: '+String(data.user.id).slice(0,10):'';
-    const badge=document.getElementById('profilePartnerBadge');if(badge){badge.textContent=data.isReseller?'♛ RESELLER':'CUSTOMER';if(data.isReseller){badge.style.background='#30230b';badge.style.color='#fbbf24';}else{badge.style.background='#172554';badge.style.color='#93c5fd';}}
+    const badge=document.getElementById('profilePartnerBadge');if(badge){badge.textContent=data.isReseller?'♛ RESELLER':'USER';if(data.isReseller){badge.style.background='#30230b';badge.style.color='#fbbf24';}else{badge.style.background='#172554';badge.style.color='#93c5fd';}}
     const balance=Number(data.walletBalance??data.wallet_balance??data.balance??0);
     const wallet=document.getElementById('profileWalletBalance');if(wallet)wallet.textContent='₹'+balance.toFixed(2);
   }).catch(e=>{const emailEl=document.getElementById('profileEmail');if(emailEl)emailEl.textContent=e.message||'Profile load nahi hua';});
