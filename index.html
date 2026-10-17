@@ -1195,7 +1195,7 @@ function restoreCustomerSession(){
 
 async function autoVerifyReturnedNovapayPayment(orderId){
   const token = localStorage.getItem('jk_customer_access_token') || '';
-  if(!token || !/^JK\\d{13}[A-F0-9]{8}$/.test(orderId)) return;
+  if(!token || !/^JK\d{13}[A-F0-9]{8}$/.test(orderId)) return;
   localStorage.setItem('jk_novapay_pending_order', orderId);
   const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
   for(let attempt=0; attempt<10; attempt++){
