@@ -215,7 +215,7 @@ body.jk-deposit-only { padding-bottom:90px; }
     <b style="color:#38bdf8">JK PANEL SHOP</b>
     <button onclick="closeMenu()" style="background:#263247;color:white;padding:8px">✕</button>
   </div>
-  <a class="menu-item" href="#" onclick="closeMenu()">Dashboard</a>
+  <a class="menu-item" href="#" onclick="closeMenu();closeDepositPage();return false">Dashboard</a>
   <a class="menu-item" id="menuLogin" href="#" onclick="openAuth(\'login\');return false">LOGIN / REGISTER</a>
 <a class="menu-item" href="#" onclick="deposit();return false">Deposit</a>
   
@@ -722,7 +722,8 @@ function setBottomNavActive(name){
   });
 }
 function navigateBottom(name){
-  // Recover any stuck overlay first so the page remains clickable.
+  // Always restore the dashboard before switching tabs; otherwise the deposit-only
+  // CSS can keep every page element hidden and leave a black screen.
   try{closePopup();}catch(e){}
   try{closeMenu();}catch(e){}
   document.body.classList.remove('menu-open','popup-open');
@@ -734,6 +735,9 @@ function navigateBottom(name){
   if(backdrop)backdrop.style.display='none';
   const depositPage=document.getElementById('jkDepositPage');
   if(depositPage)depositPage.style.display='none';
+  // Critical: clear deposit-only mode on every tab change. deposit() re-enables it
+  // only when the Deposit tab is actually selected.
+  document.body.classList.remove('jk-deposit-only');
   try{
     if(name==='home'){
       setBottomNavActive('home');
@@ -865,6 +869,7 @@ function closeDepositPage(){
   const page=document.getElementById('jkDepositPage');
   if(page)page.style.display='none';
   document.body.classList.remove('jk-deposit-only');
+  document.body.classList.remove('menu-open','popup-open');
   setBottomNavActive('home');
   window.scrollTo({top:0,behavior:'smooth'});
 }
