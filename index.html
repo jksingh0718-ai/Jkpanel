@@ -740,13 +740,18 @@ function showPopup(title,message){
   document.getElementById('popup').style.display='flex';
 }
 function closePopup(){
-  document.getElementById('popup').classList.remove('history-screen');
+  const popup=document.getElementById('popup');
+  popup.classList.remove('history-screen','auth-screen');
   const player=document.querySelector('#popupMessage video');
   if(player){player.pause();player.removeAttribute('src');player.load();}
-  document.getElementById('popup').style.display='none';
-  document.getElementById('popup').classList.remove('auth-screen');
-  const card=document.querySelector('#popup .popup-card');if(card)card.classList.remove('video-player-card');
+  popup.style.cssText='';
+  popup.style.display='none';
+  const card=popup.querySelector('.popup-card');
+  if(card){card.classList.remove('video-player-card');card.style.cssText='';}
+  const title=document.getElementById('popupTitle');if(title)title.style.cssText='';
+  const root=document.getElementById('popupMessage');if(root)root.style.cssText='';
   const close=document.querySelector('#popup .auth-close');if(close)close.remove();
+  const defaultClose=document.getElementById('popupDefaultClose');if(defaultClose)defaultClose.style.display='block';
 }
 
 function deposit(){
