@@ -498,6 +498,7 @@ async function loadOrders(){
   document.getElementById("login").hidden=true;
   document.getElementById("dashboard").hidden=false;
   const root=document.getElementById("orders");
+  if(!root){throw new Error("Orders section missing. Page refresh karein.");}
   root.replaceChildren();
   if(!data.orders.length){root.textContent="No orders found.";return;}
   data.orders.forEach(order=>{
@@ -570,6 +571,7 @@ async function loadProducts(){
  try{
   const data=await api("/api/admin/products");
   const root=document.getElementById("productList");
+  if(!root){throw new Error("Products section missing. Page refresh karein.");}
   root.replaceChildren();
   if(!data.products.length){root.textContent="No products yet. Add your first product above.";return;}
   data.products.forEach(product=>{
@@ -673,6 +675,7 @@ async function loadCustomers(){
  try{
   const data=await api("/api/admin/customers");
   const root=document.getElementById("customerList");
+  if(!root){throw new Error("Users section missing. Page refresh karein.");}
   root.replaceChildren();
   const summary=document.createElement("p");
   summary.textContent="Registered customers: "+data.customers.length+" | Old/guest deposits: "+data.unlinkedDeposits.length;
