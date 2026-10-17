@@ -731,7 +731,8 @@ async function startNovapayPayment(){
 }
 
 async function checkNovapayPayment(){
-  const status = document.getElementById('depositStatus');
+  // The user may have returned to the dashboard where the Deposit modal is closed.
+  const status = document.getElementById('depositStatus') || { set textContent(value){} };
   const orderId = localStorage.getItem('jk_novapay_pending_order');
   if(!orderId){
     status.textContent = 'Pending payment order nahi mila. Naya payment order banayein.';
