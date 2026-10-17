@@ -660,24 +660,50 @@ async function loadOrders(){
   const root=document.getElementById("orders");
   if(!root){throw new Error("Orders section missing. Page refresh karein.");}
   root.replaceChildren();
-  if(!data.orders.length){root.textContent="No orders found.";return;}
+  if(!Array.isArray(data.orders)||!data.orders.length){root.textContent="No orders found.";return;}
   data.orders.forEach(order=>{
    const card=document.createElement("article");
    card.className="card";
+   card.style.cssText="padding:12px;margin:10px 0;border-radius:12px;border:1px solid #263247;background:#111827";
+   const heading=document.createElement("div");
+   heading.style.cssText="display:flex;align-items:flex-start;justify-content:space-between;gap:10px";
+   const summary=document.createElement("div");
+   summary.style.cssText="min-width:0;flex:1";
    const title=document.createElement("h3");
    title.textContent=order.product_name||"Order";
+   title.style.cssText="font-size:15px;margin:0 0 5px;overflow-wrap:anywhere";
    const details=document.createElement("p");
-   details.textContent="Customer: "+order.customer_name+" | Amount: ₹"+order.amount;
+   details.textContent="Customer: "+(order.customer_name||"Unknown")+" · ₹"+Number(order.amount||0).toLocaleString("en-IN");
+   details.style.cssText="font-size:12px;color:#cbd5e1;margin:0";
+   const statusLine=document.createElement("p");
+   statusLine.textContent="Order: "+(order.order_status||"pending")+" · Payment: "+(order.payment_status||"pending");
+   statusLine.style.cssText="font-size:11px;color:#94a3b8;margin:6px 0 0";
+   summary.append(title,details,statusLine);
+   const toggle=document.createElement("button");
+   toggle.type="button";toggle.textContent="View details";toggle.setAttribute("aria-expanded","false");
+   toggle.style.cssText="padding:8px 10px;font-size:11px;flex-shrink:0";
+   heading.append(summary,toggle);
+   const panel=document.createElement("div");
+   panel.hidden=true;
+   panel.style.cssText="display:none;margin-top:12px;padding-top:10px;border-top:1px solid #263247";
+   toggle.onclick=()=>{
+    const open=panel.style.display==="none";
+    panel.style.display=open?"block":"none";panel.hidden=!open;
+    toggle.textContent=open?"Hide details":"View details";
+    toggle.setAttribute("aria-expanded",String(open));
+   };
    const id=document.createElement("small");
-   id.textContent="Order ID: "+order.id+" | Created: "+(order.created_at||"");
+   id.textContent="Order ID: "+order.id+" · Created: "+(order.created_at||"");
+   id.style.cssText="display:block;overflow-wrap:anywhere;color:#94a3b8;font-size:10px;margin-bottom:8px";
    const payment=document.createElement("p");
-   payment.textContent="Payment: "+order.payment_status;
+   payment.textContent="Payment: "+(order.payment_status||"pending");
    const supplier=document.createElement("p");
    supplier.textContent="Supplier delivery: "+(order.supplier_status||"not_started")+(order.supplier_duration?" ("+order.supplier_duration+")":"")+(order.supplier_error?" — "+order.supplier_error:"");
+   supplier.style.cssText="font-size:12px;overflow-wrap:anywhere";
    const verifyPayment=document.createElement("button");
    verifyPayment.textContent="Mark payment verified";
    verifyPayment.disabled=order.payment_status==="paid";
-   verifyPayment.style.marginRight="8px";
+   verifyPayment.style.cssText="margin:0 8px 8px 0;padding:9px;font-size:11px";
    verifyPayment.onclick=async()=>{
     if(!confirm("Payment ko bank/UPI statement se verify kiya hai? Sirf confirmed payment par OK karein."))return;
     try{
@@ -687,31 +713,30 @@ async function loadOrders(){
     }catch(e){message.textContent=e.message;}
    };
    const orderStatus=document.createElement("p");
-   orderStatus.textContent="Order status: "+order.order_status;
+   orderStatus.textContent="Order status: "+(order.order_status||"pending");
+   orderStatus.style.cssText="font-size:12px;margin-bottom:6px";
    const select=document.createElement("select");
+   select.style.cssText="max-width:100%;margin:0 8px 8px 0";
    ["pending","processing","completed","cancelled"].forEach(status=>{
     const option=document.createElement("option");
     option.value=status;option.textContent=status;
-    option.selected=status===order.order_status;select.appendChild(option);
+    option.selected=status===(order.order_status||"pending");select.appendChild(option);
    });
    const save=document.createElement("button");
-   save.textContent="Update status";
+   save.textContent="Update status";save.style.cssText="padding:9px;font-size:11px";
    save.onclick=async()=>{
     try{
-     await api("/api/admin/orders/"+encodeURIComponent(order.id),{
-      method:"PATCH",body:JSON.stringify({order_status:select.value})
-     });
+     await api("/api/admin/orders/"+encodeURIComponent(order.id),{method:"PATCH",body:JSON.stringify({order_status:select.value})});
      message.textContent="Order status updated.";
      await loadOrders();
     }catch(e){message.textContent=e.message;}
    };
-   card.append(title,details,id,payment,supplier,verifyPayment,orderStatus,document.createElement("br"),select,save);
+   panel.append(id,payment,supplier,verifyPayment,orderStatus,select,save);
+   card.append(heading,panel);
    root.appendChild(card);
   });
   message.textContent="";
  }catch(e){
-  // Keep the current screen visible when an individual data request fails.
-  // Only a failed login should leave the admin on the login screen.
   message.textContent=e.message;
  }
 }
