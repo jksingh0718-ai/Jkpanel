@@ -318,7 +318,7 @@ app.get("/api/my-account", async (req, res) => {
     return res.status(500).json({ error: "Referral details load nahi ho sake." });
   }
 
-  const [depositsResult, keysResult, walletResult, transactionsResult, referralsResult, commissionsResult, ordersResult] = await Promise.all([
+  const [depositsResult, keysResult, walletResult, transactionsResult, referralsResult, commissionsResult, ordersResult, novapayPaymentsResult] = await Promise.all([
     supabase.from("deposit_requests").select("id, amount, transaction_id, status, created_at")
       .eq("user_id", user.id).order("created_at", { ascending: false }).limit(100),
     supabase.from("customer_keys").select("id, product_name, key_value, status, created_at")
@@ -333,10 +333,13 @@ app.get("/api/my-account", async (req, res) => {
       .eq("referrer_user_id", user.id).order("created_at", { ascending: false }).limit(100),
     supabase.from("orders")
       .select('id, created_at, "Product_name", "Amount", "Payment_status", "Order status"')
+      .eq("user_id", user.id).order("created_at", { ascending: false }).limit(100),
+    supabase.from("payment_requests")
+      .select("id, amount, provider_order_id, provider_payment_id, status, created_at")
       .eq("user_id", user.id).order("created_at", { ascending: false }).limit(100)
   ]);
-  if (depositsResult.error || keysResult.error || walletResult.error || transactionsResult.error || referralsResult.error || commissionsResult.error || ordersResult.error) {
-    console.error("Customer account query failed:", depositsResult.error?.message || keysResult.error?.message || walletResult.error?.message || transactionsResult.error?.message || referralsResult.error?.message || commissionsResult.error?.message || ordersResult.error?.message);
+  if (depositsResult.error || keysResult.error || walletResult.error || transactionsResult.error || referralsResult.error || commissionsResult.error || ordersResult.error || novapayPaymentsResult.error) {
+    console.error("Customer account query failed:", depositsResult.error?.message || keysResult.error?.message || walletResult.error?.message || transactionsResult.error?.message || referralsResult.error?.message || commissionsResult.error?.message || ordersResult.error?.message || novapayPaymentsResult.error?.message);
     return res.status(500).json({ error: "Account data load nahi ho saka." });
   }
   const deposits = depositsResult.data || [];
@@ -348,7 +351,7 @@ app.get("/api/my-account", async (req, res) => {
     totalDeposited: deposits.filter(d => d.status === "approved").reduce((sum, d) => sum + Number(d.amount || 0), 0),
     pendingDeposits: deposits.filter(d => d.status === "pending").reduce((sum, d) => sum + Number(d.amount || 0), 0),
     totalWithdrawn: transactions.filter(t => t.transaction_type === "debit" && t.status === "completed").reduce((sum, t) => sum + Number(t.amount || 0), 0),
-    transactions, deposits,
+    transactions, deposits, novapayPayments: novapayPaymentsResult.data || [],
     orders: (ordersResult.data || []).map(order => ({
       id: order.id,
       product_name: order.Product_name,
