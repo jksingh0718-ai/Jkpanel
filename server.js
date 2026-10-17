@@ -397,12 +397,13 @@ button{cursor:pointer;background:#39f58b;border:0;font-weight:bold}
 .card{background:#111923;padding:16px;margin:12px 0;border-radius:10px;overflow-wrap:anywhere}
 small{color:#a6b2c0}
 .admin-tabs{display:none;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:18px 0}
-#adminMenuWrap{position:relative;margin:10px 0 6px}
-#adminMenuToggle{background:#1e293b;color:#e2e8f0;border:1px solid #334155;padding:8px 11px;font-size:18px;line-height:1;border-radius:8px}
-#adminMenu{display:none;background:#111923;border:1px solid #334155;border-radius:10px;margin-top:7px;padding:5px}
+#adminTitle{display:flex;align-items:center;gap:10px;margin:8px 0 18px}
+#adminMenuToggle{flex:0 0 auto;background:#1e293b;color:#e2e8f0;border:1px solid #334155;padding:8px 11px;font-size:18px;line-height:1;border-radius:8px}
+#adminMenu{display:none;background:#111923;border:1px solid #334155;border-radius:10px;margin:0 0 10px;padding:5px}
 #adminMenu.open{display:block}
 #adminMenu button{display:block;width:100%;text-align:left;margin:3px 0;padding:11px;background:transparent;color:#e2e8f0;border-radius:7px}
 #adminMenu button.active{background:#10251b;color:#39f58b}
+#adminMenu button[data-action="logout"]{color:#fca5a5}
 #refreshCustomers{padding:7px 10px;font-size:12px;border-radius:6px}
 #dashboard[hidden] #adminMenuWrap{display:none}
 .admin-tabs button{padding:12px 6px;background:#1e293b;color:#e2e8f0;border:1px solid #334155}
@@ -413,7 +414,7 @@ small{color:#a6b2c0}
 </style>
 </head>
 <body><main>
-<h1>JKPanel <span style="color:#39f58b">Admin</span></h1>
+<h1 id="adminTitle"><button type="button" id="adminMenuToggle" aria-label="Open navigation menu" aria-expanded="false" hidden>☰</button> <span>JKPanel <span style="color:#39f58b">Admin</span></span></h1>
 <section id="login">
 <h2>Admin Login</h2>
 <form id="loginForm">
@@ -430,7 +431,7 @@ small{color:#a6b2c0}
  <button type="button" data-tab="keys">Keys Management</button>
 </div>
 <section id="tab-users" class="admin-section active">
- <h2>Users</h2>
+ <h2>Registered Users</h2>
  <input id="userSearch" class="search-box" type="search" placeholder="Search users by name, email or ID...">
  <button id="refreshCustomers">Refresh Users</button>
  <div id="customerList"></div>
@@ -511,6 +512,7 @@ small{color:#a6b2c0}
    if(!response.ok)throw new Error(data.error||("Login failed (HTTP "+response.status+")"));
    document.getElementById("login").hidden=true;
    document.getElementById("dashboard").hidden=false;
+   document.getElementById("adminMenuToggle").hidden=false;
    input.value="";
    message.textContent="Login successful. If sections do not load, refresh once.";
   }catch(err){
@@ -799,7 +801,7 @@ async function loadCustomers(){
   if(!root)throw new Error("Users section missing. Page refresh karein.");
   root.replaceChildren();
   const summary=document.createElement("p");
-  summary.textContent="Registered customers: "+data.customers.length+" | Old/guest deposits: "+data.unlinkedDeposits.length;
+  summary.textContent="Registered users: "+data.customers.length;
   root.appendChild(summary);
   data.customers.forEach(customer=>{
    const card=document.createElement("article");card.className="card";
@@ -864,16 +866,6 @@ async function loadCustomers(){
    });
    root.appendChild(card);
   });
-  if(data.unlinkedDeposits.length){
-   const old=document.createElement("article");old.className="card";
-   const heading=document.createElement("h3");heading.textContent="Old / unlinked deposit requests";old.appendChild(heading);
-   data.unlinkedDeposits.forEach(d=>{
-    const row=document.createElement("div");row.style.borderBottom="1px solid #334155";row.style.padding="8px 0";
-    [("Customer: "+(d.customer_email||"Guest")),("Amount: ₹"+d.amount),("Status: "+d.status),("Transaction ID: "+(d.transaction_id||"—")),("Date: "+(d.created_at||"—"))].forEach(value=>{const p=document.createElement("p");p.textContent=value;p.style.margin="5px 0";row.appendChild(p);});
-    old.appendChild(row);
-   });
-   root.appendChild(old);
-  }
  }catch(e){message.textContent=e.message;}
 }
 
