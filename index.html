@@ -57,6 +57,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:8px;bor
 #popup.history-screen .popup-card{display:flex;flex-direction:column;width:100%;max-width:640px;max-height:calc(100dvh - 24px);min-height:0;overflow:hidden}
 #popup.history-screen #popupMessage{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-right:2px}
 #popup.history-screen #popupDefaultClose{flex:0 0 auto;position:sticky;bottom:0;margin-top:12px}
+@keyframes jkSpin{to{transform:rotate(360deg)}}
 
 .popup-card h3{color:#38bdf8;margin-bottom:12px}
 .popup-card p{color:#cbd5e1;font-size:13px;line-height:1.6}
@@ -499,6 +500,7 @@ function openKeysPanel(){
 }
 
 function openProfilePanel(){
+  document.getElementById('popup').classList.add('history-screen');
   const defaultClose=document.getElementById('popupDefaultClose');
   if(defaultClose)defaultClose.style.display='block';
   const root=document.getElementById('popupMessage');
@@ -753,9 +755,15 @@ async function openDepositHistoryPanel(){
     root.appendChild(login);
     return;
   }
-  const loading=document.createElement('p');
-  loading.textContent='Deposit history load ho rahi hai...';
-  loading.style.cssText='padding:14px 0;color:#94a3b8;text-align:center';
+  const loading=document.createElement('div');
+  loading.style.cssText='display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:28px 8px;color:#94a3b8;text-align:center';
+  const spinner=document.createElement('div');
+  spinner.setAttribute('aria-label','Loading');
+  spinner.style.cssText='width:32px;height:32px;border:3px solid #334155;border-top-color:#38bdf8;border-radius:50%;animation:jkSpin .8s linear infinite';
+  const loadingText=document.createElement('p');
+  loadingText.textContent='Deposit History load ho rahi hai...';
+  loadingText.style.cssText='color:#94a3b8;text-align:center';
+  loading.append(spinner,loadingText);
   root.appendChild(loading);
   try{
     const data=await customerApi('/api/my-account');
@@ -821,9 +829,15 @@ async function openOrderHistoryPanel(){
     root.appendChild(login);
     return;
   }
-  const loading=document.createElement('p');
-  loading.textContent='Order history load ho rahi hai...';
-  loading.style.cssText='padding:14px 0;color:#94a3b8;text-align:center';
+  const loading=document.createElement('div');
+  loading.style.cssText='display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:28px 8px;color:#94a3b8;text-align:center';
+  const spinner=document.createElement('div');
+  spinner.setAttribute('aria-label','Loading');
+  spinner.style.cssText='width:32px;height:32px;border:3px solid #334155;border-top-color:#38bdf8;border-radius:50%;animation:jkSpin .8s linear infinite';
+  const loadingText=document.createElement('p');
+  loadingText.textContent='Order History load ho rahi hai...';
+  loadingText.style.cssText='color:#94a3b8;text-align:center';
+  loading.append(spinner,loadingText);
   root.appendChild(loading);
   try{
     const data=await customerApi('/api/my-account');
