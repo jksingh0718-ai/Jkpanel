@@ -205,8 +205,8 @@ body.jk-deposit-only { padding-bottom:90px; }
 #jkDepositPage { position:relative; z-index:2; }
 
 
-/* Account page: exactly one scrollable close button under Contact Support */
-#popup.account-screen #popupDefaultClose{display:none!important}
+/* Account/profile pages: prevent duplicate global close controls */
+#popup.account-screen #popupDefaultClose,#popup.profile-sky-screen #popupDefaultClose{display:none!important}
 #popup.account-screen .popup-card{overflow:hidden!important}
 /* Compact, fixed profile and history pages on mobile */
 #popup.history-screen{position:fixed!important;inset:0!important;padding:0!important;overflow:hidden!important;align-items:stretch!important;justify-content:stretch!important;background:#070b14!important;z-index:200!important}
@@ -691,7 +691,7 @@ async function checkResellerPayment(){
 function openProfilePanel(){
   closeMenu();
   const popup=document.getElementById('popup');
-  popup.classList.remove('history-screen','auth-screen','account-screen');
+  popup.classList.remove('history-screen','auth-screen','account-screen');popup.classList.add('profile-sky-screen');
   const defaultClose=document.getElementById('popupDefaultClose');
   if(defaultClose)defaultClose.style.display='none';
   const card=popup.querySelector('.popup-card');
@@ -702,7 +702,7 @@ function openProfilePanel(){
   const root=document.getElementById('popupMessage');
   root.style.cssText='display:block;width:100%;padding:0;margin:0;overflow:visible;flex:none';
   root.innerHTML='<div style="min-height:100dvh;background:#050811;color:#f8fafc;padding-bottom:92px;font-family:Arial,sans-serif">'+
-    '<div style="height:44px;background:linear-gradient(110deg,#101b35,#0c1222);display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #202a40"><b style="font-size:13px;letter-spacing:.6px;color:#60a5fa">JK PANEL SHOP</b></div>'+
+    '<div style="height:44px;background:linear-gradient(110deg,#101b35,#0c1222);display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid #202a40"><b style="font-size:13px;letter-spacing:.6px;color:#60a5fa">JK PANEL SHOP</b><button type="button" onclick="closePopup()" aria-label="Close profile" style="width:34px;height:34px;padding:0;background:#172033;color:#fff;border:1px solid #334155;border-radius:9px;font-size:25px;line-height:1">×</button></div>'+
     '<div class="jk-profile-sky" style="height:170px;position:relative;overflow:hidden;background:linear-gradient(180deg,#030817 0%,#0a1b35 48%,#20394f 78%,#091321 100%)"><div class="sky-stars"></div><div class="sky-moon"></div><div class="sky-cloud back"></div><div class="sky-cloud"></div></div>'+
     '<div style="padding:0 14px;margin-top:-54px;position:relative">'+
       '<div style="display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:18px">'+
