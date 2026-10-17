@@ -721,7 +721,9 @@ async function startNovapayPayment(){
     }else{
       status.innerHTML = 'Order ID: <b>'+data.order_id+'</b><p>Browser ne naya tab block kar diya. Payment kholne ke liye yahan tap karein:</p><a class="action" href="'+data.payment_url.replace(/"/g,'&quot;')+'" target="_blank" rel="noopener noreferrer" style="display:inline-block;text-decoration:none;">Pay Now</a>';
     }
-    // No manual verification button is required; status checks run automatically.
+    // Start verification immediately and keep checking while the checkout is open.
+    // Returning to this tab also restarts checks through visibilitychange/pageshow.
+    runNovapayAutoVerification();
   }catch(error){
     if(paymentTab && !paymentTab.closed) paymentTab.close();
     status.textContent = 'Payment start nahi hua: '+error.message;
@@ -769,12 +771,12 @@ async function runNovapayAutoVerification(){
   if(!localStorage.getItem('jk_customer_access_token')) return;
   novapayAutoVerifyRunning = true;
   try{
-    // Check repeatedly after returning from the gateway; no hidden button dependency.
-    for(let attempt=0;attempt<10;attempt++){
+    // Poll automatically for up to 5 minutes; no manual button dependency.
+    for(let attempt=0;attempt<60;attempt++){
       if(!localStorage.getItem('jk_novapay_pending_order')) break;
       await checkNovapayPayment();
       if(!localStorage.getItem('jk_novapay_pending_order')) break;
-      if(attempt<9) await new Promise(resolve=>setTimeout(resolve,4000));
+      if(attempt<59) await new Promise(resolve=>setTimeout(resolve,5000));
     }
   }finally{
     novapayAutoVerifyRunning = false;
