@@ -675,13 +675,13 @@ function deposit(){
     '<label for="depositMobile">Mobile Number</label>' +
     '<input id="depositMobile" type="tel" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number" autocomplete="tel-national" style="width:100%;padding:12px;box-sizing:border-box;border:1px solid #ccc;border-radius:8px;margin:6px 0 12px;">' +
     '<button class="action" type="button" id="createPaymentBtn" onclick="startNovapayPayment()">Pay Instantly</button>' +
-    '<div id="depositStatus" style="margin-top:12px;overflow-wrap:anywhere;"></div>' +
-    '<button class="action" type="button" id="verifyPaymentBtn" onclick="checkNovapayPayment()" style="display:none;margin-top:10px;">Verify Payment / Update Wallet</button>';
-  if (localStorage.getItem('jk_novapay_pending_order')) {
-    document.getElementById('verifyPaymentBtn').style.display = 'block';
-    document.getElementById('depositStatus').textContent = 'Pichhla payment verify karne ke liye neeche button dabayein.';
-  }
+    '<div id="depositStatus" style="margin-top:12px;overflow-wrap:anywhere;"></div>';
   document.getElementById('popup').style.display = 'flex';
+  // Automatically check any previous payment; customers should not need to press an update button.
+  if (localStorage.getItem('jk_novapay_pending_order')) {
+    document.getElementById('depositStatus').textContent = 'Pichhle payment ka status automatically check ho raha hai...';
+    setTimeout(() => checkNovapayPayment(), 250);
+  }
 }
 
 async function startNovapayPayment(){
@@ -717,7 +717,7 @@ async function startNovapayPayment(){
     localStorage.setItem('jk_novapay_pending_order',data.order_id);
     if(paymentTab && !paymentTab.closed){
       paymentTab.location.href = data.payment_url;
-      status.innerHTML = 'Order ID: <b>'+data.order_id+'</b><p>Payment checkout naye tab mein khol diya gaya hai. Payment complete karke is page par wapas aayein aur Verify Payment dabayein.</p>';
+      status.innerHTML = 'Order ID: <b>'+data.order_id+'</b><p>Payment checkout naye tab mein khol diya gaya hai. Payment complete karke is page par wapas aayein. Payment status automatically check hoga.</p>';
     }else{
       status.innerHTML = 'Order ID: <b>'+data.order_id+'</b><p>Browser ne naya tab block kar diya. Payment kholne ke liye yahan tap karein:</p><a class="action" href="'+data.payment_url.replace(/"/g,'&quot;')+'" target="_blank" rel="noopener noreferrer" style="display:inline-block;text-decoration:none;">Pay Now</a>';
     }
@@ -751,8 +751,12 @@ async function checkNovapayPayment(){
     let data = {};
     try{data=raw?JSON.parse(raw):{};}catch{throw new Error('Server ka response samajh nahi aaya.');}
     if(!response.ok) throw new Error(data.error || 'Payment verify nahi hua.');
-    status.textContent = data.message || (data.paid ? 'Payment verified.' : 'Payment abhi confirm nahi hui.');
-    if(data.paid) localStorage.removeItem('jk_novapay_pending_order');
+    status.textContent = data.message || (data.paid ? 'Payment verify ho gaya. Wallet balance update ho raha hai...' : 'Payment abhi confirm nahi hui. Status automatically dobara check hoga.');
+    if(data.paid) {
+      localStorage.removeItem('jk_novapay_pending_order');
+      if(typeof loadMyAccountSummary==='function') await loadMyAccountSummary().catch(()=>{});
+      status.textContent = 'Payment verify ho gaya aur wallet balance update kar diya gaya hai.';
+    }
   }catch(error){
     status.textContent = 'Verification issue: '+error.message;
   }
