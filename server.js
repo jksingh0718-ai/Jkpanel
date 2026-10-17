@@ -1157,7 +1157,7 @@ app.post("/api/payments/novapay/create-order", async (req, res) => {
       user_token: token,
       amount,
       order_id: orderId,
-      redirect_url: (["https://jkpanel.shop","https://www.jkpanel.shop","https://jkpanel.onrender.com"].includes(req.headers.origin) ? req.headers.origin : "https://jkpanel.shop") + "/?payment=success&order_id=" + encodeURIComponent(orderId),
+      redirect_url: "https://jkpanel.onrender.com/?payment=success&order_id=" + encodeURIComponent(orderId),
       callback_url: "https://jkpanel-backend.onrender.com/api/payments/novapay/webhook",
       remark1: "JK PANEL SHOP wallet deposit",
       remark2: user.id
