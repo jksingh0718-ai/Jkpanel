@@ -1642,7 +1642,19 @@ app.post("/api/orders", async (req, res) => {
   }
   if (!product) return res.status(404).json({ error: "Product available nahi hai. Page refresh karein." });
 
-  const amount = Number(product.price);
+  let amount = Number(product.price);
+  const { data: resellerAccount, error: resellerAccountError } = await supabase.from("reseller_accounts")
+    .select("user_id").eq("user_id", user.id).eq("is_active", true).maybeSingle();
+  if (resellerAccountError) console.error("Reseller account lookup failed:", resellerAccountError.message);
+  if (resellerAccount) {
+    const { data: personalPrice, error: personalPriceError } = await supabase.from("reseller_prices")
+      .select("price").eq("product_id", product.id).eq("reseller_user_id", user.id).maybeSingle();
+    const { data: defaultPrice, error: defaultPriceError } = await supabase.from("reseller_prices")
+      .select("price").eq("product_id", product.id).is("reseller_user_id", null).maybeSingle();
+    if (personalPriceError || defaultPriceError) console.error("Reseller price lookup failed:", personalPriceError?.message || defaultPriceError?.message);
+    if (personalPrice) amount = Number(personalPrice.price);
+    else if (defaultPrice) amount = Number(defaultPrice.price);
+  }
   if (!Number.isFinite(amount) || amount <= 0 || amount > 1000000) {
     return res.status(400).json({ error: "Is product ki price admin panel mein sahi set karein." });
   }
@@ -1917,12 +1929,14 @@ app.get("/api/admin/resellers", isAdmin, async (req, res) => {
       supabase.from("reseller_settings").select("activation_price").eq("id", 1).maybeSingle(),
       supabase.from("products").select("id, name, price, published").order("name")
     ]);
-    const err = usersResult.error || accountsResult.error || settingsResult.error || productsResult.error;
-    if (err) throw err;
+    if (usersResult.error) throw new Error("Customer list: " + usersResult.error.message);
+    if (accountsResult.error) throw new Error("Reseller table: " + accountsResult.error.message);
+    if (settingsResult.error) throw new Error("Reseller settings: " + settingsResult.error.message);
+    if (productsResult.error) throw new Error("Products: " + productsResult.error.message);
     const accountMap = new Map((accountsResult.data || []).map(a => [a.user_id, a]));
     const customers = (usersResult.data?.users || []).map(u => { const a=accountMap.get(u.id); return {id:u.id,email:u.email||"",name:String(u.user_metadata?.full_name||u.user_metadata?.name||u.email?.split("@")[0]||"Customer"),is_reseller:Boolean(a),reseller_active:Boolean(a?.is_active),activation_price:Number(a?.activation_price||0)}; });
     res.json({settings:settingsResult.data||{activation_price:0},customers,products:productsResult.data||[]});
-  } catch(e) { console.error("Reseller admin load failed:",e.message); res.status(500).json({error:"Reseller data load nahi hua. Database tables check karein."}); }
+  } catch(e) { console.error("Reseller admin load failed:",e.message); res.status(500).json({error:"Reseller data load nahi hua: "+String(e.message||"Unknown error").slice(0,180)}); }
 });
 app.post("/api/admin/resellers/settings", isAdmin, async (req,res) => {
   if(!supabase)return res.status(503).json({error:"Database is not configured"});
