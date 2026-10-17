@@ -204,6 +204,13 @@ body.jk-deposit-only > :not(#jkDepositPage):not(#bottomNav) { display:none !impo
 body.jk-deposit-only { padding-bottom:90px; }
 #jkDepositPage { position:relative; z-index:2; }
 
+
+/* Compact, fixed profile and history pages on mobile */
+#popup.history-screen{position:fixed!important;inset:0!important;padding:0!important;overflow:hidden!important;align-items:stretch!important;justify-content:stretch!important;background:#070b14!important;z-index:200!important}
+#popup.history-screen .popup-card{width:100%!important;max-width:none!important;height:100dvh!important;max-height:100dvh!important;min-height:0!important;border:0!important;border-radius:0!important;padding:12px 12px 0!important;background:#070b14!important}
+#popup.history-screen #popupTitle{position:relative!important;top:auto!important;flex:0 0 auto!important;padding:9px 0 12px!important;margin:0 0 8px!important;border-bottom:1px solid #263449!important;background:#070b14!important;font-size:16px!important}
+#popup.history-screen #popupMessage{flex:1 1 0!important;height:0!important;min-height:0!important;overflow-y:auto!important;overscroll-behavior:contain!important;padding:0 0 10px!important}
+#popup.history-screen #popupDefaultClose{position:relative!important;bottom:auto!important;flex:0 0 auto!important;align-self:stretch!important;width:100%!important;min-height:44px!important;margin:8px 0 10px!important;padding:12px!important;border-radius:10px!important;box-shadow:0 -6px 16px #0005!important}
 </style>
 </head>
 <body>
@@ -675,43 +682,47 @@ function openProfilePanel(){
   const defaultClose=document.getElementById('popupDefaultClose');
   if(defaultClose)defaultClose.style.display='none';
   const card=popup.querySelector('.popup-card');
-  card.style.cssText='display:block;position:relative;width:100%;max-width:none;height:100%;max-height:none;min-height:100%;overflow-y:auto;margin:0;padding:0 0 86px;border:0;border-radius:0;background:#050811;box-shadow:none';
-  popup.style.cssText='display:flex;position:fixed;inset:0;z-index:200;padding:0;overflow:hidden;align-items:stretch;justify-content:stretch;background:#050811';
+  card.style.cssText='display:flex;flex-direction:column;position:relative;box-sizing:border-box;width:100%;max-width:none;height:100dvh;max-height:100dvh;min-height:0;overflow:hidden;margin:0;padding:0;border:0;border-radius:0;background:#070b14;box-shadow:none';
+  popup.style.cssText='display:flex;position:fixed;inset:0;z-index:200;padding:0;overflow:hidden;align-items:stretch;justify-content:stretch;background:#070b14';
   const title=document.getElementById('popupTitle');
   title.style.cssText='display:none';
   const root=document.getElementById('popupMessage');
-  root.style.cssText='display:block;width:100%;padding:0;margin:0;overflow:visible;flex:none';
-  root.innerHTML='<div style="min-height:100dvh;background:#050811;color:#f8fafc;padding-bottom:92px;font-family:Arial,sans-serif">'+
-    '<div style="height:44px;background:linear-gradient(110deg,#101b35,#0c1222);display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #202a40"><b style="font-size:13px;letter-spacing:.6px;color:#60a5fa">JK PANEL SHOP</b></div>'+
-    '<div class="jk-profile-sky" style="height:170px;position:relative;overflow:hidden;background:linear-gradient(180deg,#030817 0%,#0a1b35 48%,#20394f 78%,#091321 100%)"><div class="sky-stars"></div><div class="sky-moon"></div><div class="sky-cloud back"></div><div class="sky-cloud"></div></div>'+
-    '<div style="padding:0 14px;margin-top:-54px;position:relative">'+
-      '<div style="display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:18px">'+
-        '<div id="profileAvatar" style="width:76px;height:76px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#22cbb8;color:#04121b;font-size:27px;font-weight:900;border:3px solid #2563eb;box-shadow:0 0 0 4px #38bdf822">JK</div>'+
-        '<div id="profileEmail" style="font-size:14px;font-weight:800;overflow-wrap:anywhere;margin-top:12px">Loading profile…</div>'+
-        '<div id="profileUserId" style="font-size:10px;color:#64748b;margin-top:5px"></div>'+
-        '<div id="profilePartnerBadge" style="margin-top:10px;padding:6px 12px;border-radius:20px;background:#30230b;color:#fbbf24;font-size:10px;font-weight:900;letter-spacing:.5px">CUSTOMER</div>'+
+  root.style.cssText='display:block;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;width:100%;padding:0;margin:0';
+  root.innerHTML=
+    '<div style="position:sticky;top:0;z-index:5;height:52px;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:#0d1728;border-bottom:1px solid #263449"><b style="font-size:13px;letter-spacing:.7px;color:#7dd3fc">JK PANEL SHOP</b><span style="font-size:10px;color:#64748b">MY PROFILE</span></div>'+
+    '<div style="padding:16px 13px 24px;color:#f8fafc;font-family:Arial,sans-serif;max-width:620px;margin:0 auto;width:100%;box-sizing:border-box">'+
+      '<div style="display:flex;align-items:center;gap:12px;padding:14px;background:#111b2c;border:1px solid #25344b;border-radius:14px">'+
+        '<div id="profileAvatar" style="width:48px;height:48px;flex:0 0 48px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:linear-gradient(140deg,#22d3ee,#2563eb);color:#031525;font-size:17px;font-weight:900">JK</div>'+
+        '<div style="min-width:0;flex:1"><div id="profileEmail" style="font-size:13px;font-weight:800;overflow-wrap:anywhere">OPENING...</div><div id="profilePartnerBadge" style="display:inline-block;margin-top:6px;padding:4px 8px;border-radius:20px;background:#172554;color:#93c5fd;font-size:9px;font-weight:900">USER</div><div id="profileUserId" style="font-size:9px;color:#64748b;margin-top:4px;overflow-wrap:anywhere"></div></div>'+
       '</div>'+
-      '<div style="padding:16px;background:linear-gradient(120deg,#111b30,#101827);border:1px solid #202d44;border-radius:18px;box-shadow:0 8px 24px #0003">'+
-        '<div style="display:flex;align-items:center;justify-content:space-between;color:#94a3b8;font-size:11px"><span>Wallet Balance</span><span style="background:#172d54;border:1px solid #25477d;border-radius:12px;padding:10px;color:#60a5fa">▣</span></div>'+
-        '<div id="profileWalletBalance" style="font-size:24px;font-weight:900;margin:7px 0 14px">₹0.00</div>'+
-        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button type="button" onclick="closePopup();deposit()" style="margin:0;padding:12px 5px;background:#2563eb;color:white;border-radius:9px;font-size:12px">Add Balance</button><button type="button" onclick="showPopup(\'Transfer\',\'Wallet transfer abhi available nahi hai.\')" style="margin:0;padding:12px 5px;background:#202b3e;color:#e2e8f0;border:1px solid #28364b;border-radius:9px;font-size:12px">Transfer</button></div>'+
+      '<div style="margin-top:12px;padding:16px;background:linear-gradient(120deg,#111b30,#101827);border:1px solid #263b59;border-radius:14px">'+
+        '<div style="font-size:11px;color:#94a3b8">WALLET BALANCE</div><div id="profileWalletBalance" style="font-size:27px;font-weight:900;color:#67e8f9;margin:6px 0 13px">₹0.00</div>'+
+        '<button type="button" onclick="closePopup();deposit()" style="width:100%;margin:0;padding:12px;background:linear-gradient(100deg,#06b6d4,#22c55e);color:#03231f;border:0;border-radius:10px;font-size:12px;font-weight:900">＋ ADD BALANCE</button>'+
       '</div>'+
-      '<button type="button" onclick="closePopup();openKeysPanel()" style="display:flex;align-items:center;justify-content:space-between;text-align:left;width:100%;margin-top:12px;padding:16px;background:#111a2c;color:#f8fafc;border:1px solid #202b40;border-radius:14px"><span><b style="color:#60a5fa;margin-right:10px">⚿</b>My Purchased Keys</span><span style="color:#64748b">›</span></button>'+
-      '<button type="button" onclick="closePopup();showPopup(\'Support Center\',\'Support ke liye WhatsApp par contact karein.\')" style="display:flex;align-items:center;justify-content:space-between;text-align:left;width:100%;margin-top:9px;padding:16px;background:#111a2c;color:#f8fafc;border:1px solid #202b40;border-radius:14px"><span><b style="color:#a78bfa;margin-right:10px">◉</b>Support Center</span><span style="color:#64748b">›</span></button>'+
-      '<button type="button" onclick="closePopup();openOrderHistoryPanel()" style="display:flex;align-items:center;justify-content:space-between;text-align:left;width:100%;margin-top:9px;padding:16px;background:#111a2c;color:#f8fafc;border:1px solid #202b40;border-radius:14px"><span>Order History</span><span style="color:#64748b">›</span></button>'+
-      '<button type="button" onclick="closePopup()" style="position:fixed;left:14px;right:14px;bottom:28px;z-index:9999;width:calc(100% - 28px);margin:0;padding:17px;background:#e3262e;color:#fff;border:0;border-radius:13px;font-size:16px;font-weight:900;box-shadow:0 8px 24px #0009;cursor:pointer">CLOSE</button>'+
-      '<button type="button" onclick="closePopup();openDepositHistoryPanel()" style="display:flex;align-items:center;justify-content:space-between;text-align:left;width:100%;margin-top:9px;padding:16px;background:#111a2c;color:#f8fafc;border:1px solid #202b40;border-radius:14px"><span>Deposit History</span><span style="color:#64748b">›</span></button>'+
-    '</div></div>';
+      '<div style="margin-top:12px;display:grid;gap:8px">'+
+        '<button type="button" onclick="closePopup();openKeysPanel()" style="display:flex;align-items:center;justify-content:space-between;width:100%;margin:0;padding:13px;background:#101827;color:#e2e8f0;border:1px solid #253247;border-radius:11px;text-align:left;font-size:12px"><span>⚿ &nbsp; My Purchased Keys</span><span style="color:#64748b">›</span></button>'+
+        '<button type="button" onclick="closePopup();openDepositHistoryPanel()" style="display:flex;align-items:center;justify-content:space-between;width:100%;margin:0;padding:13px;background:#101827;color:#e2e8f0;border:1px solid #253247;border-radius:11px;text-align:left;font-size:12px"><span>▤ &nbsp; Deposit History</span><span style="color:#64748b">›</span></button>'+
+        '<button type="button" onclick="closePopup();openOrderHistoryPanel()" style="display:flex;align-items:center;justify-content:space-between;width:100%;margin:0;padding:13px;background:#101827;color:#e2e8f0;border:1px solid #253247;border-radius:11px;text-align:left;font-size:12px"><span>▣ &nbsp; Order History</span><span style="color:#64748b">›</span></button>'+
+        '<a href="https://wa.me/917645957071" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:space-between;padding:13px;background:#101827;color:#e2e8f0;border:1px solid #253247;border-radius:11px;text-decoration:none;font-size:12px"><span>◉ &nbsp; Contact Support</span><span style="color:#64748b">›</span></a>'+
+      '</div>'+
+    '</div>';
+  const close=document.createElement('button');
+  close.type='button';close.textContent='CLOSE';
+  close.style.cssText='flex:0 0 auto;position:relative;z-index:10;width:calc(100% - 26px);margin:8px 13px 12px;padding:13px;background:#dc2626;color:#fff;border:0;border-radius:10px;font-size:13px;font-weight:900';
+  close.onclick=closePopup;
+  card.appendChild(close);
   popup.style.display='flex';
   customerApi('/api/my-account').then(data=>{
     const email=data.email||data.user?.email||'Customer';
     const emailEl=document.getElementById('profileEmail');if(emailEl)emailEl.textContent=email;
     const avatar=document.getElementById('profileAvatar');if(avatar)avatar.textContent=(email.split('@')[0].replace(/[^a-z0-9]/gi,'').slice(0,2)||'JK').toUpperCase();
-    const id=document.getElementById('profileUserId');if(id)id.textContent=data.user?.id?'User ID: '+String(data.user.id).slice(0,10):'';
-    const badge=document.getElementById('profilePartnerBadge');if(badge){badge.textContent=data.isReseller?'♛ RESELLER':'USER';if(data.isReseller){badge.style.background='#30230b';badge.style.color='#fbbf24';}else{badge.style.background='#172554';badge.style.color='#93c5fd';}}
+    const id=document.getElementById('profileUserId');if(id)id.textContent=data.user?.id?'ID: '+String(data.user.id).slice(0,10):'';
+    const badge=document.getElementById('profilePartnerBadge');if(badge){badge.textContent=data.isReseller?'♛ RESELLER':'USER';if(data.isReseller){badge.style.background='#30230b';badge.style.color='#fbbf24';}}
     const balance=Number(data.walletBalance??data.wallet_balance??data.balance??0);
     const wallet=document.getElementById('profileWalletBalance');if(wallet)wallet.textContent='₹'+balance.toFixed(2);
-  }).catch(e=>{const emailEl=document.getElementById('profileEmail');if(emailEl)emailEl.textContent=e.message||'Profile load nahi hua';});
+  }).catch(()=>{
+    const emailEl=document.getElementById('profileEmail');if(emailEl)emailEl.textContent='Profile load nahi ho saka';
+  });
 }
 
 function setBottomNavActive(name){
@@ -1040,13 +1051,11 @@ async function openDepositHistoryPanel(){
     const heading=document.createElement('h4');heading.textContent='DEPOSIT HISTORY';heading.style.cssText='font-size:12px;letter-spacing:1px;color:#e2e8f0;margin:0 0 8px';root.appendChild(heading);
     if(!items.length){const empty=document.createElement('p');empty.textContent='Abhi koi deposit record nahi hai.';empty.style.cssText='padding:18px 0;color:#94a3b8;text-align:center';root.appendChild(empty);return;}
     items.forEach(item=>{
-      const card=document.createElement('div');card.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;padding:13px 11px;background:#0b0d12;border:1px solid #27272a;border-radius:10px;overflow-wrap:anywhere';
-      const left=document.createElement('div');left.style.cssText='min-width:0;flex:1';
-      const amount=document.createElement('b');amount.textContent='₹'+Number(item.amount||0).toFixed(2);amount.style.cssText='display:block;font-size:16px;color:#f8fafc;margin-bottom:6px';
-      const date=document.createElement('small');date.textContent=item.created_at?new Date(item.created_at).toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'}):'Date/time unavailable';date.style.cssText='display:block;color:#a1a1aa;font-size:10px;line-height:1.5';
-      left.append(amount,date);
-      const status=document.createElement('span');const st=statusOf(item.status);status.textContent=st;status.style.cssText='flex:0 0 auto;font-size:10px;font-weight:800;padding:6px 8px;border-radius:6px;background:'+(st==='SUCCESS'?'#052e16':st==='PENDING'?'#422006':'#450a0a')+';color:'+(st==='SUCCESS'?'#4ade80':st==='PENDING'?'#fbbf24':'#f87171');
-      card.append(left,status);root.appendChild(card);
+      const card=document.createElement('div');card.style.cssText='display:flex;align-items:center;gap:7px;margin-top:6px;padding:9px 8px;background:#0b1220;border:1px solid #243247;border-radius:9px;white-space:nowrap;overflow:hidden';
+      const amount=document.createElement('b');amount.textContent='₹'+Number(item.amount||0).toFixed(0);amount.style.cssText='flex:0 0 auto;font-size:13px;color:#67e8f9;min-width:54px';
+      const date=document.createElement('small');date.textContent=item.created_at?new Date(item.created_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short'}):'—';date.style.cssText='min-width:0;flex:1;color:#94a3b8;font-size:10px;overflow:hidden;text-overflow:ellipsis';
+      const status=document.createElement('span');const st=statusOf(item.status);status.textContent=st;status.style.cssText='flex:0 0 auto;font-size:9px;font-weight:900;padding:5px 6px;border-radius:6px;background:'+(st==='SUCCESS'?'#052e16':st==='PENDING'?'#422006':'#450a0a')+';color:'+(st==='SUCCESS'?'#4ade80':st==='PENDING'?'#fbbf24':'#f87171');
+      card.append(amount,date,status);root.appendChild(card);
     });
   }catch(error){
     root.replaceChildren();const p=document.createElement('p');p.textContent=error.message||'Deposit history load nahi ho saki.';p.style.cssText='color:#fca5a5;padding:12px 0';root.appendChild(p);
