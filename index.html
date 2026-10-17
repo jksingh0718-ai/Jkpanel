@@ -184,6 +184,9 @@ footer{display:none}
   <a class="action purple" href="https://whatsapp.com/channel/0029VbE3msh47Xe5PEWcBW3b" target="_blank" rel="noopener">📢 JOIN CHANNEL</a>
 </div>
 
+<div id="resellerPromo" class="box" style="border:1px solid #f59e0b;background:#211807;margin:12px 0">
+  <button type="button" onclick="openResellerActivation()" style="display:block;width:100%;padding:14px;background:linear-gradient(90deg,#f59e0b,#facc15);color:#1c1917;font-weight:900;border-radius:10px">MAKE RESELLER ONLY ₹99</button>
+</div>
 <div class="stats">
   <div class="stat"><b id="walletBalanceStat">₹0.00</b><span>Wallet Balance</span></div>
   <div class="stat"><b id="totalOrdersStat">0</b><span>Total Orders</span></div>
@@ -236,6 +239,7 @@ function saveCustomerSession(session){
   localStorage.setItem('jk_customer_refresh_token',session.refresh_token);
   localStorage.setItem('jk_customer_expires_at',String(session.expires_at||0));
 }
+let isResellerCustomer=false;
 function clearCustomerSession(){
   localStorage.removeItem('jk_customer_access_token');
   localStorage.removeItem('jk_customer_refresh_token');
@@ -411,11 +415,13 @@ async function loginCustomer(){
   }catch(e){status.textContent=e.message;}
 }
 async function logoutCustomer(){
-  clearCustomerSession();updateAccountBar('');showPopup('Logout','Aap logout ho gaye hain.');
+  clearCustomerSession();isResellerCustomer=false;updateResellerUI();updateAccountBar('');showPopup('Logout','Aap logout ho gaye hain.');
 }
 async function loadMyAccountSummary(){
   try{
     const data=await customerApi('/api/my-account');
+    isResellerCustomer=Boolean(data.isReseller);
+    updateResellerUI();
     updateAccountBar(data.user.email);
     const stat=document.getElementById('referralStatCount');
     if(stat)stat.textContent=String(data.referral?.referredUsers||0);
@@ -537,6 +543,37 @@ function openKeysPanel(){
   }).catch(e=>{root.replaceChildren();const p=document.createElement('p');p.textContent=e.message;root.appendChild(p);});
 }
 
+function updateResellerUI(){
+ const promo=document.getElementById('resellerPromo');
+ if(promo)promo.style.display=isResellerCustomer?'none':'block';
+ document.querySelectorAll('#shopProducts button').forEach(button=>{
+  if(button.textContent==='PURCHASE KEY'||button.textContent==='BUY RESELLER KEY'){
+   button.textContent=isResellerCustomer?'BUY RESELLER KEY':'PURCHASE KEY';
+  }
+ });
+}
+function openResellerActivation(){
+ const root=document.getElementById('popupMessage');
+ const title=document.getElementById('popupTitle');
+ const popup=document.getElementById('popup');
+ if(!root||!title||!popup)return;
+ root.replaceChildren();
+ title.textContent='Become a Reseller Partner';
+ const message=document.createElement('p');
+ message.textContent='Reseller Partner activation fee: ₹99. Activation ke liye support se contact karein. Payment ke baad admin aapka reseller status verify karke activate karega.';
+ message.style.cssText='line-height:1.7;color:#cbd5e1;margin:8px 0 14px';
+ root.appendChild(message);
+ const contact=document.createElement('a');
+ contact.href='https://wa.me/917645957071?text='+encodeURIComponent('Hello JK PANEL SHOP, mujhe ₹99 Reseller Partner activation chahiye.');
+ contact.target='_blank';contact.rel='noopener';contact.textContent='CONTACT SUPPORT TO ACTIVATE';
+ contact.style.cssText='display:block;text-align:center;text-decoration:none;padding:13px;background:#10b981;color:#052e16;font-weight:900;border-radius:10px';
+ root.appendChild(contact);
+ const note=document.createElement('p');
+ note.textContent='Reseller status admin verification ke baad hi active hoga.';
+ note.style.cssText='font-size:12px;color:#94a3b8;margin-top:12px';
+ root.appendChild(note);
+ popup.classList.remove('auth-screen');popup.style.display='flex';
+}
 function openProfilePanel(){
   document.getElementById('popup').classList.add('history-screen');
   const defaultClose=document.getElementById('popupDefaultClose');
@@ -558,6 +595,9 @@ function openProfilePanel(){
     const title=document.createElement('h4');
     title.textContent='My Profile';
     title.style.cssText='margin-bottom:14px;color:#38bdf8';
+    const partner=document.createElement('div');
+    partner.textContent=data.isReseller?'✓ RESELLER PARTNER':'CUSTOMER ACCOUNT';
+    partner.style.cssText='display:inline-block;margin:0 0 12px;padding:7px 10px;border-radius:8px;background:'+(data.isReseller?'#064e3b':'#263247')+';color:'+(data.isReseller?'#6ee7b7':'#cbd5e1')+';font-size:12px;font-weight:900;letter-spacing:.5px';
     const email=document.createElement('p');
     email.textContent='Email: '+(data.email||data.user?.email||'Not available');
     email.style.cssText='overflow-wrap:anywhere;line-height:1.7';
@@ -567,7 +607,7 @@ function openProfilePanel(){
     const balance=document.createElement('p');
     balance.textContent='Wallet Balance: ₹'+Number(data.walletBalance??data.wallet_balance??data.balance??0).toFixed(2);
     balance.style.cssText='margin-top:12px;color:#6ee7b7;font-weight:bold;font-size:18px';
-    profile.append(title,email,contact,balance);
+    profile.append(title,partner,email,contact,balance);
     root.appendChild(profile);
   }).catch(e=>{
     root.replaceChildren();
@@ -1035,7 +1075,8 @@ async function loadShopProducts(){
  const root=document.getElementById('shopProducts');
  if(!root)return;
  try{
-  const response=await fetch('https://jkpanel-backend.onrender.com/api/products');
+  const token=localStorage.getItem('jk_customer_access_token');
+  const response=await fetch('https://jkpanel-backend.onrender.com/api/products',{headers:token?{Authorization:'Bearer '+token}:{} });
   const data=await response.json();
   if(!response.ok)throw new Error(data.error||'Products load nahi ho sake.');
   root.replaceChildren();
@@ -1043,6 +1084,8 @@ async function loadShopProducts(){
    const empty=document.createElement('p');empty.textContent='Abhi products available nahi hain.';empty.style.cssText='color:#94a3b8;font-size:12px;margin-top:10px';root.appendChild(empty);return;
   }
 
+  isResellerCustomer=Boolean(data.isReseller);
+  updateResellerUI();
   const products=data.products;
   const dripProducts=products.filter(product=>/^DRIP Wire\s*-\s*/i.test(product.name||''));
   const aimProducts=products.filter(product=>/^AIM HACK FF(?:\s*-|$)/i.test(product.name||''));
@@ -1076,14 +1119,14 @@ async function loadShopProducts(){
    }
    const title=document.createElement('h4');title.textContent='DRIP Wire';title.style.cssText='font-size:21px;color:#f8fafc;margin:4px 0 7px';
    const desc=document.createElement('p');desc.textContent='Apni key ka time duration select karein.';desc.style.cssText='font-size:12px;color:#94a3b8;line-height:1.6;margin-bottom:12px';
-   const purchase=document.createElement('button');purchase.type='button';purchase.textContent='PURCHASE KEY';purchase.setAttribute('aria-expanded','false');
+   const purchase=document.createElement('button');purchase.type='button';purchase.textContent=isResellerCustomer?'BUY RESELLER KEY':'PURCHASE KEY';purchase.setAttribute('aria-expanded','false');
    purchase.style.cssText='display:block;width:100%;padding:14px;background:linear-gradient(90deg,#06b6d4,#22d3ee);color:#082f49;font-size:14px;border-radius:10px';
    const plans=document.createElement('div');plans.hidden=true;plans.style.cssText='margin-top:12px;display:none';
    purchase.onclick=()=>{
     const open=plans.style.display==='none';
     plans.style.display=open?'block':'none';plans.hidden=!open;
     purchase.setAttribute('aria-expanded',String(open));
-    purchase.textContent='PURCHASE KEY';
+    purchase.textContent=isResellerCustomer?'BUY RESELLER KEY':'PURCHASE KEY';
    };
    const durationRank=duration=>{const d=String(duration).toLowerCase().replace(/\s+/g,'');if(d.includes('6hour')||d.includes('6hr'))return 6;if(d.includes('12hour')||d.includes('12hr'))return 12;if(d.includes('1day')||d.includes('24hour')||d.includes('24hr'))return 24;if(d.includes('7day'))return 168;return 9999;};
    dripProducts.sort((a,b)=>durationRank((a.name||'').replace(/^DRIP Wire\s*-\s*/i,''))-durationRank((b.name||'').replace(/^DRIP Wire\s*-\s*/i,'')));
@@ -1127,10 +1170,10 @@ async function loadShopProducts(){
    }
    const title=document.createElement('h4');title.textContent='AIM HACK FF';title.style.cssText='font-size:21px;color:#f8fafc;margin:4px 0 7px';
    const desc=document.createElement('p');desc.textContent='Apni key ka time duration select karein.';desc.style.cssText='font-size:12px;color:#94a3b8;line-height:1.6;margin-bottom:12px';
-   const purchase=document.createElement('button');purchase.type='button';purchase.textContent='PURCHASE KEY';purchase.setAttribute('aria-expanded','false');
+   const purchase=document.createElement('button');purchase.type='button';purchase.textContent=isResellerCustomer?'BUY RESELLER KEY':'PURCHASE KEY';purchase.setAttribute('aria-expanded','false');
    purchase.style.cssText='display:block;width:100%;padding:14px;background:linear-gradient(90deg,#8b5cf6,#c084fc);color:#1e103d;font-size:14px;border-radius:10px';
    const plans=document.createElement('div');plans.hidden=true;plans.style.cssText='margin-top:12px;display:none';
-   purchase.onclick=()=>{const open=plans.style.display==='none';plans.style.display=open?'block':'none';plans.hidden=!open;purchase.setAttribute('aria-expanded',String(open));purchase.textContent='PURCHASE KEY';};
+   purchase.onclick=()=>{const open=plans.style.display==='none';plans.style.display=open?'block':'none';plans.hidden=!open;purchase.setAttribute('aria-expanded',String(open));purchase.textContent=isResellerCustomer?'BUY RESELLER KEY':'PURCHASE KEY';};
    const durationRank=duration=>{const d=String(duration).toLowerCase().replace(/\s+/g,'');const ranks={'1hour':1,'3hours':3,'6hours':6,'12hours':12,'1day':24,'3days':72,'7days':168,'30days':720};return ranks[d]||9999;};
    aimProducts.sort((a,b)=>durationRank(aimHackLabel(a.name))-durationRank(aimHackLabel(b.name)));
    const seen=new Set();
@@ -1177,7 +1220,7 @@ async function loadShopProducts(){
    const hasPlans=group.some(p=>String(p.name||'').startsWith(base+' - '));
    if(hasPlans){
     const desc=document.createElement('p');desc.textContent='Apna duration select karein.';desc.style.cssText='margin:0 0 12px;color:#94a3b8;font-size:12px;line-height:1.6';card.appendChild(desc);
-    const purchase=document.createElement('button');purchase.type='button';purchase.textContent='PURCHASE KEY';purchase.setAttribute('aria-expanded','false');purchase.style.cssText='display:block;width:100%;padding:14px;background:#06b6d4;color:#082f49;font-size:14px;border-radius:10px';
+    const purchase=document.createElement('button');purchase.type='button';purchase.textContent=isResellerCustomer?'BUY RESELLER KEY':'PURCHASE KEY';purchase.setAttribute('aria-expanded','false');purchase.style.cssText='display:block;width:100%;padding:14px;background:#06b6d4;color:#082f49;font-size:14px;border-radius:10px';
     const plans=document.createElement('div');plans.hidden=true;plans.style.cssText='display:none;margin-top:10px';
     purchase.onclick=()=>{const open=plans.style.display==='none';plans.style.display=open?'block':'none';plans.hidden=!open;purchase.setAttribute('aria-expanded',String(open));};
     group.forEach(product=>{
