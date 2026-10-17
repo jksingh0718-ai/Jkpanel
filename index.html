@@ -716,8 +716,8 @@ function setBottomNavActive(name){
   });
 }
 function navigateBottom(name){
-  closePopup();
-  closeMenu();
+  try{closePopup();}catch(e){}
+  try{closeMenu();}catch(e){}
   const depositPage=document.getElementById('jkDepositPage');
   if(depositPage)depositPage.style.display='none';
   if(name==='home'){
@@ -829,7 +829,6 @@ function deposit(){
     if(header)header.insertAdjacentElement('afterend',page);
     else document.body.insertBefore(page,document.body.firstChild);
   }
-  document.querySelectorAll('body > .brand, body > .account-bar, body > .box, body > #products, body > #resellerPromo').forEach(el=>{});
   page.style.display='block';
   page.scrollIntoView({behavior:'smooth',block:'start'});
   setBottomNavActive('deposit');
