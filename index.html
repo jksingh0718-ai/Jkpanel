@@ -148,6 +148,13 @@ footer{display:none}
 .jk-home-icon svg,.jk-key-icon svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .jk-key-icon{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;flex:0 0 34px;border:1px solid #22d3ee;border-radius:9px;background:#071923;color:#22d3ee;box-shadow:0 0 8px #06b6d422}
 .product h4{display:flex;align-items:center;gap:9px}
+
+/* Keep all five bottom navigation buttons on one row, including Profile */
+#bottomNav{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:2px!important;padding:6px 4px!important}
+#bottomNav button{min-width:0!important;width:100%!important;padding:6px 1px!important;gap:3px!important;font-size:9px!important;white-space:nowrap!important;overflow:hidden!important}
+#bottomNav button .nav-icon{display:flex;align-items:center;justify-content:center;font-size:17px!important;line-height:1!important}
+#bottomNav button .nav-icon svg{width:18px!important;height:18px!important}
+#bottomNav button>span:last-child{font-size:clamp(8px,2.4vw,10px)!important;letter-spacing:0!important;line-height:1.1!important}
 </style>
 </head>
 <body>
