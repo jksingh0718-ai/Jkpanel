@@ -706,7 +706,9 @@ function openProfilePanel(){
         '<a href="https://wa.me/917645957071" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:space-between;padding:13px;background:#101827;color:#e2e8f0;border:1px solid #253247;border-radius:11px;text-decoration:none;font-size:12px"><span>◉ &nbsp; Contact Support</span><span style="color:#64748b">›</span></a>'+
       '</div>'+
     '</div>';
+  const previousClose=card.querySelector('#jkProfileClose');if(previousClose)previousClose.remove();
   const close=document.createElement('button');
+  close.id='jkProfileClose';
   close.type='button';close.textContent='CLOSE';
   close.style.cssText='flex:0 0 auto;position:relative;z-index:10;width:calc(100% - 26px);margin:8px 13px 12px;padding:13px;background:#dc2626;color:#fff;border:0;border-radius:10px;font-size:13px;font-weight:900';
   close.onclick=closePopup;
