@@ -482,6 +482,32 @@ small{color:#a6b2c0}
 </section>
 <p id="message" role="status"></p>
 <script>
+(function(){
+ const form=document.getElementById("loginForm");
+ if(!form)return;
+ form.addEventListener("submit",async function(e){
+  if(typeof form.onsubmit==="function")return;
+  e.preventDefault();
+  const input=document.getElementById("password");
+  const button=form.querySelector("button");
+  const message=document.getElementById("message");
+  button.disabled=true;button.textContent="Logging in...";
+  message.textContent="Checking admin login...";
+  try{
+   const response=await fetch("/api/admin/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:input.value})});
+   let data={};try{data=await response.json()}catch(_){}
+   if(!response.ok)throw new Error(data.error||("Login failed (HTTP "+response.status+")"));
+   document.getElementById("login").hidden=true;
+   document.getElementById("dashboard").hidden=false;
+   input.value="";
+   message.textContent="Login successful. If sections do not load, refresh once.";
+  }catch(err){
+   message.textContent=err.message||"Login failed. Check password and Render ADMIN_PASSWORD.";
+  }finally{button.disabled=false;button.textContent="Login";}
+ });
+})();
+</script>
+<script>
 const message=document.getElementById("message");
 document.querySelectorAll("[data-tab]").forEach(button=>button.addEventListener("click",()=>{
  document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b===button));
