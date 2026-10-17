@@ -1379,8 +1379,7 @@ async function activateResellerFromVerifiedPayment(request, utr, payload) {
   }).eq("id",request.id).eq("status","pending");
   if (paidError) throw new Error("Verified reseller payment status save nahi hua.");
   const { error: activationError } = await supabase.from("reseller_accounts").upsert({
-    user_id:request.user_id,is_active:true,activation_price:activationPrice,
-    activated_at:new Date().toISOString(),updated_at:new Date().toISOString()
+    user_id:request.user_id,is_active:true,activation_price:activationPrice
   },{onConflict:"user_id"});
   if (activationError) throw new Error("Payment verify ho gaya, lekin reseller activation finalize nahi hui. Admin se contact karein.");
   return {success:true,isReseller:true};
