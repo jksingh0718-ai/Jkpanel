@@ -406,7 +406,7 @@ small{color:#a6b2c0}
 #adminMenu button[data-action="logout"]{color:#fca5a5}
 #refreshCustomers{padding:7px 10px;font-size:12px;border-radius:6px}
 .admin-bottom-nav{display:none}
-@media(max-width:700px){body{padding-bottom:95px}#adminTitle{gap:10px}.admin-bottom-nav{position:fixed;z-index:9999;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;background:#0d141e;border-top:1px solid #334155;padding:7px 4px calc(7px + env(safe-area-inset-bottom));box-shadow:0 -4px 18px #0008}.admin-bottom-nav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;margin:0;padding:5px 2px;background:transparent;color:#a6b2c0;font-size:11px;border-radius:8px}.admin-bottom-nav button .nav-icon{font-size:21px;line-height:1}.admin-bottom-nav button.active{color:#39f58b;background:#10251b}}
+@media(max-width:700px){body{padding-bottom:95px}#adminTitle{gap:10px}.admin-bottom-nav{position:fixed;z-index:9999;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;background:#0d141e;border-top:1px solid #334155;padding:7px 4px calc(7px + env(safe-area-inset-bottom));box-shadow:0 -4px 18px #0008}.admin-bottom-nav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;margin:0;padding:5px 2px;background:transparent;color:#a6b2c0;font-size:11px;border-radius:8px}.admin-bottom-nav button .nav-icon{font-size:21px;line-height:1}.admin-bottom-nav button.active{color:#39f58b;background:#10251b}}
 @media(min-width:701px){.admin-bottom-nav{display:flex;gap:8px;margin:14px 0}.admin-bottom-nav button{display:flex;align-items:center;gap:7px;padding:10px 14px;background:#1e293b;color:#e2e8f0;border-radius:7px}.admin-bottom-nav button.active{background:#39f58b;color:#062012}.admin-bottom-nav .nav-icon{font-size:18px}}
 .admin-tabs button{padding:12px 6px;background:#1e293b;color:#e2e8f0;border:1px solid #334155}
 .admin-tabs button.active{background:#39f58b;color:#062012}
@@ -425,7 +425,7 @@ small{color:#a6b2c0}
 </form>
 </section>
 <section id="dashboard" hidden>
-<nav id="adminMenu" aria-label="Admin navigation"><button type="button" class="active" data-tab="users">Home</button><button type="button" data-tab="products">Products</button><button type="button" data-tab="keys">Keys Management</button><button type="button" data-tab="profile">Profile</button><button type="button" data-action="logout">Logout</button></nav>
+<nav id="adminMenu" aria-label="Admin navigation"><button type="button" class="active" data-tab="users">Home</button><button type="button" data-tab="products">Products</button><button type="button" data-tab="keys">Keys Management</button><button type="button" data-tab="resellers">Resellers</button><button type="button" data-tab="profile">Profile</button><button type="button" data-action="logout">Logout</button></nav>
 <button id="logout" hidden>Logout</button>
 <section id="tab-users" class="admin-section active">
 
@@ -489,8 +489,15 @@ small{color:#a6b2c0}
  <h3 style="margin-top:18px">Saved Key Products</h3><div id="keyGroupList"></div>
  <h3 style="margin-top:18px">Orders / Key Requests</h3><div id="orders"></div>
 </section>
+<section id="tab-resellers" class="admin-section">
+ <h2>Reseller Management</h2>
+ <div class="card"><h3>Reseller banne ka price</h3><label for="resellerActivationPrice">Activation price (₹)</label><br><input id="resellerActivationPrice" type="number" min="0" max="1000000" step="0.01" value="0" style="width:100%"><button type="button" id="saveResellerSettings">Save activation price</button><p id="resellerSettingsMessage" role="status"></p><small>Yeh price save hoga; customer ko reseller banane se pehle payment manually verify karein.</small></div>
+ <div class="card"><h3>Customer ko reseller banayein</h3><label for="resellerCustomer">Customer</label><br><select id="resellerCustomer" style="width:100%"><option value="">Loading customers...</option></select><br><button type="button" id="assignReseller">Make Reseller</button><p id="assignResellerMessage" role="status"></p></div>
+ <div class="card"><h3>Reseller key prices</h3><label for="resellerPriceCustomer">Price kis ke liye?</label><br><select id="resellerPriceCustomer" style="width:100%"><option value="">Default reseller price (all resellers)</option></select><br><label for="resellerPriceProduct">Key / duration</label><br><select id="resellerPriceProduct" style="width:100%"></select><br><label for="resellerPriceAmount">Reseller price (₹)</label><br><input id="resellerPriceAmount" type="number" min="0" max="1000000" step="0.01" style="width:100%"><button type="button" id="saveResellerPrice">Save reseller key price</button><p id="resellerPriceMessage" role="status"></p><small>Default price sabhi resellers par lagega; kisi ek reseller ko alag price dene ke liye uska naam select karein.</small></div>
+ <h3>Current resellers</h3><div id="resellerList"></div>
+</section>
 <section id="tab-profile" class="admin-section"><h2>Admin Profile</h2><div class="card"><p>JK PANEL SHOP Admin</p><small>Admin dashboard account</small><p>Account security ke liye kaam khatam hone par Logout karein.</p><button type="button" onclick="document.getElementById('logout').click()">Logout</button></div></section>
-<nav class="admin-bottom-nav" aria-label="Bottom navigation"><button type="button" class="active" data-tab="users"><span class="nav-icon">⌂</span><span>Home</span></button><button type="button" data-tab="products"><span class="nav-icon">▣</span><span>Products</span></button><button type="button" data-tab="keys"><span class="nav-icon">⚿</span><span>Keys</span></button><button type="button" data-tab="profile"><span class="nav-icon">♙</span><span>Profile</span></button></nav>
+<nav class="admin-bottom-nav" aria-label="Bottom navigation"><button type="button" class="active" data-tab="users"><span class="nav-icon">⌂</span><span>Home</span></button><button type="button" data-tab="products"><span class="nav-icon">▣</span><span>Products</span></button><button type="button" data-tab="keys"><span class="nav-icon">⚿</span><span>Keys</span></button><button type="button" data-tab="resellers"><span class="nav-icon">♧</span><span>Resellers</span></button><button type="button" data-tab="profile"><span class="nav-icon">♙</span><span>Profile</span></button></nav>
 </section>
 <p id="message" role="status"></p>
 <script>
@@ -875,7 +882,28 @@ async function loadCustomers(){
  }catch(e){message.textContent=e.message;}
 }
 
-document.getElementById("refreshCustomers").onclick=async()=>{await loadCustomers();};
+async function loadResellers(){
+ try{
+  const data=await api("/api/admin/resellers");
+  document.getElementById("resellerActivationPrice").value=Number(data.settings?.activation_price||0);
+  const customerSelect=document.getElementById("resellerCustomer"),priceCustomer=document.getElementById("resellerPriceCustomer");
+  const prev=customerSelect.value,prevPrice=priceCustomer.value;customerSelect.replaceChildren();priceCustomer.replaceChildren();
+  const def=document.createElement("option");def.value="";def.textContent="Default reseller price (all resellers)";priceCustomer.appendChild(def);
+  (data.customers||[]).forEach(c=>{const o=document.createElement("option");o.value=c.id;o.textContent=(c.name||c.email)+" ("+c.email+")";customerSelect.appendChild(o);if(c.reseller_active){const p=document.createElement("option");p.value=c.id;p.textContent=(c.name||c.email)+" ("+c.email+")";priceCustomer.appendChild(p);}});
+  if(prev)customerSelect.value=prev;if(prevPrice)priceCustomer.value=prevPrice;
+  const productSelect=document.getElementById("resellerPriceProduct"),prevProduct=productSelect.value;productSelect.replaceChildren();
+  (data.products||[]).forEach(p=>{const o=document.createElement("option");o.value=p.id;o.textContent=p.name+" — shop ₹"+Number(p.price).toFixed(2);o.dataset.price=String(p.price);productSelect.appendChild(o);});
+  if(prevProduct)productSelect.value=prevProduct;
+  const root=document.getElementById("resellerList");root.replaceChildren();const list=(data.customers||[]).filter(c=>c.is_reseller);
+  if(!list.length){root.textContent="Abhi koi reseller nahi hai.";return;}
+  list.forEach(c=>{const card=document.createElement("article");card.className="card";const title=document.createElement("h3");title.textContent=c.name||c.email;const email=document.createElement("p");email.textContent=c.email+" · Activation ₹"+Number(c.activation_price||0).toFixed(2);const status=document.createElement("p");status.textContent=c.reseller_active?"Active reseller":"Inactive reseller";const toggle=document.createElement("button");toggle.type="button";toggle.textContent=c.reseller_active?"Remove reseller access":"Activate reseller";toggle.onclick=async()=>{toggle.disabled=true;try{await api("/api/admin/resellers/assign",{method:"POST",body:JSON.stringify({user_id:c.id,active:!c.reseller_active})});await loadResellers();document.getElementById("assignResellerMessage").textContent="Reseller status saved.";}catch(e){document.getElementById("assignResellerMessage").textContent=e.message;}finally{toggle.disabled=false;}};card.append(title,email,status,toggle);root.appendChild(card);});
+ }catch(e){document.getElementById("resellerSettingsMessage").textContent=e.message||"Reseller data load nahi hua.";}
+}
+document.getElementById("saveResellerSettings").onclick=async()=>{const b=document.getElementById("saveResellerSettings"),m=document.getElementById("resellerSettingsMessage"),price=Number(document.getElementById("resellerActivationPrice").value);if(!Number.isFinite(price)||price<0||price>1000000){m.textContent="Valid activation price enter karein.";return;}b.disabled=true;try{await api("/api/admin/resellers/settings",{method:"POST",body:JSON.stringify({activation_price:price})});m.textContent="Reseller activation price Supabase mein save ho gaya.";}catch(e){m.textContent=e.message;}finally{b.disabled=false;}};
+document.getElementById("assignReseller").onclick=async()=>{const userId=document.getElementById("resellerCustomer").value,m=document.getElementById("assignResellerMessage"),b=document.getElementById("assignReseller");if(!userId){m.textContent="Pehle customer select karein.";return;}b.disabled=true;try{await api("/api/admin/resellers/assign",{method:"POST",body:JSON.stringify({user_id:userId,active:true})});m.textContent="Customer reseller ban gaya; status save ho gaya.";await loadResellers();}catch(e){m.textContent=e.message;}finally{b.disabled=false;}};
+document.getElementById("saveResellerPrice").onclick=async()=>{const productId=document.getElementById("resellerPriceProduct").value,userId=document.getElementById("resellerPriceCustomer").value||null,price=Number(document.getElementById("resellerPriceAmount").value),m=document.getElementById("resellerPriceMessage"),b=document.getElementById("saveResellerPrice");if(!productId){m.textContent="Key/duration select karein.";return;}if(!Number.isFinite(price)||price<0||price>1000000){m.textContent="Valid reseller price enter karein.";return;}b.disabled=true;try{await api("/api/admin/reseller-prices",{method:"POST",body:JSON.stringify({product_id:productId,reseller_user_id:userId,price})});m.textContent="Reseller key price Supabase mein save ho gaya.";}catch(e){m.textContent=e.message;}finally{b.disabled=false;}};
+document.getElementById("resellerPriceProduct").addEventListener("change",e=>{const o=e.target.selectedOptions[0];if(o)document.getElementById("resellerPriceAmount").value=o.dataset.price||"";});
+document.getElementById("refreshCustomers").onclick=async()=>{await loadCustomers();await loadResellers();};
 document.getElementById("refreshProducts").onclick=async()=>{await loadProducts();};
 document.getElementById("refreshKeys").onclick=async()=>{await loadCustomers();await loadKeyGroups();};
 document.getElementById("logout").onclick=async()=>{
@@ -890,6 +918,7 @@ loadOrders();
 loadCustomers();
 loadProducts();
 loadKeyGroups();
+loadResellers();
 clearKeyGroupForm();
 </script>
 </main></body></html>`);
@@ -1558,11 +1587,19 @@ app.get("/api/products", async (req, res) => {
   if (!supabase) return res.status(503).json({ error: "Database is not configured" });
   const { data, error } = await supabase.from("products")
     .select("id, name, price, image_url, video_url, description").eq("published", true).order("created_at", { ascending: false });
-  if (error) {
-    console.error("Public products load failed:", error.message);
-    return res.status(500).json({ error: "Products load nahi ho sake." });
+  if (error) { console.error("Public products load failed:", error.message); return res.status(500).json({ error: "Products load nahi ho sake." }); }
+  const user = await getAuthenticatedUser(req);
+  let products = data || [];
+  if (user) {
+    const { data: reseller } = await supabase.from("reseller_accounts").select("user_id").eq("user_id", user.id).eq("is_active", true).maybeSingle();
+    if (reseller) {
+      const { data: prices } = await supabase.from("reseller_prices").select("product_id, price, reseller_user_id").or("reseller_user_id.is.null,reseller_user_id.eq."+user.id);
+      const defaults = new Map(), personal = new Map();
+      (prices || []).forEach(p => { if (p.reseller_user_id === null) defaults.set(p.product_id, Number(p.price)); else if (p.reseller_user_id === user.id) personal.set(p.product_id, Number(p.price)); });
+      products = products.map(p => personal.has(p.id) ? { ...p, price: personal.get(p.id) } : defaults.has(p.id) ? { ...p, price: defaults.get(p.id) } : p);
+    }
   }
-  res.json({ products: data || [] });
+  res.json({ products });
 });
 
 app.post("/api/orders", async (req, res) => {
@@ -1597,7 +1634,8 @@ app.post("/api/orders", async (req, res) => {
 
     const { data: purchase, error: walletError } = await supabase.rpc("create_wallet_product_order", {
       p_user_id: user.id,
-      p_product_id: product.id
+      p_product_id: product.id,
+      p_price: amount
     });
     if (walletError) {
       const message = String(walletError.message || "");
@@ -1845,6 +1883,65 @@ app.patch("/api/admin/products/:id", isAdmin, async (req, res) => {
   }
   if (!data) return res.status(404).json({ error: "Product nahi mila." });
   res.json({ success: true, product: data });
+});
+
+
+app.get("/api/admin/resellers", isAdmin, async (req, res) => {
+  if (!supabase) return res.status(503).json({ error: "Database is not configured" });
+  try {
+    const [usersResult, accountsResult, settingsResult, productsResult] = await Promise.all([
+      supabase.auth.admin.listUsers({ page: 1, perPage: 1000 }),
+      supabase.from("reseller_accounts").select("user_id, is_active, activation_price, activated_at, created_at"),
+      supabase.from("reseller_settings").select("activation_price").eq("id", 1).maybeSingle(),
+      supabase.from("products").select("id, name, price, published").order("name")
+    ]);
+    const err = usersResult.error || accountsResult.error || settingsResult.error || productsResult.error;
+    if (err) throw err;
+    const accountMap = new Map((accountsResult.data || []).map(a => [a.user_id, a]));
+    const customers = (usersResult.data?.users || []).map(u => { const a=accountMap.get(u.id); return {id:u.id,email:u.email||"",name:String(u.user_metadata?.full_name||u.user_metadata?.name||u.email?.split("@")[0]||"Customer"),is_reseller:Boolean(a),reseller_active:Boolean(a?.is_active),activation_price:Number(a?.activation_price||0)}; });
+    res.json({settings:settingsResult.data||{activation_price:0},customers,products:productsResult.data||[]});
+  } catch(e) { console.error("Reseller admin load failed:",e.message); res.status(500).json({error:"Reseller data load nahi hua. Database tables check karein."}); }
+});
+app.post("/api/admin/resellers/settings", isAdmin, async (req,res) => {
+  if(!supabase)return res.status(503).json({error:"Database is not configured"});
+  const activationPrice=Number(req.body?.activation_price);
+  if(!Number.isFinite(activationPrice)||activationPrice<0||activationPrice>1000000)return res.status(400).json({error:"Valid activation price enter karein."});
+  const {data,error}=await supabase.from("reseller_settings").upsert({id:1,activation_price:activationPrice,updated_at:new Date().toISOString()},{onConflict:"id"}).select("activation_price").single();
+  if(error){console.error("Reseller settings save failed:",error.message);return res.status(500).json({error:"Activation price save nahi hua."});}
+  res.json({success:true,settings:data});
+});
+app.post("/api/admin/resellers/assign", isAdmin, async (req,res) => {
+  if(!supabase)return res.status(503).json({error:"Database is not configured"});
+  const userId=typeof req.body?.user_id==="string"?req.body.user_id.trim():"",active=req.body?.active!==false;
+  if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId))return res.status(400).json({error:"Valid customer select karein."});
+  const {data:settings}=await supabase.from("reseller_settings").select("activation_price").eq("id",1).maybeSingle();
+  if(active){
+    const {data,error}=await supabase.from("reseller_accounts").upsert({user_id:userId,is_active:true,activation_price:Number(settings?.activation_price||0),activated_at:new Date().toISOString(),updated_at:new Date().toISOString()},{onConflict:"user_id"}).select("user_id,is_active,activation_price").single();
+    if(error){console.error("Reseller assignment failed:",error.message);return res.status(500).json({error:"Customer reseller nahi bana."});}
+    return res.json({success:true,reseller:data});
+  }
+  const {data,error}=await supabase.from("reseller_accounts").update({is_active:false,updated_at:new Date().toISOString()}).eq("user_id",userId).select("user_id,is_active").maybeSingle();
+  if(error){console.error("Reseller removal failed:",error.message);return res.status(500).json({error:"Reseller status update nahi hua."});}
+  if(!data)return res.status(404).json({error:"Reseller record nahi mila."});
+  res.json({success:true,reseller:data});
+});
+app.post("/api/admin/reseller-prices", isAdmin, async (req,res) => {
+  if(!supabase)return res.status(503).json({error:"Database is not configured"});
+  const productId=typeof req.body?.product_id==="string"?req.body.product_id.trim():"";
+  const resellerUserId=typeof req.body?.reseller_user_id==="string"&&req.body.reseller_user_id.trim()?req.body.reseller_user_id.trim():null;
+  const price=Number(req.body?.price);
+  if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(productId)||!Number.isFinite(price)||price<0||price>1000000)return res.status(400).json({error:"Key aur valid reseller price select karein."});
+  if(resellerUserId){const {data:account}=await supabase.from("reseller_accounts").select("user_id").eq("user_id",resellerUserId).eq("is_active",true).maybeSingle();if(!account)return res.status(400).json({error:"Is customer ka reseller access active nahi hai."});}
+  let lookup=supabase.from("reseller_prices").select("id").eq("product_id",productId);
+  lookup=resellerUserId?lookup.eq("reseller_user_id",resellerUserId):lookup.is("reseller_user_id",null);
+  const {data:existing,error:lookupError}=await lookup.maybeSingle();
+  if(lookupError){console.error("Reseller price lookup failed:",lookupError.message);return res.status(500).json({error:"Existing reseller price check nahi hua."});}
+  const values={product_id:productId,reseller_user_id:resellerUserId,price,updated_at:new Date().toISOString()};
+  let saved,error;
+  if(existing){const r=await supabase.from("reseller_prices").update(values).eq("id",existing.id).select("id,product_id,reseller_user_id,price").single();saved=r.data;error=r.error;}
+  else{const r=await supabase.from("reseller_prices").insert(values).select("id,product_id,reseller_user_id,price").single();saved=r.data;error=r.error;}
+  if(error){console.error("Reseller price save failed:",error.message);return res.status(500).json({error:"Reseller key price save nahi hua."});}
+  res.json({success:true,reseller_price:saved});
 });
 
 app.listen(PORT, () => {
