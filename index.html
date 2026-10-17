@@ -53,6 +53,11 @@ header{display:flex;align-items:center;justify-content:space-between;gap:8px;bor
  .product-video-hint{position:absolute;left:0;right:0;bottom:0;padding:9px;text-align:center;background:linear-gradient(transparent,#000d);color:#fff;font-size:12px;font-weight:bold;letter-spacing:1px}
 
 .popup-card{width:100%;max-width:340px;background:#111827;border:1px solid #10b981;border-radius:14px;padding:20px}
+#popup.history-screen{padding:12px;overflow:hidden}
+#popup.history-screen .popup-card{display:flex;flex-direction:column;width:100%;max-width:640px;max-height:calc(100dvh - 24px);min-height:0;overflow:hidden}
+#popup.history-screen #popupMessage{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-right:2px}
+#popup.history-screen #popupDefaultClose{flex:0 0 auto;position:sticky;bottom:0;margin-top:12px}
+
 .popup-card h3{color:#38bdf8;margin-bottom:12px}
 .popup-card p{color:#cbd5e1;font-size:13px;line-height:1.6}
 .popup-card button{width:100%;padding:12px;margin-top:12px;background:#10b981;color:#04130b}
@@ -608,6 +613,7 @@ function showPopup(title,message){
   document.getElementById('popup').style.display='flex';
 }
 function closePopup(){
+  document.getElementById('popup').classList.remove('history-screen');
   const player=document.querySelector('#popupMessage video');
   if(player){player.pause();player.removeAttribute('src');player.load();}
   document.getElementById('popup').style.display='none';
@@ -728,6 +734,7 @@ function feature(name){
 
 async function openDepositHistoryPanel(){
   closeMenu();
+  document.getElementById('popup').classList.add('history-screen');
   const defaultClose=document.getElementById('popupDefaultClose');
   if(defaultClose)defaultClose.style.display='block';
   const root=document.getElementById('popupMessage');
@@ -795,6 +802,7 @@ async function openDepositHistoryPanel(){
 
 async function openOrderHistoryPanel(){
   closeMenu();
+  document.getElementById('popup').classList.add('history-screen');
   const defaultClose=document.getElementById('popupDefaultClose');
   if(defaultClose)defaultClose.style.display='block';
   const root=document.getElementById('popupMessage');
