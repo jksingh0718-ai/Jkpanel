@@ -1393,7 +1393,7 @@ async function loadShopProducts(){
    purchase.style.cssText='display:block;width:100%;padding:13px;background:#10b981;color:#052e16;font-size:13px;border-radius:10px';
    const plans=document.createElement('div');plans.hidden=true;plans.style.cssText='margin-top:12px;display:none';
    purchase.onclick=()=>{const open=plans.style.display==='none';plans.style.display=open?'block':'none';plans.hidden=!open;purchase.setAttribute('aria-expanded',String(open));};
-   const balaDuration=(product)=>String(product.name||'').replace(/^BALA\s*MODS?\s*~?\s*FF\s+NONROOT\s*[-–:]?\s*/i,'').trim()||'Duration';
+   const balaDuration=(product)=>String(product.name||'').replace(/^BALA\s*MODS?\s*~?\s*(?:V?6\s*)?FF\s+NONROOT\s*[-–:]?\s*/i,'').trim()||'Duration';
    balaProducts.sort((a,b)=>shopDurationRank(balaDuration(a))-shopDurationRank(balaDuration(b)));
    balaProducts.forEach(product=>{
     const duration=balaDuration(product);
