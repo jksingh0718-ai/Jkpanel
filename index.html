@@ -721,7 +721,7 @@ async function startNovapayPayment(){
     }else{
       status.innerHTML = 'Order ID: <b>'+data.order_id+'</b><p>Browser ne naya tab block kar diya. Payment kholne ke liye yahan tap karein:</p><a class="action" href="'+data.payment_url.replace(/"/g,'&quot;')+'" target="_blank" rel="noopener noreferrer" style="display:inline-block;text-decoration:none;">Pay Now</a>';
     }
-    document.getElementById('verifyPaymentBtn').style.display='block';
+    // No manual verification button is required; status checks run automatically.
   }catch(error){
     if(paymentTab && !paymentTab.closed) paymentTab.close();
     status.textContent = 'Payment start nahi hua: '+error.message;
@@ -763,14 +763,35 @@ async function checkNovapayPayment(){
 }
 
 let novapayAutoVerifyRunning = false;
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState !== 'visible' || novapayAutoVerifyRunning) return;
-  const orderId = localStorage.getItem('jk_novapay_pending_order');
-  const verifyButton = document.getElementById('verifyPaymentBtn');
-  if (!orderId || !verifyButton || verifyButton.style.display === 'none') return;
+async function runNovapayAutoVerification(){
+  if(novapayAutoVerifyRunning || !localStorage.getItem('jk_novapay_pending_order')) return;
+  if(!localStorage.getItem('jk_customer_access_token')) return;
   novapayAutoVerifyRunning = true;
-  checkNovapayPayment().finally(() => { novapayAutoVerifyRunning = false; });
+  try{
+    // Check repeatedly after returning from the gateway; no hidden button dependency.
+    for(let attempt=0;attempt<10;attempt++){
+      if(!localStorage.getItem('jk_novapay_pending_order')) break;
+      await checkNovapayPayment();
+      if(!localStorage.getItem('jk_novapay_pending_order')) break;
+      if(attempt<9) await new Promise(resolve=>setTimeout(resolve,4000));
+    }
+  }finally{
+    novapayAutoVerifyRunning = false;
+  }
+}
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'visible') runNovapayAutoVerification();
 });
+window.addEventListener('pageshow', () => {
+  if(new URLSearchParams(window.location.search).get('payment') === 'success'){
+    const returnedOrderId = new URLSearchParams(window.location.search).get('order_id');
+    if(returnedOrderId) localStorage.setItem('jk_novapay_pending_order', returnedOrderId);
+    // Clean the URL without reloading the page.
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+  runNovapayAutoVerification();
+});
+
 
 function feature(name){
   closeMenu();
