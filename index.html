@@ -53,11 +53,17 @@ header{display:flex;align-items:center;justify-content:space-between;gap:8px;bor
  .product-video-hint{position:absolute;left:0;right:0;bottom:0;padding:9px;text-align:center;background:linear-gradient(transparent,#000d);color:#fff;font-size:12px;font-weight:bold;letter-spacing:1px}
 
 .popup-card{width:100%;max-width:340px;background:#111827;border:1px solid #10b981;border-radius:14px;padding:20px}
-#popup.history-screen{padding:12px;overflow:hidden}
-#popup.history-screen .popup-card{display:flex;flex-direction:column;width:100%;max-width:640px;max-height:calc(100dvh - 24px);min-height:0;overflow:hidden}
-#popup.history-screen #popupMessage{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-right:2px}
-#popup.history-screen #popupDefaultClose{flex:0 0 auto;position:sticky;bottom:0;margin-top:12px}
+#popup.history-screen{padding:12px!important;overflow:hidden!important;align-items:center!important}
+#popup.history-screen .popup-card{display:flex!important;flex-direction:column!important;width:100%!important;max-width:640px!important;height:auto!important;max-height:calc(100dvh - 24px)!important;min-height:0!important;overflow:hidden!important}
+#popup.history-screen #popupTitle{flex:0 0 auto!important}
+#popup.history-screen #popupMessage{flex:1 1 auto!important;min-height:0!important;max-height:none!important;overflow-y:auto!important;overscroll-behavior:contain!important;padding-right:2px!important}
+#popup.history-screen #popupDefaultClose{display:block;flex:0 0 auto!important;position:relative!important;bottom:auto!important;left:auto!important;right:auto!important;margin-top:12px!important;z-index:5!important}
+.menu-btn{position:relative;overflow:hidden;transition:transform .2s ease,box-shadow .25s ease,border-color .25s ease;animation:jkMenuPulse 2.8s ease-in-out infinite}
+.menu-btn::after{content:"";position:absolute;top:-60%;left:-70%;width:45%;height:220%;transform:rotate(25deg);background:linear-gradient(90deg,transparent,#ffffff55,transparent);animation:jkMenuShine 3.8s ease-in-out infinite;pointer-events:none}
+.menu-btn:active{transform:scale(.92)}
 @keyframes jkSpin{to{transform:rotate(360deg)}}
+@keyframes jkMenuPulse{0%,100%{box-shadow:0 0 0 0 #38bdf833,0 3px 10px #0284c722}50%{box-shadow:0 0 0 5px #38bdf811,0 4px 16px #0284c755}}
+@keyframes jkMenuShine{0%,65%{left:-70%}85%,100%{left:140%}}
 
 .popup-card h3{color:#38bdf8;margin-bottom:12px}
 .popup-card p{color:#cbd5e1;font-size:13px;line-height:1.6}
@@ -761,7 +767,7 @@ async function openDepositHistoryPanel(){
   spinner.setAttribute('aria-label','Loading');
   spinner.style.cssText='width:32px;height:32px;border:3px solid #334155;border-top-color:#38bdf8;border-radius:50%;animation:jkSpin .8s linear infinite';
   const loadingText=document.createElement('p');
-  loadingText.textContent='Deposit History load ho rahi hai...';
+  loadingText.textContent='Loading Deposit History...';
   loadingText.style.cssText='color:#94a3b8;text-align:center';
   loading.append(spinner,loadingText);
   root.appendChild(loading);
@@ -835,7 +841,7 @@ async function openOrderHistoryPanel(){
   spinner.setAttribute('aria-label','Loading');
   spinner.style.cssText='width:32px;height:32px;border:3px solid #334155;border-top-color:#38bdf8;border-radius:50%;animation:jkSpin .8s linear infinite';
   const loadingText=document.createElement('p');
-  loadingText.textContent='Order History load ho rahi hai...';
+  loadingText.textContent='Loading Order History...';
   loadingText.style.cssText='color:#94a3b8;text-align:center';
   loading.append(spinner,loadingText);
   root.appendChild(loading);
