@@ -435,21 +435,13 @@ async function logoutCustomer(){
 async function loadMyAccountSummary(){
   try{
     const data=await customerApi('/api/my-account');
-    isResellerCustomer=Boolean(data.isReseller);
-    currentResellerActivationPrice=Number(data.resellerActivationPrice??99);
-    updateResellerUI();
-    updateAccountBar(data.user.email);
-    const stat=document.getElementById('referralStatCount');
-    if(stat)stat.textContent=String(data.referral?.referredUsers||0);
-    const walletStat=document.getElementById('walletBalanceStat');
-    if(walletStat)walletStat.textContent='₹'+Number(data.walletBalance||0).toFixed(2);
-    const ordersStat=document.getElementById('totalOrdersStat');
-    if(ordersStat)ordersStat.textContent=String((data.orders||[]).length);
-    const keysStat=document.getElementById('availableKeysStat');
-    if(keysStat)keysStat.textContent=String((data.keys||[]).filter(k=>k.status==='active').length);
-  }catch(e){
-    if(e.message==='Login required'){clearCustomerSession();updateAccountBar('');}
-  }
+    isResellerCustomer=Boolean(data.isReseller);currentResellerActivationPrice=Number(data.resellerActivationPrice??99);updateResellerUI();updateAccountBar(data.user.email);
+    const stat=document.getElementById('referralStatCount');if(stat)stat.textContent=String(data.referral?.referredUsers||0);
+    const walletStat=document.getElementById('walletBalanceStat');if(walletStat)walletStat.textContent='₹'+Number(data.walletBalance||0).toFixed(2);
+    const ordersStat=document.getElementById('totalOrdersStat');if(ordersStat)ordersStat.textContent=String((data.orders||[]).length);
+    const keysStat=document.getElementById('availableKeysStat');if(keysStat)keysStat.textContent=String((data.keys||[]).filter(k=>k.status==='active').length);
+    try{sessionStorage.setItem('jk_wallet_balance_cache',JSON.stringify({balance:Number(data.walletBalance||0),userId:data.user?.id||data.user?.email||''}));}catch(_){}
+  }catch(e){if(e.message==='Login required'){clearCustomerSession();updateAccountBar('');}}
 }
 function openMyAccount(){
   const popup=document.getElementById('popup');
@@ -717,8 +709,16 @@ function closeMenu(){
   document.getElementById('sidebar').style.display='none';
   document.getElementById('backdrop').style.display='none';
 }
+function makeProductVideoThumb(video){
+  const button=document.createElement('button');button.type='button';button.className='product-video-thumb';button.setAttribute('aria-label','Play product video');
+  const url=video.currentSrc||video.src;button.onclick=()=>openProductVideo(url,'Product',button);
+  const img=document.createElement('img');img.alt='Product video preview';img.src=video.poster||'';img.style.cssText='width:100%;height:240px;object-fit:contain';img.onerror=()=>{img.style.display='none';};
+  const play=document.createElement('span');play.className='product-video-play';play.textContent='▶';const hint=document.createElement('span');hint.className='product-video-hint';hint.textContent='TAP TO PLAY VIDEO';button.append(img,play,hint);return button;
+}
 function openProductVideo(url,title,thumb){
   if(!url){showPopup('Video not available','Is product ka video abhi upload nahi hua hai.');return;}
+  document.querySelectorAll('#shopProducts video').forEach(existing=>{existing.pause();});
+  document.querySelectorAll('#shopProducts video').forEach(existing=>{if(existing.parentNode)existing.parentNode.replaceChild(makeProductVideoThumb(existing),existing);});
   const video=document.createElement('video');
   video.src=url;video.controls=true;video.autoplay=true;video.playsInline=true;video.preload='metadata';
   video.style.cssText='display:block;width:100%;height:auto;max-height:70vh;min-height:220px;background:#000;border-radius:12px;object-fit:contain;margin:0 0 14px';
@@ -1390,5 +1390,8 @@ loadShopProducts();
 
 </script>
   
+<script>
+(function(){try{const cached=JSON.parse(sessionStorage.getItem('jk_wallet_balance_cache')||'null');const token=localStorage.getItem('jk_customer_access_token');if(cached&&token&&Number.isFinite(cached.balance)){const el=document.getElementById('walletBalanceStat');if(el)el.textContent='₹'+cached.balance.toFixed(2);}}catch(_){}})();
+</script>
 </body>
 </html>
