@@ -345,8 +345,13 @@ app.get("/api/my-account", async (req, res) => {
   const deposits = depositsResult.data || [];
   const transactions = transactionsResult.data || [];
   const commissions = commissionsResult.data || [];
+  const { data: resellerAccount, error: resellerStatusError } = await supabase.from("reseller_accounts")
+    .select("user_id, is_active, activation_price").eq("user_id", user.id).maybeSingle();
+  if (resellerStatusError) console.error("Customer reseller status lookup failed:", resellerStatusError.message);
   res.json({
     user: { id: user.id, email: user.email },
+    isReseller: Boolean(resellerAccount?.is_active),
+    resellerActivationPrice: 99,
     walletBalance: Number(walletResult.data?.balance || 0),
     totalDeposited: deposits.filter(d => d.status === "approved").reduce((sum, d) => sum + Number(d.amount || 0), 0),
     pendingDeposits: deposits.filter(d => d.status === "pending").reduce((sum, d) => sum + Number(d.amount || 0), 0),
@@ -1614,8 +1619,10 @@ app.get("/api/products", async (req, res) => {
   if (error) { console.error("Public products load failed:", error.message); return res.status(500).json({ error: "Products load nahi ho sake." }); }
   const user = await getAuthenticatedUser(req);
   let products = data || [];
+  let isReseller = false;
   if (user) {
     const { data: reseller } = await supabase.from("reseller_accounts").select("user_id").eq("user_id", user.id).eq("is_active", true).maybeSingle();
+    isReseller = Boolean(reseller);
     if (reseller) {
       const { data: prices } = await supabase.from("reseller_prices").select("product_id, price, reseller_user_id").or("reseller_user_id.is.null,reseller_user_id.eq."+user.id);
       const defaults = new Map(), personal = new Map();
@@ -1623,7 +1630,7 @@ app.get("/api/products", async (req, res) => {
       products = products.map(p => personal.has(p.id) ? { ...p, price: personal.get(p.id) } : defaults.has(p.id) ? { ...p, price: defaults.get(p.id) } : p);
     }
   }
-  res.json({ products });
+  res.json({ products, isReseller });
 });
 
 app.post("/api/orders", async (req, res) => {
