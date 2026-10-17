@@ -351,7 +351,7 @@ app.get("/api/my-account", async (req, res) => {
   res.json({
     user: { id: user.id, email: user.email },
     isReseller: Boolean(resellerAccount?.is_active),
-    resellerActivationPrice: 99,
+    resellerActivationPrice: Number((await supabase.from("reseller_settings").select("activation_price").eq("id",1).maybeSingle()).data?.activation_price ?? 99),
     walletBalance: Number(walletResult.data?.balance || 0),
     totalDeposited: deposits.filter(d => d.status === "approved").reduce((sum, d) => sum + Number(d.amount || 0), 0),
     pendingDeposits: deposits.filter(d => d.status === "pending").reduce((sum, d) => sum + Number(d.amount || 0), 0),
@@ -1382,7 +1382,9 @@ async function creditVerifiedNovapayPayment(orderId, amount, utr, payload) {
 }
 
 async function activateResellerFromVerifiedPayment(request, utr, payload) {
-  const activationPrice = 99;
+  const { data: settings, error: settingsError } = await supabase.from("reseller_settings").select("activation_price").eq("id",1).maybeSingle();
+  if (settingsError) throw new Error("Reseller activation price load nahi hua.");
+  const activationPrice = Number(settings?.activation_price ?? 99);
   if (Math.round(Number(request.amount)*100) !== Math.round(activationPrice*100)) throw new Error("Reseller activation amount mismatch.");
   const { error: paidError } = await supabase.from("payment_requests").update({
     status:"paid", updated_at:new Date().toISOString()
@@ -1401,7 +1403,12 @@ app.post("/api/payments/novapay/create-order", async (req, res) => {
   if (!user) return res.status(401).json({ error: "Deposit ke liye pehle login karein." });
 
   const purpose = req.body?.purpose === "reseller" ? "reseller" : "wallet";
-  const amount = purpose === "reseller" ? 99 : Number(req.body?.amount);
+  let amount = Number(req.body?.amount);
+  if (purpose === "reseller") {
+    const { data: settings, error: settingsError } = await supabase.from("reseller_settings").select("activation_price").eq("id",1).maybeSingle();
+    if (settingsError) return res.status(500).json({ error: "Reseller activation price load nahi hua." });
+    amount = Number(settings?.activation_price ?? 99);
+  }
   const mobile = String(req.body?.customer_mobile || "").replace(/\D/g, "");
   if (!Number.isInteger(amount) || amount < 1 || amount > 50000) {
     return res.status(400).json({ error: "₹1 se ₹50,000 tak valid amount enter karein." });
