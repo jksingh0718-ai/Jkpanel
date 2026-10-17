@@ -389,14 +389,19 @@ app.get("/admin", (req, res) => {
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>JKPanel Admin</title>
 <style>
-body{font-family:Arial;background:#080c12;color:white;padding:14px}
+body{font-family:Arial;background:#080c12;color:white;padding:14px;padding-bottom:100px}
 main{max-width:850px;margin:auto}
 input,button,select,textarea{padding:12px;margin:6px 0;border-radius:6px;max-width:100%;box-sizing:border-box}
 input{max-width:100%}
 button{cursor:pointer;background:#39f58b;border:0;font-weight:bold}
 .card{background:#111923;padding:16px;margin:12px 0;border-radius:10px;overflow-wrap:anywhere}
 small{color:#a6b2c0}
-.admin-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:18px 0}
+.admin-tabs{display:none;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:18px 0}
+#adminBottomNav{position:fixed;left:0;right:0;bottom:0;z-index:100;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:9px 8px calc(9px + env(safe-area-inset-bottom));background:#0b1220;border-top:1px solid #334155;box-shadow:0 -8px 24px #0007}
+#adminBottomNav button{min-width:0;margin:0;padding:9px 2px;background:transparent;color:#94a3b8;border:1px solid transparent;border-radius:10px;font-size:11px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+#adminBottomNav button.active{color:#39f58b;background:#10251b;border-color:#17603b}
+#adminBottomNav .nav-icon{font-size:19px;line-height:1.1}
+#dashboard[hidden] #adminBottomNav{display:none}
 .admin-tabs button{padding:12px 6px;background:#1e293b;color:#e2e8f0;border:1px solid #334155}
 .admin-tabs button.active{background:#39f58b;color:#062012}
 .admin-section{display:none}.admin-section.active{display:block}
@@ -480,6 +485,13 @@ small{color:#a6b2c0}
  <h3 style="margin-top:18px">Saved Key Products</h3><div id="keyGroupList"></div>
  <h3 style="margin-top:18px">Orders / Key Requests</h3><div id="orders"></div>
 </section>
+<section id="tab-profile" class="admin-section"><h2>Admin Profile</h2><div class="card"><p>JK PANEL SHOP Admin</p><small>Admin dashboard account</small><p>Account security ke liye kaam khatam hone par Logout karein.</p><button type="button" onclick="document.getElementById('logout').click()">Logout</button></div></section>
+<nav id="adminBottomNav" aria-label="Admin navigation">
+ <button type="button" class="active" data-tab="users"><span class="nav-icon">⌂</span><span>Home</span></button>
+ <button type="button" data-tab="products"><span class="nav-icon">▣</span><span>Product</span></button>
+ <button type="button" data-tab="keys"><span class="nav-icon">🔑</span><span>My Keys</span></button>
+ <button type="button" data-tab="profile"><span class="nav-icon">♙</span><span>Profile</span></button>
+</nav>
 </section>
 <p id="message" role="status"></p>
 <script>
