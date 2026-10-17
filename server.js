@@ -1143,7 +1143,7 @@ app.post("/api/payments/novapay/create-order", async (req, res) => {
       user_token: token,
       amount,
       order_id: orderId,
-      redirect_url: "https://jkpanel.shop/",
+      redirect_url: "https://jkpanel.onrender.com/",
       remark1: "JK PANEL SHOP wallet deposit",
       remark2: user.id
     });
