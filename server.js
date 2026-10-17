@@ -580,7 +580,7 @@ document.getElementById("loginForm").onsubmit=async e=>{
   document.getElementById("login").hidden=true;
   document.getElementById("dashboard").hidden=false;
   message.textContent="Login successful. Admin panel loading...";
-  await Promise.all([loadOrders(),loadCustomers(),loadProducts(),loadKeyGroups()]);
+  await Promise.allSettled([loadOrders(),loadCustomers(),loadProducts(),loadKeyGroups()]);
   if(!message.textContent) message.textContent="Admin panel ready.";
  }catch(err){
   message.textContent=err.message||"Login failed. Password aur Render environment setting check karein.";
