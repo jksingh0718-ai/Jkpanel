@@ -630,7 +630,7 @@ function deposit(){
     '<label for="depositMobile">Mobile Number</label>' +
     '<input id="depositMobile" type="tel" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number" autocomplete="tel-national" style="width:100%;padding:12px;box-sizing:border-box;border:1px solid #ccc;border-radius:8px;margin:6px 0 12px;">' +
     '<button class="action" type="button" id="createPaymentBtn" onclick="startNovapayPayment()">Pay Instantly</button>' +
-    '<div id="depositStatus" style="margin-top:12px;overflow-wrap:anywhere;">Payment verify hone ke baad hi wallet balance add hoga.</div>' +
+    '<div id="depositStatus" style="margin-top:12px;overflow-wrap:anywhere;"></div>' +
     '<button class="action" type="button" id="verifyPaymentBtn" onclick="checkNovapayPayment()" style="display:none;margin-top:10px;">Verify Payment / Update Wallet</button>';
   document.getElementById('popup').style.display = 'flex';
 }
