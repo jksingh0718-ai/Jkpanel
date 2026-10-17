@@ -685,6 +685,7 @@ function clearProductForm(){
  document.getElementById("productMessage").textContent="";
 }
 document.getElementById("addProductPlan").onclick=()=>addProductPlanRow();
+productPlanSeed.forEach(p=>addProductPlanRow(p.duration,p.price));
 document.getElementById("productCancel").onclick=clearProductForm;
 document.getElementById("productForm").onsubmit=async e=>{
  e.preventDefault();
