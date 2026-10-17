@@ -436,8 +436,9 @@ small{color:#a6b2c0}
   <input id="productId" type="hidden">
   <label for="productName">Product name</label><br>
   <input id="productName" required maxlength="120" placeholder="Product name" style="width:100%"><br>
-  <label for="productPrice">Selling price (₹)</label><br>
-  <input id="productPrice" required type="number" min="0" max="1000000" step="0.01" placeholder="30" style="width:100%"><br>
+  <h4 style="margin:14px 0 6px">Duration aur price options</h4>
+  <div id="productPlanRows"></div>
+  <button type="button" id="addProductPlan" style="background:#334155;color:white">+ Add duration</button><br><small>Ek hi product ke sabhi duration aur price yahin add karein.</small><br>
   <label for="productDescription">Product description</label><br>
   <textarea id="productDescription" maxlength="2000" placeholder="Product ke baare mein likhein" style="width:100%;min-height:80px"></textarea><br>
   <label for="productImageFile">Product photo (phone Gallery se)</label><br>
@@ -625,37 +626,49 @@ async function loadProducts(){
   const root=document.getElementById("productList");
   if(!root){throw new Error("Products section missing. Page refresh karein.");}
   root.replaceChildren();
-  if(!data.products.length){root.textContent="No products yet. Add your first product above.";return;}
-  data.products.forEach(product=>{
+  const products=Array.isArray(data.products)?data.products:[];
+  if(!products.length){root.textContent="Abhi koi product nahi hai. Upar se product add karein.";return;}
+  const groups=new Map();
+  products.forEach(p=>{const m=String(p.name||"").match(/^(.*?)\\s*-\\s*(.+)$/);const base=m?m[1].trim():String(p.name||"");if(!groups.has(base))groups.set(base,[]);groups.get(base).push(p);});
+  groups.forEach((items,base)=>{
    const card=document.createElement("article");card.className="card";
-   const title=document.createElement("h3");title.textContent=product.name;
-   const info=document.createElement("p");info.textContent="Price: ₹"+Number(product.price).toFixed(2)+" | "+(product.published?"Published":"Hidden");
-   const description=document.createElement("p");description.textContent=product.description||"No description";
-   const img=document.createElement("p");img.textContent=product.image_url||"No image URL";
-   const video=document.createElement("p");video.textContent=product.video_url?"Video: "+product.video_url:"No video uploaded";
-   const edit=document.createElement("button");edit.textContent="Edit";
+   const title=document.createElement("h3");title.textContent=base;
+   const info=document.createElement("p");info.textContent=items.filter(p=>p.published).length+" active option(s) · "+items.length+" saved option(s)";
+   const options=document.createElement("p");options.style.cssText="white-space:pre-line;line-height:1.8";options.textContent=items.map(p=>{const m=String(p.name||"").match(/^(.*?)\\s*-\\s*(.+)$/);return (m?m[2]:"Standard")+" — ₹"+Number(p.price).toFixed(2)+(p.published?"":" (hidden)");}).join("\\n");
+   const description=document.createElement("p");description.textContent=items.find(p=>p.description)?.description||"No description";
+   const media=document.createElement("p");media.textContent=(items.find(p=>p.image_url)?.image_url||"No image")+(items.find(p=>p.video_url)?" · Video uploaded":"");
+   const edit=document.createElement("button");edit.textContent="Edit product and durations";
    edit.onclick=()=>{
-    document.getElementById("productId").value=product.id;
-    document.getElementById("productName").value=product.name;
-    document.getElementById("productPrice").value=product.price;
-    document.getElementById("productDescription").value=product.description||"";
-    document.getElementById("productImage").value=product.image_url||"";
-    document.getElementById("productVideoUrl").value=product.video_url||"";
+    document.getElementById("productId").value=items[0].id;
+    document.getElementById("productName").value=base;
+    document.getElementById("productDescription").value=items.find(p=>p.description)?.description||"";
+    document.getElementById("productImage").value=items.find(p=>p.image_url)?.image_url||"";
+    document.getElementById("productVideoUrl").value=items.find(p=>p.video_url)?.video_url||"";
     document.getElementById("productVideoFile").value="";
-    document.getElementById("videoUploadStatus").textContent=product.video_url?"Current video saved. Nayi video select karne par replace hogi.":"";
-    document.getElementById("productPublished").checked=Boolean(product.published);
-    document.getElementById("productSave").textContent="Save Changes";
-    document.getElementById("productMessage").textContent="Editing: "+product.name;
+    document.getElementById("videoUploadStatus").textContent=items.find(p=>p.video_url)?"Current video saved. Nayi video select karne par replace hogi.":"";
+    document.getElementById("productImageFile").value="";
+    document.getElementById("imageUploadStatus").textContent=items.find(p=>p.image_url)?"Current photo saved. Nayi photo select karne par replace hogi.":"";
+    document.getElementById("productPublished").checked=items.some(p=>p.published);
+    const rows=document.getElementById("productPlanRows");rows.replaceChildren();
+    items.forEach(p=>{const m=String(p.name||"").match(/^(.*?)\\s*-\\s*(.+)$/);addProductPlanRow(m?m[2].trim():"Standard",String(p.price));});
+    document.getElementById("productSave").textContent="Update Product and Durations";
+    document.getElementById("productMessage").textContent="Editing: "+base;
     document.getElementById("productForm").scrollIntoView({behavior:"smooth",block:"center"});
    };
-   const toggle=document.createElement("button");toggle.style.marginLeft="8px";toggle.style.background=product.published?"#b45309":"#059669";toggle.style.color="white";toggle.textContent=product.published?"Hide from shop":"Publish";
-   toggle.onclick=async()=>{
-    try{await api("/api/admin/products/"+encodeURIComponent(product.id),{method:"PATCH",body:JSON.stringify({published:!product.published})});await loadProducts();message.textContent="Product visibility updated.";}
-    catch(e){document.getElementById("productMessage").textContent=e.message;}
-   };
-   card.append(title,info,description,img,video,edit,toggle);root.appendChild(card);
+   const visibility=document.createElement("button");visibility.style.marginLeft="8px";visibility.style.background="#475569";visibility.style.color="white";visibility.textContent="Toggle all options";
+   visibility.onclick=async()=>{try{const publish=!items.some(p=>p.published);for(const p of items)await api("/api/admin/products/"+encodeURIComponent(p.id),{method:"PATCH",body:JSON.stringify({published:publish})});await loadProducts();}catch(e){document.getElementById("productMessage").textContent=e.message;}};
+   card.append(title,info,options,description,media,edit,visibility);root.appendChild(card);
   });
  }catch(e){document.getElementById("productMessage").textContent=e.message;}
+}
+const productPlanSeed=[{duration:"",price:""}];
+function addProductPlanRow(duration="",price=""){
+ const root=document.getElementById("productPlanRows"),row=document.createElement("div");row.className="card product-plan-row";row.style.cssText="padding:10px;margin:8px 0;border:1px solid #334155";
+ const fields=document.createElement("div");fields.style.cssText="display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:8px";
+ const time=document.createElement("input");time.className="product-plan-duration";time.required=true;time.maxLength=80;time.placeholder="Duration, e.g. 6 Hours";time.value=duration;time.style.width="100%";
+ const cost=document.createElement("input");cost.className="product-plan-price";cost.required=true;cost.type="number";cost.min="0";cost.max="1000000";cost.step="0.01";cost.placeholder="Price ₹";cost.value=price;cost.style.width="100%";
+ const remove=document.createElement("button");remove.type="button";remove.textContent="Remove duration";remove.style.cssText="background:#7f1d1d;color:white";remove.onclick=()=>row.remove();
+ fields.append(time,cost);row.append(fields,remove);root.appendChild(row);
 }
 function clearProductForm(){
  document.getElementById("productForm").reset();
@@ -667,9 +680,11 @@ function clearProductForm(){
  document.getElementById("productVideoUrl").value="";
  document.getElementById("productVideoFile").value="";
  document.getElementById("videoUploadStatus").textContent="";
+ document.getElementById("productPlanRows").replaceChildren();productPlanSeed.forEach(p=>addProductPlanRow(p.duration,p.price));
  document.getElementById("productSave").textContent="Add Product";
  document.getElementById("productMessage").textContent="";
 }
+document.getElementById("addProductPlan").onclick=()=>addProductPlanRow();
 document.getElementById("productCancel").onclick=clearProductForm;
 document.getElementById("productForm").onsubmit=async e=>{
  e.preventDefault();
@@ -677,49 +692,28 @@ document.getElementById("productForm").onsubmit=async e=>{
  const status=document.getElementById("productMessage");
  const videoStatus=document.getElementById("videoUploadStatus");
  try{
-  status.textContent=id?"Saving changes...":"Adding product...";
+  const base=document.getElementById("productName").value.trim();
+  const rows=[...document.querySelectorAll("#productPlanRows .product-plan-row")].map(row=>({duration:row.querySelector(".product-plan-duration").value.trim(),price:Number(row.querySelector(".product-plan-price").value)}));
+  if(!base||base.length>100)throw new Error("Valid product name enter karein.");
+  if(!rows.length)throw new Error("Kam se kam ek duration-price option add karein.");
+  const seen=new Set();for(const row of rows){const key=row.duration.toLowerCase();if(!row.duration||row.duration.length>80||seen.has(key))throw new Error("Har duration bharein aur duplicate duration na rakhein.");if(!Number.isFinite(row.price)||row.price<0||row.price>1000000)throw new Error("Har duration ki valid price enter karein.");seen.add(key);}
+  status.textContent=id?"Product aur durations update ho rahe hain...":"Product aur durations add ho rahe hain...";
   let imageUrl=document.getElementById("productImage").value.trim();
-  const imageStatus=document.getElementById("imageUploadStatus");
-  const imageFile=document.getElementById("productImageFile").files[0];
-  if(imageFile){
-   if(imageFile.size>8*1024*1024)throw new Error("Photo 8 MB se chhoti honi chahiye.");
-   imageStatus.textContent="Gallery photo upload ho rahi hai...";
-   const imageForm=new FormData();imageForm.append("image",imageFile);
-   const imageResponse=await fetch("/api/admin/product-image",{method:"POST",body:imageForm});
-   const imageText=await imageResponse.text();let imageData={};
-   try{imageData=imageText?JSON.parse(imageText):{};}catch{}
-   if(!imageResponse.ok)throw new Error(imageData.error||"Photo upload fail hua.");
-   imageUrl=imageData.image_url;
-   document.getElementById("productImage").value=imageUrl;
-   imageStatus.textContent="Photo upload ho gayi.";
+  const imageStatus=document.getElementById("imageUploadStatus"),imageFile=document.getElementById("productImageFile").files[0];
+  if(imageFile){if(imageFile.size>8*1024*1024)throw new Error("Photo 8 MB se chhoti honi chahiye.");imageStatus.textContent="Gallery photo upload ho rahi hai...";const imageForm=new FormData();imageForm.append("image",imageFile);const r=await fetch("/api/admin/product-image",{method:"POST",body:imageForm});const raw=await r.text();let d={};try{d=raw?JSON.parse(raw):{};}catch{}if(!r.ok)throw new Error(d.error||"Photo upload fail hua.");imageUrl=d.image_url;document.getElementById("productImage").value=imageUrl;imageStatus.textContent="Photo upload ho gayi.";}
+  let videoUrl=document.getElementById("productVideoUrl").value.trim();const videoFile=document.getElementById("productVideoFile").files[0];
+  if(videoFile){if(videoFile.size>100*1024*1024)throw new Error("Video 100 MB se chhoti honi chahiye.");videoStatus.textContent="Gallery video upload ho rahi hai...";const formData=new FormData();formData.append("video",videoFile);const r=await fetch("/api/admin/product-video",{method:"POST",body:formData});const raw=await r.text();let d={};try{d=raw?JSON.parse(raw):{};}catch{}if(!r.ok)throw new Error(d.error||"Video upload fail hua.");videoUrl=d.video_url;document.getElementById("productVideoUrl").value=videoUrl;videoStatus.textContent="Video upload ho gaya.";}
+  const current=await api("/api/admin/products"),all=Array.isArray(current.products)?current.products:[];
+  const existing=all.filter(p=>String(p.name||"").toLowerCase()===base.toLowerCase()||String(p.name||"").toLowerCase().startsWith((base+" - ").toLowerCase()));
+  const wanted=new Set(rows.map(p=>(base+" - "+p.duration).toLowerCase()));
+  for(const old of existing){if(!wanted.has(String(old.name||"").toLowerCase())&&old.published)await api("/api/admin/products/"+encodeURIComponent(old.id),{method:"PATCH",body:JSON.stringify({published:false})});}
+  for(const plan of rows){
+   const name=base+" - "+plan.duration;
+   const old=existing.find(p=>String(p.name||"").toLowerCase()===name.toLowerCase())||(!existing.some(p=>String(p.name||"").toLowerCase()===name.toLowerCase())&&existing.find(p=>String(p.name||"").toLowerCase()===base.toLowerCase())&&rows.length===1?existing.find(p=>String(p.name||"").toLowerCase()===base.toLowerCase()):null);
+   const payload={name,price:plan.price,image_url:imageUrl||null,video_url:videoUrl||null,published:document.getElementById("productPublished").checked,description:document.getElementById("productDescription").value.trim()};
+   if(old)await api("/api/admin/products/"+encodeURIComponent(old.id),{method:"PATCH",body:JSON.stringify(payload)});else await api("/api/admin/products",{method:"POST",body:JSON.stringify(payload)});
   }
-  let videoUrl=document.getElementById("productVideoUrl").value.trim();
-  const videoFile=document.getElementById("productVideoFile").files[0];
-  if(videoFile){
-   if(videoFile.size>100*1024*1024)throw new Error("Video 100 MB se chhoti honi chahiye.");
-   videoStatus.textContent="Gallery video upload ho rahi hai...";
-   const formData=new FormData();formData.append("video",videoFile);
-   const uploadResponse=await fetch("/api/admin/product-video",{method:"POST",body:formData});
-   const uploadText=await uploadResponse.text();let uploadData={};
-   try{uploadData=uploadText?JSON.parse(uploadText):{};}catch{}
-   if(!uploadResponse.ok)throw new Error(uploadData.error||"Video upload fail hua.");
-   videoUrl=uploadData.video_url;
-   document.getElementById("productVideoUrl").value=videoUrl;
-   videoStatus.textContent="Video upload ho gaya.";
-  }
-  const payload={
-   name:document.getElementById("productName").value.trim(),
-   price:Number(document.getElementById("productPrice").value),
-   image_url:imageUrl||null,
-   video_url:videoUrl||null,
-   published:document.getElementById("productPublished").checked,
-   description:document.getElementById("productDescription").value.trim()
-  };
-  await api(id?"/api/admin/products/"+encodeURIComponent(id):"/api/admin/products",{
-   method:id?"PATCH":"POST",body:JSON.stringify(payload)
-  });
-  clearProductForm();status.textContent="Product saved successfully.";
-  await loadProducts();
+  clearProductForm();status.textContent="Product aur "+rows.length+" duration-price option(s) Supabase mein save ho gaye.";await loadProducts();
  }catch(err){status.textContent=err.message;}
 };
 
