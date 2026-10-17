@@ -1371,12 +1371,31 @@ async function creditVerifiedNovapayPayment(orderId, amount, utr, payload) {
   return data;
 }
 
+async function activateResellerFromVerifiedPayment(request, utr, payload) {
+  const { data: settings, error: settingsError } = await supabase.from("reseller_settings").select("activation_price").eq("id",1).maybeSingle();
+  if (settingsError) throw new Error("Reseller activation setting load nahi hui.");
+  const activationPrice = Number(settings?.activation_price || 99);
+  if (Math.round(Number(request.amount)*100) !== Math.round(activationPrice*100)) throw new Error("Reseller activation amount mismatch.");
+  const { error: paidError } = await supabase.from("payment_requests").update({
+    status:"paid", updated_at:new Date().toISOString(), utr:utr||null,
+    gateway_payload:payload||{}
+  }).eq("id",request.id).eq("status","pending");
+  if (paidError) throw new Error("Verified reseller payment status save nahi hua.");
+  const { error: activationError } = await supabase.from("reseller_accounts").upsert({
+    user_id:request.user_id,is_active:true,activation_price:activationPrice,
+    activated_at:new Date().toISOString(),updated_at:new Date().toISOString()
+  },{onConflict:"user_id"});
+  if (activationError) throw new Error("Payment verify ho gaya, lekin reseller activation finalize nahi hui. Admin se contact karein.");
+  return {success:true,isReseller:true};
+}
+
 app.post("/api/payments/novapay/create-order", async (req, res) => {
   if (!supabase) return res.status(503).json({ error: "Database is not configured" });
   const user = await getAuthenticatedUser(req);
   if (!user) return res.status(401).json({ error: "Deposit ke liye pehle login karein." });
 
-  const amount = Number(req.body?.amount);
+  const purpose = req.body?.purpose === "reseller" ? "reseller" : "wallet";
+  const amount = purpose === "reseller" ? 99 : Number(req.body?.amount);
   const mobile = String(req.body?.customer_mobile || "").replace(/\D/g, "");
   if (!Number.isInteger(amount) || amount < 1 || amount > 50000) {
     return res.status(400).json({ error: "₹1 se ₹50,000 tak valid amount enter karein." });
@@ -1392,7 +1411,7 @@ app.post("/api/payments/novapay/create-order", async (req, res) => {
   const { data: pending, error: insertError } = await supabase.from("payment_requests").insert({
     user_id: user.id,
     amount,
-    provider: "novapay",
+    provider: purpose === "reseller" ? "novapay_reseller" : "novapay",
     provider_order_id: orderId,
     status: "pending"
   }).select("id, provider_order_id, amount, status").single();
@@ -1410,7 +1429,7 @@ app.post("/api/payments/novapay/create-order", async (req, res) => {
       order_id: orderId,
       redirect_url: "https://jkpanel.onrender.com/?payment=success&order_id=" + encodeURIComponent(orderId),
       callback_url: "https://jkpanel-backend.onrender.com/api/payments/novapay/webhook",
-      remark1: "JK PANEL SHOP wallet deposit",
+      remark1: purpose === "reseller" ? "JK PANEL SHOP reseller activation" : "JK PANEL SHOP wallet deposit",
       remark2: user.id
     });
     const paymentUrl = gateway?.result?.payment_url;
@@ -1436,7 +1455,7 @@ app.post("/api/payments/novapay/check-status", async (req, res) => {
 
   const { data: request, error } = await supabase.from("payment_requests")
     .select("id, user_id, amount, provider, provider_order_id, status")
-    .eq("provider", "novapay").eq("provider_order_id", orderId).eq("user_id", user.id).maybeSingle();
+    .in("provider", ["novapay","novapay_reseller"]).eq("provider_order_id", orderId).eq("user_id", user.id).maybeSingle();
   if (error) return res.status(500).json({ error: "Payment request load nahi hui." });
   if (!request) return res.status(404).json({ error: "Payment request nahi mili." });
   if (request.status === "paid") return res.json({ success: true, paid: true, message: "Payment pehle hi verify ho chuka hai." });
@@ -1444,6 +1463,10 @@ app.post("/api/payments/novapay/check-status", async (req, res) => {
   try {
     const verified = await verifyNovapayOrder(orderId, Number(request.amount));
     if (!verified.paid) return res.json({ success: true, paid: false, message: "Payment abhi confirm nahi hui. Payment ke baad dobara check karein." });
+    if (request.provider === "novapay_reseller") {
+      await activateResellerFromVerifiedPayment(request, verified.utr, {source:"status_check",gateway:verified.data});
+      return res.json({success:true,paid:true,isReseller:true,message:"₹99 payment verify ho gaya. Reseller Partner activate ho gaya!"});
+    }
     await creditVerifiedNovapayPayment(orderId, Number(request.amount), verified.utr, { source: "status_check", gateway: verified.data });
     return res.json({ success: true, paid: true, message: "Payment verify ho gaya. Wallet balance update ho gaya." });
   } catch (error) {
@@ -1468,7 +1491,7 @@ app.post("/api/payments/novapay/webhook", async (req, res) => {
 
   const { data: request, error } = await supabase.from("payment_requests")
     .select("id, user_id, amount, provider, provider_order_id, status")
-    .eq("provider", "novapay").eq("provider_order_id", orderId).maybeSingle();
+    .in("provider", ["novapay","novapay_reseller"]).eq("provider_order_id", orderId).maybeSingle();
   if (error) return res.status(500).json({ error: "Payment request lookup failed" });
   if (!request) return res.status(404).json({ error: "Payment order not found" });
   if (Math.round(Number(request.amount) * 100) !== Math.round(amount * 100)) {
@@ -1479,11 +1502,16 @@ app.post("/api/payments/novapay/webhook", async (req, res) => {
   try {
     const verified = await verifyNovapayOrder(orderId, Number(request.amount));
     if (!verified.paid) return res.status(409).json({ error: "Gateway status is not completed yet" });
-    await creditVerifiedNovapayPayment(orderId, Number(request.amount), req.body?.utr || verified.utr, {
+    const payload = {
       source: "webhook",
       gateway: verified.data,
       callback: { event, status: callbackStatus, order_id: orderId, amount }
-    });
+    };
+    if (request.provider === "novapay_reseller") {
+      await activateResellerFromVerifiedPayment(request, req.body?.utr || verified.utr, payload);
+      return res.json({success:true,isReseller:true});
+    }
+    await creditVerifiedNovapayPayment(orderId, Number(request.amount), req.body?.utr || verified.utr, payload);
     return res.json({ success: true });
   } catch (error) {
     console.error("NovaPay webhook verification failed:", error.message);
