@@ -405,7 +405,6 @@ small{color:#a6b2c0}
 #adminMenu button.active{background:#10251b;color:#39f58b}
 #adminMenu button[data-action="logout"]{color:#fca5a5}
 #refreshCustomers{padding:7px 10px;font-size:12px;border-radius:6px}
-#dashboard[hidden] #adminMenuWrap{display:none}
 .admin-tabs button{padding:12px 6px;background:#1e293b;color:#e2e8f0;border:1px solid #334155}
 .admin-tabs button.active{background:#39f58b;color:#062012}
 .admin-section{display:none}.admin-section.active{display:block}
@@ -423,13 +422,8 @@ small{color:#a6b2c0}
 </form>
 </section>
 <section id="dashboard" hidden>
-<div id="adminMenuWrap"><button type="button" id="adminMenuToggle" aria-label="Open navigation menu" aria-expanded="false">☰</button><nav id="adminMenu" aria-label="Admin navigation"><button type="button" class="active" data-tab="users">Home</button><button type="button" data-tab="products">Products</button><button type="button" data-tab="keys">Keys Management</button><button type="button" data-tab="profile">Profile</button></nav></div>
-<button id="logout">Logout</button>
-<div class="admin-tabs" role="tablist">
- <button type="button" class="active" data-tab="users">Users</button>
- <button type="button" data-tab="products">Products</button>
- <button type="button" data-tab="keys">Keys Management</button>
-</div>
+<nav id="adminMenu" aria-label="Admin navigation"><button type="button" class="active" data-tab="users">Home</button><button type="button" data-tab="products">Products</button><button type="button" data-tab="keys">Keys Management</button><button type="button" data-tab="profile">Profile</button><button type="button" data-action="logout">Logout</button></nav>
+<button id="logout" hidden>Logout</button>
 <section id="tab-users" class="admin-section active">
  <h2>Registered Users</h2>
  <input id="userSearch" class="search-box" type="search" placeholder="Search users by name, email or ID...">
@@ -529,6 +523,7 @@ document.querySelectorAll("[data-tab]").forEach(button=>button.addEventListener(
  const menu=document.getElementById("adminMenu");if(menu){menu.classList.remove("open");document.getElementById("adminMenuToggle").setAttribute("aria-expanded","false");}
 }));
 document.getElementById("adminMenuToggle").addEventListener("click",()=>{const menu=document.getElementById("adminMenu");const open=menu.classList.toggle("open");document.getElementById("adminMenuToggle").setAttribute("aria-expanded",String(open));});
+document.querySelector('[data-action="logout"]').addEventListener("click",()=>document.getElementById("logout").click());
 function filterCards(inputId,containerId){
  const input=document.getElementById(inputId),container=document.getElementById(containerId);
  if(!input||!container)return;
@@ -876,6 +871,8 @@ document.getElementById("logout").onclick=async()=>{
  try{await api("/api/admin/logout",{method:"POST"});}catch(e){}
  document.getElementById("dashboard").hidden=true;
  document.getElementById("login").hidden=false;
+ document.getElementById("adminMenuToggle").hidden=true;
+ document.getElementById("adminMenu").classList.remove("open");
  message.textContent="Logged out.";
 };
 loadOrders();
