@@ -626,14 +626,14 @@ function openProfilePanel(){
   const defaultClose=document.getElementById('popupDefaultClose');
   if(defaultClose)defaultClose.style.display='none';
   const card=popup.querySelector('.popup-card');
-  card.style.cssText='display:block;width:100%;max-width:none;height:100%;max-height:none;min-height:100%;overflow-y:auto;margin:0;padding:0;border:0;border-radius:0;background:#050811;box-shadow:none';
-  popup.style.cssText='display:flex;position:fixed;inset:0;z-index:200;padding:0;overflow-y:auto;align-items:stretch;justify-content:stretch;background:#050811';
+  card.style.cssText='display:block;position:relative;width:100%;max-width:none;height:100%;max-height:none;min-height:100%;overflow-y:auto;margin:0;padding:0 0 86px;border:0;border-radius:0;background:#050811;box-shadow:none';
+  popup.style.cssText='display:flex;position:fixed;inset:0;z-index:200;padding:0;overflow:hidden;align-items:stretch;justify-content:stretch;background:#050811';
   const title=document.getElementById('popupTitle');
   title.style.cssText='display:none';
   const root=document.getElementById('popupMessage');
   root.style.cssText='display:block;width:100%;padding:0;margin:0;overflow:visible;flex:none';
   root.innerHTML='<div style="min-height:100dvh;background:#050811;color:#f8fafc;padding-bottom:92px;font-family:Arial,sans-serif">'+
-    '<div style="height:44px;background:linear-gradient(110deg,#101b35,#0c1222);display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid #202a40"><b style="font-size:13px;letter-spacing:.6px;color:#60a5fa">JK PANEL SHOP</b><button type="button" onclick="closePopup()" style="width:auto;margin:0;padding:7px 11px;background:#1e293b;color:#cbd5e1;border:1px solid #334155;border-radius:9px">✕</button></div>'+
+    '<div style="height:44px;background:linear-gradient(110deg,#101b35,#0c1222);display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #202a40"><b style="font-size:13px;letter-spacing:.6px;color:#60a5fa">JK PANEL SHOP</b></div>'+
     '<div style="height:145px;background:radial-gradient(ellipse at 50% 110%,#1d4ed855,transparent 65%),linear-gradient(120deg,#101d35,#07101e 60%,#172554)"></div>'+
     '<div style="padding:0 14px;margin-top:-54px;position:relative">'+
       '<div style="display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:18px">'+
@@ -650,6 +650,7 @@ function openProfilePanel(){
       '<button type="button" onclick="closePopup();openKeysPanel()" style="display:flex;align-items:center;justify-content:space-between;text-align:left;width:100%;margin-top:12px;padding:16px;background:#111a2c;color:#f8fafc;border:1px solid #202b40;border-radius:14px"><span><b style="color:#60a5fa;margin-right:10px">⚿</b>My Purchased Keys</span><span style="color:#64748b">›</span></button>'+
       '<button type="button" onclick="closePopup();showPopup(\'Support Center\',\'Support ke liye WhatsApp par contact karein.\')" style="display:flex;align-items:center;justify-content:space-between;text-align:left;width:100%;margin-top:9px;padding:16px;background:#111a2c;color:#f8fafc;border:1px solid #202b40;border-radius:14px"><span><b style="color:#a78bfa;margin-right:10px">◉</b>Support Center</span><span style="color:#64748b">›</span></button>'+
       '<button type="button" onclick="closePopup();openOrderHistoryPanel()" style="display:flex;align-items:center;justify-content:space-between;text-align:left;width:100%;margin-top:9px;padding:16px;background:#111a2c;color:#f8fafc;border:1px solid #202b40;border-radius:14px"><span>Order History</span><span style="color:#64748b">›</span></button>'+
+      '<button type="button" onclick="closePopup()" style="position:fixed;left:14px;right:14px;bottom:22px;z-index:205;width:calc(100% - 28px);margin:0;padding:17px;background:#dc2626;color:#fff;border:0;border-radius:13px;font-size:16px;font-weight:900;box-shadow:0 8px 24px #0008">CLOSE</button>'+
       '<button type="button" onclick="closePopup();openDepositHistoryPanel()" style="display:flex;align-items:center;justify-content:space-between;text-align:left;width:100%;margin-top:9px;padding:16px;background:#111a2c;color:#f8fafc;border:1px solid #202b40;border-radius:14px"><span>Deposit History</span><span style="color:#64748b">›</span></button>'+
     '</div></div>';
   popup.style.display='flex';
