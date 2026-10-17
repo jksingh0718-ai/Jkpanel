@@ -1332,41 +1332,52 @@ async function loadShopProducts(){
     const durationLabel=document.createElement('p');durationLabel.textContent=duration.toUpperCase();durationLabel.style.cssText='font-size:14px;font-weight:bold;color:#f8fafc';
     const price=document.createElement('p');price.textContent='₹'+Number(product.price||0).toLocaleString('en-IN',{maximumFractionDigits:0});price.style.cssText='font-size:13px;color:#c4b5fd;margin-top:5px';
     details.append(durationLabel,price);
-    const buy=document.createElement('button');buy.type='button';buy.className='buy';buy.textContent='BUY';buy.style.cssText='padding:11px 14px;flex-shrink:0;background:#a78bfa;color:#1e103d;font-size:12px';
-    buy.onclick=()=>buyProduct(product);
-    row.append(details,buy);plans.appendChild(row);
-   });
-   card.append(title,desc,purchase,plans);root.appendChild(card);
+    async function buyProduct(product){
+  if(!product || !product.id){
+    showPopup('Order failed','Product details nahi mile. Page refresh karke dobara try karein.');
+    return;
+  }
+  
+  const token = localStorage.getItem('jk_customer_access_token');
+  if(!token){
+    openAuth('login');
+    return;
   }
 
-  const genericGroups=new Map();
-  otherProducts.forEach(product=>{
-   const match=String(product.name||"").match(/^(.*?)\s*-\s*(.+)$/);
-   const base=match?match[1].trim():String(product.name||"");
-   if(!genericGroups.has(base))genericGroups.set(base,[]);
-   genericGroups.get(base).push(product);
-  });
-  genericGroups.forEach((group,base)=>{
-   const card=document.createElement('article');card.className='drip-product-card product';
-   card.dataset.createdAt=String(Math.max(...group.map(p=>Date.parse(p.created_at||'')||0)));
-   card.style.cssText='display:block;margin-top:12px;padding:14px;background:linear-gradient(160deg,#111827,#0b1220);border:1px solid #334155;border-radius:16px;overflow:hidden;box-shadow:0 8px 26px #0003';
-   const imageProduct=group.find(p=>p.image_url),videoProduct=group.find(p=>p.video_url);
-   if(imageProduct?.image_url){
-    if(videoProduct?.video_url){
-     const thumb=document.createElement('button');thumb.type='button';thumb.className='product-video-thumb';thumb.setAttribute('aria-label','Play '+base+' video');thumb.onclick=()=>openProductVideo(videoProduct.video_url,base);
-     const img=document.createElement('img');img.src=imageProduct.image_url;img.alt=base;img.loading='lazy';img.onerror=()=>img.style.display='none';
-     const play=document.createElement('span');play.className='product-video-play';play.textContent='▶';
-     const hint=document.createElement('span');hint.className='product-video-hint';hint.textContent='TAP TO PLAY VIDEO';thumb.append(img,play,hint);card.appendChild(thumb);
-    }else{
-     const img=document.createElement('img');img.src=imageProduct.image_url;img.alt=base;img.loading='lazy';img.style.cssText='display:block;width:100%;height:clamp(220px,64vw,360px);object-fit:contain;background:#030712;border-radius:12px;margin-bottom:14px';img.onerror=()=>img.style.display='none';card.appendChild(img);
+  const buttons=document.querySelectorAll('#shopProducts button.buy');
+  buttons.forEach(button=>button.disabled=true);
+
+  try{
+    // Naya API Call /api/buy-key par
+    const res = await fetch('/api/buy-key', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ 
+        productId: product.id, 
+        duration: product.duration || "1 Days", 
+        price: product.price, 
+        productName: product.name || product.product_name 
+      })
+    });
+    
+    const result = await res.json();
+    
+    if(result.success) {
+      showPopup('Purchase successful', `Order complete!\n\nYour Key: ${result.key}\n\nWallet se ₹${product.price} deduct ho gaye hain.`);
+      
+      if(typeof loadMyAccountSummary==='function') loadMyAccountSummary().catch(()=>{});
+    } else {
+      showPopup('Order failed', result.error || 'Order submit nahi ho saka.');
     }
-   }else if(videoProduct?.video_url){
-    const video=document.createElement('video');video.src=videoProduct.video_url;video.controls=true;video.preload='metadata';video.playsInline=true;video.style.cssText='display:block;width:100%;height:clamp(220px,64vw,360px);object-fit:contain;background:#030712;border-radius:12px;margin-bottom:14px';card.appendChild(video);
-   }
-   const title=document.createElement('h4');title.style.cssText='font-size:20px;color:#f8fafc;margin:4px 0 8px;overflow-wrap:anywhere';const keyIcon=document.createElement('span');keyIcon.className='jk-key-icon';keyIcon.setAttribute('aria-hidden','true');keyIcon.innerHTML='<svg viewBox="0 0 24 24"><circle cx="8" cy="15" r="5"></circle><path d="m11.5 11.5 9-9M16 7l3 3M18 5l3 3"></path></svg>';const titleText=document.createElement('span');titleText.textContent=base;title.append(keyIcon,titleText);card.appendChild(title);
-   const hasPlans=true; // Every product opens into a collapsible purchase panel, including single-item products.
-   if(hasPlans){
-    const desc=document.createElement('p');desc.textContent='Apna duration select karein.';desc.style.cssText='margin:0 0 12px;color:#94a3b8;font-size:12px;line-height:1.6';card.appendChild(desc);
+  }catch(error){
+    showPopup('Order failed', 'Network error. Dobara try karein.');
+  }finally{
+    buttons.forEach(button=>button.disabled=false);
+  }
+}
     const purchase=document.createElement('button');purchase.type='button';purchase.textContent=isResellerCustomer?'BUY RESELLER KEY':'PURCHASE KEY';purchase.setAttribute('aria-expanded','false');purchase.style.cssText='display:block;width:100%;padding:14px;background:#06b6d4;color:#082f49;font-size:14px;border-radius:10px';
     const plans=document.createElement('div');plans.hidden=true;plans.style.cssText='display:none;margin-top:10px';
     purchase.onclick=()=>{const open=plans.style.display==='none';plans.style.display=open?'block':'none';plans.hidden=!open;purchase.setAttribute('aria-expanded',String(open));};
