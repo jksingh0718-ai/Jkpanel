@@ -225,7 +225,7 @@ footer{display:none}
   <a class="action" href="https://wa.me/917645957071?text=Hello%20JK%20PANEL%20SHOP%2C%20mujhe%20help%20chahiye." target="_blank" rel="noopener">CONTACT ON WHATSAPP</a>
 </div>
 
-<a class="whatsapp-float" href="https://wa.me/917645957071" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M16 3.2A12.6 12.6 0 0 0 5.2 22.3L3.5 28.5l6.4-1.7A12.6 12.6 0 1 0 16 3.2Zm0 22.9a10.2 10.2 0 0 1-5.2-1.4l-.4-.2-3.8 1 1-3.7-.3-.4A10.2 10.2 0 1 1 16 26.1Zm5.6-7.6c-.3-.2-1.8-.9-2.1-1s-.5-.2-.7.2-.8 1-.9 1.1-.3.2-.6.1a8.3 8.3 0 0 1-2.5-1.5 9.2 9.2 0 0 1-1.7-2.1c-.2-.3 0-.5.1-.6l.5-.6c.2-.2.2-.3.3-.5s0-.4 0-.5-.7-1.7-1-2.3c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4s-1.1 1.1-1.1 2.6 1.1 3 1.2 3.2a11.8 11.8 0 0 0 4.5 4c.6.3 1.1.5 1.5.6.6.2 1.2.2 1.7.1.5-.1 1.8-.7 2-1.4s.3-1.3.2-1.4-.2-.2-.5-.4Z"/></svg></a>
+<a class="whatsapp-float" href="https://whatsapp.com/channel/0029VbE3msh47Xe5PEWcBW3b" target="_blank" rel="noopener" aria-label="Join WhatsApp channel"><svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M16 3.2A12.6 12.6 0 0 0 5.2 22.3L3.5 28.5l6.4-1.7A12.6 12.6 0 1 0 16 3.2Zm0 22.9a10.2 10.2 0 0 1-5.2-1.4l-.4-.2-3.8 1 1-3.7-.3-.4A10.2 10.2 0 1 1 16 26.1Zm5.6-7.6c-.3-.2-1.8-.9-2.1-1s-.5-.2-.7.2-.8 1-.9 1.1-.3.2-.6.1a8.3 8.3 0 0 1-2.5-1.5 9.2 9.2 0 0 1-1.7-2.1c-.2-.3 0-.5.1-.6l.5-.6c.2-.2.2-.3.3-.5s0-.4 0-.5-.7-1.7-1-2.3c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4s-1.1 1.1-1.1 2.6 1.1 3 1.2 3.2a11.8 11.8 0 0 0 4.5 4c.6.3 1.1.5 1.5.6.6.2 1.2.2 1.7.1.5-.1 1.8-.7 2-1.4s.3-1.3.2-1.4-.2-.2-.5-.4Z"/></svg></a>
 
 <div id="popup" onclick="if(event.target===this)closePopup()">
   <div class="popup-card">
@@ -717,23 +717,15 @@ function closeMenu(){
   document.getElementById('sidebar').style.display='none';
   document.getElementById('backdrop').style.display='none';
 }
-function openProductVideo(url,title){
+function openProductVideo(url,title,thumb){
   if(!url){showPopup('Video not available','Is product ka video abhi upload nahi hua hai.');return;}
-  const root=document.getElementById('popupMessage');
-  const popup=document.getElementById('popup');
-  const card=document.querySelector('#popup .popup-card');
-  const close=document.querySelector('#popup .auth-close');if(close)close.remove();
-  popup.classList.remove('auth-screen');
-  card.classList.add('video-player-card');
-  document.getElementById('popupTitle').textContent=title+' — Video';
-  document.getElementById('popupDefaultClose').style.display='block';
-  root.replaceChildren();
   const video=document.createElement('video');
   video.src=url;video.controls=true;video.autoplay=true;video.playsInline=true;video.preload='metadata';
-  video.style.cssText='display:block;width:100%;max-height:78dvh;background:#000;border-radius:10px;object-fit:contain';
-  video.onerror=()=>{const note=document.createElement('p');note.textContent='Video play nahi hua. Admin panel se MP4/WebM/MOV video dobara upload karein.';note.style.cssText='color:#fca5a5;font-size:13px;margin-top:10px';root.appendChild(note);};
-  root.appendChild(video);
-  popup.style.display='flex';
+  video.style.cssText='display:block;width:100%;height:auto;max-height:70vh;min-height:220px;background:#000;border-radius:12px;object-fit:contain;margin:0 0 14px';
+  video.onerror=()=>{video.insertAdjacentHTML('afterend','<p style="color:#fca5a5;font-size:13px">Video play nahi hua. Admin panel se video dobara upload karein.</p>');};
+  if(thumb&&thumb.parentNode)thumb.replaceWith(video);
+  else {const candidate=[...document.querySelectorAll('.product-video-thumb')].find(el=>el.getAttribute('aria-label')==='Play '+title+' video');if(candidate)candidate.replaceWith(video);else{showPopup('Video not available','Video player ko product card mein nahi dhoondh paaye.');return;}}
+  video.scrollIntoView({behavior:'smooth',block:'center'});
   video.play().catch(()=>{});
 }
 
@@ -924,8 +916,9 @@ async function openDepositHistoryPanel(){
     const statusOf=value=>{
       const v=String(value||'pending').toLowerCase();
       if(['paid','success','successful','approved','completed','verified'].includes(v))return 'SUCCESS';
-      if(['failed','failure','rejected','cancelled','canceled','expired'].includes(v))return 'FAILED';
-      return 'PENDING';
+      if(['failed','failure','rejected'].includes(v))return 'FAILED';
+      if(['pending','created','initiated','cancelled','canceled','expired','abandoned'].includes(v))return 'CANCELLED';
+      return 'CANCELLED';
     };
     const now=new Date();
     const sameDay=d=>d&&d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth()&&d.getDate()===now.getDate();
@@ -949,7 +942,7 @@ async function openDepositHistoryPanel(){
       const amount=document.createElement('b');amount.textContent='₹'+Number(item.amount||0).toFixed(2);amount.style.cssText='display:block;font-size:16px;color:#f8fafc;margin-bottom:6px';
       const date=document.createElement('small');date.textContent=item.created_at?new Date(item.created_at).toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'}):'Date/time unavailable';date.style.cssText='display:block;color:#a1a1aa;font-size:10px;line-height:1.5';
       left.append(amount,date);
-      const status=document.createElement('span');const st=statusOf(item.status);status.textContent=st;status.style.cssText='flex:0 0 auto;font-size:10px;font-weight:800;padding:6px 8px;border-radius:6px;background:'+(st==='SUCCESS'?'#052e16':st==='FAILED'?'#450a0a':'#422006')+';color:'+(st==='SUCCESS'?'#4ade80':st==='FAILED'?'#fca5a5':'#fbbf24');
+      const status=document.createElement('span');const st=statusOf(item.status);status.textContent=st;status.style.cssText='flex:0 0 auto;font-size:10px;font-weight:800;padding:6px 8px;border-radius:6px;background:'+(st==='SUCCESS'?'#052e16':st==='PENDING'?'#422006':'#450a0a')+';color:'+(st==='SUCCESS'?'#4ade80':st==='PENDING'?'#fbbf24':'#f87171');
       card.append(left,status);root.appendChild(card);
     });
   }catch(error){
@@ -1190,7 +1183,7 @@ async function loadShopProducts(){
    const videoProduct=dripProducts.find(p=>p.video_url);
    if(imageProduct.image_url){
     if(videoProduct?.video_url){
-     const thumb=document.createElement('button');thumb.type='button';thumb.className='product-video-thumb';thumb.setAttribute('aria-label','Play DRIP Wire video');thumb.onclick=()=>openProductVideo(videoProduct.video_url,'DRIP Wire');
+     const thumb=document.createElement('button');thumb.type='button';thumb.className='product-video-thumb';thumb.setAttribute('aria-label','Play DRIP Wire video');thumb.onclick=()=>openProductVideo(videoProduct.video_url,'DRIP Wire',thumb);
      const img=document.createElement('img');img.src=imageProduct.image_url;img.alt='DRIP Wire video preview';img.loading='eager';img.onerror=()=>{img.style.display='none';};
      const play=document.createElement('span');play.className='product-video-play';play.textContent='▶';
      const hint=document.createElement('span');hint.className='product-video-hint';hint.textContent='TAP TO PLAY VIDEO';
