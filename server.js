@@ -398,7 +398,7 @@ button{cursor:pointer;background:#39f58b;border:0;font-weight:bold}
 small{color:#a6b2c0}
 .admin-tabs{display:none;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:18px 0}
 #adminTitle{display:flex;align-items:center;gap:10px;margin:8px 0 18px}
-#adminMenuToggle{flex:0 0 auto;background:#1e293b;color:#e2e8f0;border:1px solid #334155;padding:8px 11px;font-size:18px;line-height:1;border-radius:8px}
+#adminMenuToggle:not([hidden]){display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;background:#1e293b;color:#e2e8f0;border:1px solid #334155;padding:8px 11px;font-size:20px;line-height:1;border-radius:8px;min-width:42px;min-height:40px}#adminMenuToggle[hidden]{display:none!important}
 #adminMenu{display:none;background:#111923;border:1px solid #334155;border-radius:10px;margin:0 0 10px;padding:5px}
 #adminMenu.open{display:block}
 #adminMenu button{display:block;width:100%;text-align:left;margin:3px 0;padding:11px;background:transparent;color:#e2e8f0;border-radius:7px}
