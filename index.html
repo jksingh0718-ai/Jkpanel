@@ -768,6 +768,7 @@ document.addEventListener('visibilitychange', () => {
 function feature(name){
   closeMenu();
   if(name==='Order History'){openOrderHistoryPanel();return;}
+  if(name==='My Keys'){openKeysPanel();return;}
   showPopup(name, name + ' section abhi setup nahi hua hai. Is feature ko use karne ke liye admin/backend setup zaroori hai.');
 }
 
