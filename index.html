@@ -440,7 +440,7 @@ async function loadMyAccountSummary(){
     const walletStat=document.getElementById('walletBalanceStat');if(walletStat)walletStat.textContent='₹'+Number(data.walletBalance||0).toFixed(2);
     const ordersStat=document.getElementById('totalOrdersStat');if(ordersStat)ordersStat.textContent=String((data.orders||[]).length);
     const keysStat=document.getElementById('availableKeysStat');if(keysStat)keysStat.textContent=String((data.keys||[]).filter(k=>k.status==='active').length);
-    try{sessionStorage.setItem('jk_wallet_balance_cache',JSON.stringify({balance:Number(data.walletBalance||0),userId:data.user?.id||data.user?.email||''}));}catch(_){}
+    try{const walletCache={balance:Number(data.walletBalance||0),userId:data.user?.id||data.user?.email||'',isReseller:Boolean(data.isReseller),savedAt:Date.now()};localStorage.setItem('jk_wallet_balance_cache',JSON.stringify(walletCache));sessionStorage.setItem('jk_wallet_balance_cache',JSON.stringify(walletCache));}catch(_){}
   }catch(e){if(e.message==='Login required'){clearCustomerSession();updateAccountBar('');}}
 }
 function openMyAccount(){
@@ -1391,7 +1391,7 @@ loadShopProducts();
 </script>
   
 <script>
-(function(){try{const cached=JSON.parse(sessionStorage.getItem('jk_wallet_balance_cache')||'null');const token=localStorage.getItem('jk_customer_access_token');if(cached&&token&&Number.isFinite(cached.balance)){const el=document.getElementById('walletBalanceStat');if(el)el.textContent='₹'+cached.balance.toFixed(2);}}catch(_){}})();
+(function(){try{const token=localStorage.getItem('jk_customer_access_token');const cached=JSON.parse(localStorage.getItem('jk_wallet_balance_cache')||sessionStorage.getItem('jk_wallet_balance_cache')||'null');const promo=document.getElementById('resellerPromo');if(promo&&token){promo.style.display='none';}if(cached&&token&&Number.isFinite(cached.balance)){const el=document.getElementById('walletBalanceStat');if(el)el.textContent='₹'+cached.balance.toFixed(2);if(promo&&cached.isReseller)promo.style.display='none';}}catch(_){}})();
 </script>
 </body>
 </html>
