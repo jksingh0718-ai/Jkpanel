@@ -396,7 +396,7 @@ input{max-width:100%}
 button{cursor:pointer;background:#39f58b;border:0;font-weight:bold}
 .card{background:#111923;padding:16px;margin:12px 0;border-radius:10px;overflow-wrap:anywhere}
 small{color:#a6b2c0}
-.admin-tabs{display:none;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:18px 0}
+.admin-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:10px 0 18px}.admin-tabs button{padding:12px 6px;background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:7px}.admin-tabs button.active{background:#39f58b;color:#062012}
 #adminTitle{display:flex;align-items:center;gap:10px;margin:8px 0 18px}
 #adminMenuToggle:not([hidden]){display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;background:#1e293b;color:#e2e8f0;border:1px solid #334155;padding:8px 11px;font-size:20px;line-height:1;border-radius:8px;min-width:42px;min-height:40px}#adminMenuToggle[hidden]{display:none!important}
 #adminMenu{display:none;background:#111923;border:1px solid #334155;border-radius:10px;margin:0 0 10px;padding:5px}
@@ -422,6 +422,7 @@ small{color:#a6b2c0}
 </form>
 </section>
 <section id="dashboard" hidden>
+<div class="admin-tabs" aria-label="Admin sections"><button type="button" class="active" data-tab="users">Home</button><button type="button" data-tab="products">Products</button><button type="button" data-tab="keys">Keys Management</button><button type="button" data-tab="profile">Profile</button></div>
 <nav id="adminMenu" aria-label="Admin navigation"><button type="button" class="active" data-tab="users">Home</button><button type="button" data-tab="products">Products</button><button type="button" data-tab="keys">Keys Management</button><button type="button" data-tab="profile">Profile</button><button type="button" data-action="logout">Logout</button></nav>
 <button id="logout" hidden>Logout</button>
 <section id="tab-users" class="admin-section active">
@@ -518,7 +519,7 @@ small{color:#a6b2c0}
 <script>
 const message=document.getElementById("message");
 document.querySelectorAll("[data-tab]").forEach(button=>button.addEventListener("click",()=>{
- document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b===button));
+ document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===button.dataset.tab));
  document.querySelectorAll(".admin-section").forEach(section=>section.classList.toggle("active",section.id==="tab-"+button.dataset.tab));
  const menu=document.getElementById("adminMenu");if(menu){menu.classList.remove("open");document.getElementById("adminMenuToggle").setAttribute("aria-expanded","false");}
 }));
