@@ -892,15 +892,11 @@ async function loadResellers(){
  try{
   const data=await api("/api/admin/resellers");
   document.getElementById("resellerActivationPrice").value=Number(data.settings?.activation_price||0);
-  const customerSelect=document.getElementById("resellerCustomer"),priceCustomer=document.getElementById("resellerPriceCustomer");
-  if(!customerSelect||!priceCustomer)throw new Error("Reseller customer selectors missing. Admin page refresh karein.");
-  const prev=customerSelect.value,prevPrice=priceCustomer.value;customerSelect.replaceChildren();priceCustomer.replaceChildren();
-  const def=document.createElement("option");def.value="";def.textContent="Default reseller price (all resellers)";priceCustomer.appendChild(def);
-  (data.customers||[]).forEach(c=>{const o=document.createElement("option");o.value=c.id;o.textContent=(c.name||c.email)+" ("+c.email+")";customerSelect.appendChild(o);if(c.reseller_active){const p=document.createElement("option");p.value=c.id;p.textContent=(c.name||c.email)+" ("+c.email+")";priceCustomer.appendChild(p);}});
-  if(prev)customerSelect.value=prev;if(prevPrice)priceCustomer.value=prevPrice;
-  const productSelect=document.getElementById("resellerPriceProduct");if(!productSelect)throw new Error("Reseller product selector missing. Admin page refresh karein.");const prevProduct=productSelect.value;productSelect.replaceChildren();
-  (data.products||[]).forEach(p=>{const o=document.createElement("option");o.value=p.id;o.textContent=p.name+" — shop ₹"+Number(p.price).toFixed(2);o.dataset.price=String(p.price);productSelect.appendChild(o);});
-  if(prevProduct)productSelect.value=prevProduct;
+  const customerSelect=document.getElementById("resellerCustomer");
+  if(!customerSelect)throw new Error("Reseller customer selector missing. Admin page refresh karein.");
+  const prev=customerSelect.value;customerSelect.replaceChildren();
+  (data.customers||[]).forEach(c=>{const o=document.createElement("option");o.value=c.id;o.textContent=(c.name||c.email)+" ("+c.email+")";customerSelect.appendChild(o);});
+  if(prev)customerSelect.value=prev;
   const dripRoot=document.getElementById("dripResellerPriceRows");if(!dripRoot)throw new Error("Reseller price section missing. Admin page refresh karein.");dripRoot.replaceChildren();
   const allProducts=[...(data.products||[])].sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),"en",{numeric:true,sensitivity:"base"}));
   const groups=new Map();
@@ -928,7 +924,6 @@ async function loadResellers(){
   const msg=e.message||"Reseller data load nahi hua.";
   document.getElementById("resellerSettingsMessage").textContent="Load error: "+msg;
   const c=document.getElementById("resellerCustomer");if(c){c.replaceChildren();const o=document.createElement("option");o.value="";o.textContent="Customer load error — Refresh karein";c.appendChild(o);}
-  const p=document.getElementById("resellerPriceProduct");if(p){p.replaceChildren();const o=document.createElement("option");o.value="";o.textContent="Product load error";p.appendChild(o);}
   const d=document.getElementById("dripResellerPriceRows");if(d)d.textContent="Load error: "+msg;
  }
 }
