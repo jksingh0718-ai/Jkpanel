@@ -53,17 +53,26 @@ header{display:flex;align-items:center;justify-content:space-between;gap:8px;bor
  .product-video-hint{position:absolute;left:0;right:0;bottom:0;padding:9px;text-align:center;background:linear-gradient(transparent,#000d);color:#fff;font-size:12px;font-weight:bold;letter-spacing:1px}
 
 .popup-card{width:100%;max-width:340px;background:#111827;border:1px solid #10b981;border-radius:14px;padding:20px}
-#popup.history-screen{padding:12px!important;overflow:hidden!important;align-items:center!important}
-#popup.history-screen .popup-card{display:flex!important;flex-direction:column!important;width:100%!important;max-width:640px!important;height:auto!important;max-height:calc(100dvh - 24px)!important;min-height:0!important;overflow:hidden!important}
-#popup.history-screen #popupTitle{flex:0 0 auto!important}
-#popup.history-screen #popupMessage{flex:1 1 auto!important;min-height:0!important;max-height:none!important;overflow-y:auto!important;overscroll-behavior:contain!important;padding-right:2px!important}
-#popup.history-screen #popupDefaultClose{display:block;flex:0 0 auto!important;position:relative!important;bottom:auto!important;left:auto!important;right:auto!important;margin-top:12px!important;z-index:5!important}
+#popup.history-screen{padding:10px!important;overflow:hidden!important;align-items:center!important;justify-content:center!important}
+#popup.history-screen .popup-card{display:flex!important;flex-direction:column!important;box-sizing:border-box!important;width:100%!important;max-width:640px!important;height:calc(100dvh - 20px)!important;max-height:calc(100dvh - 20px)!important;min-height:0!important;overflow:hidden!important;padding:16px!important}
+#popup.history-screen #popupTitle{display:block!important;flex:0 0 auto!important;margin:0 0 12px!important}
+#popup.history-screen #popupMessage{display:block!important;flex:1 1 0!important;height:0!important;min-height:0!important;max-height:none!important;overflow-y:auto!important;overscroll-behavior:contain!important;padding:0 3px 8px 0!important}
+#popup.history-screen #popupDefaultClose{display:block!important;flex:0 0 auto!important;position:static!important;align-self:stretch!important;width:100%!important;box-sizing:border-box!important;margin:10px 0 0!important;z-index:5!important}
 .menu-btn{position:relative;overflow:hidden;transition:transform .2s ease,box-shadow .25s ease,border-color .25s ease;animation:jkMenuPulse 2.8s ease-in-out infinite}
 .menu-btn::after{content:"";position:absolute;top:-60%;left:-70%;width:45%;height:220%;transform:rotate(25deg);background:linear-gradient(90deg,transparent,#ffffff55,transparent);animation:jkMenuShine 3.8s ease-in-out infinite;pointer-events:none}
 .menu-btn:active{transform:scale(.92)}
 @keyframes jkSpin{to{transform:rotate(360deg)}}
 @keyframes jkMenuPulse{0%,100%{box-shadow:0 0 0 0 #38bdf833,0 3px 10px #0284c722}50%{box-shadow:0 0 0 5px #38bdf811,0 4px 16px #0284c755}}
 @keyframes jkMenuShine{0%,65%{left:-70%}85%,100%{left:140%}}
+
+
+.jk-brand-mark{position:relative;isolation:isolate;display:inline-flex;align-items:center;justify-content:center;flex:0 0 44px;width:44px;height:44px;border-radius:14px;color:#fff;background:linear-gradient(140deg,#38bdf8 0%,#2563eb 48%,#312e81 100%);border:1px solid #7dd3fc;box-shadow:0 5px 18px #2563eb55;animation:jkLogoFloat 3s ease-in-out infinite;overflow:hidden}
+.jk-brand-mark::before{content:"";position:absolute;inset:-45%;z-index:-1;background:linear-gradient(110deg,transparent 38%,#ffffff70 49%,transparent 60%);transform:translateX(-85%) rotate(18deg);animation:jkLogoShine 3.4s ease-in-out infinite}
+.jk-brand-mark svg{filter:drop-shadow(0 2px 3px #0f172a99)}
+.jk-brand-name{font-weight:900;letter-spacing:.6px;text-shadow:0 0 18px #38bdf833}
+@keyframes jkLogoFloat{0%,100%{transform:translateY(0) rotate(0);box-shadow:0 5px 18px #2563eb55}50%{transform:translateY(-2px) rotate(-2deg);box-shadow:0 8px 24px #0ea5e966}}
+@keyframes jkLogoShine{0%,60%{transform:translateX(-85%) rotate(18deg)}90%,100%{transform:translateX(85%) rotate(18deg)}}
+@media(prefers-reduced-motion:reduce){.jk-brand-mark,.jk-brand-mark::before,.menu-btn,.menu-btn::after{animation:none!important}}
 
 .popup-card h3{color:#38bdf8;margin-bottom:12px}
 .popup-card p{color:#cbd5e1;font-size:13px;line-height:1.6}
@@ -160,7 +169,7 @@ footer{display:none}
   <button class="deposit-btn" onclick="deposit()">▶ HOW TO DEPOSIT?</button>
 </header>
 
-<div class="brand" style="display:flex;align-items:center;gap:9px"><span aria-hidden="true" style="display:inline-flex;align-items:center;justify-content:center;flex:0 0 38px;width:38px;height:38px;border-radius:11px;background:linear-gradient(145deg,#0ea5e9,#1d4ed8 60%,#172554);box-shadow:0 3px 12px #0284c755;color:#fff;border:1px solid #7dd3fc"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5 12 4l8 4.5v10L12 23l-8-4.5z" transform="translate(0 -2)"/><path d="M8 9h8M8 12h8M8 15h5"/></svg></span><span>JK PANEL SHOP</span></div>
+<div class="brand" style="display:flex;align-items:center;gap:10px"><span class="jk-brand-mark" aria-hidden="true"><svg width="27" height="27" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9 16 3l10 6v14l-10 6L6 23z"/><path d="M11 11h10M11 16h10M11 21h6"/><path d="m9 6 14 20" opacity=".32"/></svg></span><span class="jk-brand-name">JK PANEL SHOP</span></div>
 <div class="subtitle">Digital Products & Reseller Dashboard</div>
 <div class="account-bar" id="accountBar" style="display:none"></div>
 
