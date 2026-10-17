@@ -1253,7 +1253,7 @@ async function loadShopProducts(){
     const video=document.createElement('video');video.src=videoProduct.video_url;video.controls=true;video.preload='metadata';video.playsInline=true;video.style.cssText='display:block;width:100%;height:clamp(220px,64vw,360px);object-fit:contain;background:#030712;border-radius:12px;margin-bottom:14px';card.appendChild(video);
    }
    const title=document.createElement('h4');title.textContent=base;title.style.cssText='font-size:20px;color:#f8fafc;margin:4px 0 8px;overflow-wrap:anywhere';card.appendChild(title);
-   const hasPlans=group.some(p=>String(p.name||'').startsWith(base+' - '));
+   const hasPlans=true; // Every product opens into a collapsible purchase panel, including single-item products.
    if(hasPlans){
     const desc=document.createElement('p');desc.textContent='Apna duration select karein.';desc.style.cssText='margin:0 0 12px;color:#94a3b8;font-size:12px;line-height:1.6';card.appendChild(desc);
     const purchase=document.createElement('button');purchase.type='button';purchase.textContent=isResellerCustomer?'BUY RESELLER KEY':'PURCHASE KEY';purchase.setAttribute('aria-expanded','false');purchase.style.cssText='display:block;width:100%;padding:14px;background:#06b6d4;color:#082f49;font-size:14px;border-radius:10px';
