@@ -709,6 +709,16 @@ async function checkNovapayPayment(){
   }
 }
 
+let novapayAutoVerifyRunning = false;
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible' || novapayAutoVerifyRunning) return;
+  const orderId = localStorage.getItem('jk_novapay_pending_order');
+  const verifyButton = document.getElementById('verifyPaymentBtn');
+  if (!orderId || !verifyButton || verifyButton.style.display === 'none') return;
+  novapayAutoVerifyRunning = true;
+  checkNovapayPayment().finally(() => { novapayAutoVerifyRunning = false; });
+});
+
 function feature(name){
   closeMenu();
   if(name==='Order History'){openOrderHistoryPanel();return;}
