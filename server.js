@@ -533,6 +533,7 @@ const message=document.getElementById("message");
 document.querySelectorAll("[data-tab]").forEach(button=>button.addEventListener("click",()=>{
  document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===button.dataset.tab));
  document.querySelectorAll(".admin-section").forEach(section=>section.classList.toggle("active",section.id==="tab-"+button.dataset.tab));
+ if(button.dataset.tab==="resellers"){loadResellers();}
  const menu=document.getElementById("adminMenu");if(menu){menu.classList.remove("open");document.getElementById("adminMenuToggle").setAttribute("aria-expanded","false");}
 }));
 document.getElementById("adminMenuToggle").addEventListener("click",()=>{const menu=document.getElementById("adminMenu");const open=menu.classList.toggle("open");document.getElementById("adminMenuToggle").setAttribute("aria-expanded",String(open));});
