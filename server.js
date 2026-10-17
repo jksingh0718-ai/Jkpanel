@@ -1336,10 +1336,10 @@ async function verifyNovapayOrder(orderId, expectedAmount) {
   const result = data?.result || {};
   // NovaPay can report the final state as COMPLETE as well as COMPLETED/SUCCESS.
   // Check all known status fields instead of letting an earlier non-final field mask the final one.
+  // Fail closed: a successful API/order response alone is NOT proof of payment.
+  // Require an explicit final paid status from the transaction result, matching amount,
+  // and a gateway transaction reference before enabling wallet credit/reseller activation.
   const statuses = [
-    data?.status,
-    data?.payment_status,
-    data?.txnStatus,
     result?.status,
     result?.payment_status,
     result?.paymentStatus,
@@ -1347,14 +1347,14 @@ async function verifyNovapayOrder(orderId, expectedAmount) {
     result?.transaction_status
   ].map(value => String(value ?? "").trim().toUpperCase());
   const paidStatuses = new Set(["COMPLETE", "COMPLETED", "SUCCESS", "PAID"]);
-  const apiAccepted = data?.status === true || data?.success === true || statuses.some(value => paidStatuses.has(value));
-  const paid = apiAccepted && statuses.some(value => paidStatuses.has(value));
-  const gatewayAmount = Number(result.amount ?? result.txnAmount ?? result.transaction_amount ?? data.amount);
-  if (!paid) return { paid: false, data };
+  const paid = statuses.some(value => paidStatuses.has(value));
+  const gatewayAmount = Number(result.amount ?? result.txnAmount ?? result.transaction_amount);
+  const utr = result.utr || result.txnId || result.paymentId || result.transaction_id || result.transactionId || null;
+  if (!paid || !utr) return { paid: false, data };
   if (!Number.isFinite(gatewayAmount) || Math.round(gatewayAmount * 100) !== Math.round(Number(expectedAmount) * 100)) {
-    throw new Error("Payment amount mismatch");
+    return { paid: false, data };
   }
-  return { paid: true, data, utr: result.utr || result.txnId || result.paymentId || result.transaction_id || null };
+  return { paid: true, data, utr };
 }
 
 async function creditVerifiedNovapayPayment(orderId, amount, utr, payload) {
