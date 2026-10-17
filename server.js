@@ -1083,16 +1083,27 @@ async function verifyNovapayOrder(orderId, expectedAmount) {
     order_id: orderId
   });
   const result = data?.result || {};
-  const statusText = String(result.txnStatus || result.status || data.status || "").toUpperCase();
-  const paid = data.status === true && (
-    statusText === "COMPLETED" || statusText === "SUCCESS"
-  );
-  const gatewayAmount = Number(result.amount ?? data.amount);
+  // NovaPay can report the final state as COMPLETE as well as COMPLETED/SUCCESS.
+  // Check all known status fields instead of letting an earlier non-final field mask the final one.
+  const statuses = [
+    data?.status,
+    data?.payment_status,
+    data?.txnStatus,
+    result?.status,
+    result?.payment_status,
+    result?.paymentStatus,
+    result?.txnStatus,
+    result?.transaction_status
+  ].map(value => String(value ?? "").trim().toUpperCase());
+  const paidStatuses = new Set(["COMPLETE", "COMPLETED", "SUCCESS", "PAID"]);
+  const apiAccepted = data?.status === true || data?.success === true || statuses.some(value => paidStatuses.has(value));
+  const paid = apiAccepted && statuses.some(value => paidStatuses.has(value));
+  const gatewayAmount = Number(result.amount ?? result.txnAmount ?? result.transaction_amount ?? data.amount);
   if (!paid) return { paid: false, data };
   if (!Number.isFinite(gatewayAmount) || Math.round(gatewayAmount * 100) !== Math.round(Number(expectedAmount) * 100)) {
     throw new Error("Payment amount mismatch");
   }
-  return { paid: true, data, utr: result.utr || result.txnId || result.paymentId || null };
+  return { paid: true, data, utr: result.utr || result.txnId || result.paymentId || result.transaction_id || null };
 }
 
 async function creditVerifiedNovapayPayment(orderId, amount, utr, payload) {
