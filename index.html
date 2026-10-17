@@ -621,103 +621,85 @@ function deposit(){
     return;
   }
   document.getElementById('popupTitle').textContent = 'Deposit';
-
   document.getElementById('popupMessage').innerHTML =
+    '<p>Apni deposit amount aur mobile number enter karein. Payment gateway par isi amount ka payment QR/checkout khulega.</p>' +
     '<label for="depositAmount">Deposit Amount (₹)</label>' +
-    '<input id="depositAmount" type="number" min="1" max="50000" step="1" placeholder="Amount enter karein" style="width:100%;padding:12px;box-sizing:border-box;border:1px solid #ccc;border-radius:8px;">' +
-
-    '<p>PhonePe se QR scan karke payment karein.</p>' +
-
-    '<img id="depositQR" src="/phonepe-qr.png?v=3" alt="PhonePe QR" style="display:block;width:250px;max-width:100%;height:auto;margin:15px auto;">' +
-
-    '<button class="action" type="button" onclick="downloadDepositQR()">Download QR</button>' +
-
-    '<label for="depositTxn" style="display:block;margin-top:15px;">Transaction ID / UTR</label>' +
-    '<input id="depositTxn" type="text" maxlength="100" placeholder="Transaction ID enter karein" style="width:100%;padding:12px;box-sizing:border-box;border:1px solid #ccc;border-radius:8px;">' +
-
-    '<button class="action" type="button" onclick="submitDepositRequest()">Submit Payment Details</button>' +
-
-    '<p id="depositStatus">Payment verify hone ke baad hi wallet balance add hoga.</p>';
-
+    '<input id="depositAmount" type="number" min="1" max="50000" step="1" placeholder="Amount enter karein" style="width:100%;padding:12px;box-sizing:border-box;border:1px solid #ccc;border-radius:8px;margin:6px 0 12px;">' +
+    '<label for="depositMobile">Mobile Number</label>' +
+    '<input id="depositMobile" type="tel" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number" style="width:100%;padding:12px;box-sizing:border-box;border:1px solid #ccc;border-radius:8px;margin:6px 0 12px;">' +
+    '<button class="action" type="button" id="createPaymentBtn" onclick="startNovapayPayment()">Generate Payment QR</button>' +
+    '<div id="depositStatus" style="margin-top:12px;overflow-wrap:anywhere;">Payment verify hone ke baad hi wallet balance add hoga.</div>' +
+    '<button class="action" type="button" id="verifyPaymentBtn" onclick="checkNovapayPayment()" style="display:none;margin-top:10px;">Verify Payment / Update Wallet</button>';
   document.getElementById('popup').style.display = 'flex';
 }
 
-function downloadDepositQR(){
-  const link = document.createElement('a');
-  link.href = '/phonepe-qr.png?v=3';
-  link.download = 'JK-PANEL-SHOP-PhonePe-QR.png';
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-}
-
-
-async function submitDepositRequest(){
+async function startNovapayPayment(){
   const amount = Number(document.getElementById('depositAmount').value);
-  const txn = document.getElementById('depositTxn').value.trim();
+  const mobile = document.getElementById('depositMobile').value.replace(/\\D/g,'');
   const status = document.getElementById('depositStatus');
-
-  if(!Number.isInteger(amount) || amount < 1 || amount > 10000){
-    status.textContent = '₹1 se ₹10,000 tak valid amount enter karein.';
+  const button = document.getElementById('createPaymentBtn');
+  if(!Number.isInteger(amount) || amount < 1 || amount > 50000){
+    status.textContent = '₹1 se ₹50,000 tak valid amount enter karein.';
     return;
   }
-
-  if(txn.length < 6 || txn.length > 100){
-    status.textContent = 'Valid Transaction ID / UTR enter karein.';
+  if(!/^[6-9]\\d{9}$/.test(mobile)){
+    status.textContent = 'Valid 10-digit Indian mobile number enter karein.';
     return;
   }
-
-  status.textContent = 'Request submit ho rahi hai...';
-
-  try {
-    const response = await fetch('https://jkpanel-backend.onrender.com/api/deposit-requests', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + (localStorage.getItem('jk_customer_access_token') || '')
+  button.disabled = true;
+  status.textContent = 'Payment order create ho raha hai...';
+  try{
+    const response = await fetch('https://jkpanel-backend.onrender.com/api/payments/novapay/create-order',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer '+(localStorage.getItem('jk_customer_access_token')||'')
       },
-      body: JSON.stringify({
-        amount: amount,
-        transaction_id: txn
-      })
+      body:JSON.stringify({amount,customer_mobile:mobile})
     });
-
-    const text = await response.text();
-let data = {};
-
-try {
-  data = text ? JSON.parse(text) : {};
-} catch {
-  throw new Error(
-    `Server ne invalid response diya (HTTP ${response.status}). Render Logs check karo.`
-  );
+    const raw = await response.text();
+    let data = {};
+    try{data=raw?JSON.parse(raw):{};}catch{throw new Error('Server ka response samajh nahi aaya.');}
+    if(!response.ok) throw new Error(data.error || 'Payment order create nahi hua.');
+    if(!data.payment_url || !data.order_id) throw new Error('Gateway ne payment link nahi diya.');
+    localStorage.setItem('jk_novapay_pending_order',data.order_id);
+    const safeUrl = data.payment_url;
+    status.innerHTML = 'Order ID: <b>'+data.order_id+'</b><p>Payment karne ke liye neeche button dabayein. Gateway checkout par is amount ka QR/payment option dikhna chahiye.</p><a class="action" href="'+safeUrl.replace(/"/g,'&quot;')+'" target="_blank" rel="noopener noreferrer" style="display:inline-block;text-decoration:none;">Open Payment QR / Checkout</a><p>Payment complete hone ke baad isi page par lautkar Verify Payment dabayein.</p>';
+    document.getElementById('verifyPaymentBtn').style.display='block';
+  }catch(error){
+    status.textContent = 'Payment start nahi hua: '+error.message;
+  }finally{
+    button.disabled = false;
+  }
 }
 
-if (!response.ok) {
-  throw new Error(
-    data.error || `Server error (HTTP ${response.status})`
-  );
+async function checkNovapayPayment(){
+  const status = document.getElementById('depositStatus');
+  const orderId = localStorage.getItem('jk_novapay_pending_order');
+  if(!orderId){
+    status.textContent = 'Pending payment order nahi mila. Naya payment order banayein.';
+    return;
+  }
+  status.textContent = 'Gateway se payment verify ho raha hai...';
+  try{
+    const response = await fetch('https://jkpanel-backend.onrender.com/api/payments/novapay/check-status',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer '+(localStorage.getItem('jk_customer_access_token')||'')
+      },
+      body:JSON.stringify({order_id:orderId})
+    });
+    const raw = await response.text();
+    let data = {};
+    try{data=raw?JSON.parse(raw):{};}catch{throw new Error('Server ka response samajh nahi aaya.');}
+    if(!response.ok) throw new Error(data.error || 'Payment verify nahi hua.');
+    status.textContent = data.message || (data.paid ? 'Payment verified.' : 'Payment abhi confirm nahi hui.');
+    if(data.paid) localStorage.removeItem('jk_novapay_pending_order');
+  }catch(error){
+    status.textContent = 'Verification issue: '+error.message;
+  }
 }
-
-if (!data.request || !data.request.id) {
-  throw new Error(
-    `Server response incomplete (HTTP ${response.status}). Render Logs check karo.`
-  );
-}
-
-status.textContent =
-  'Deposit request submit ho gayi! Request ID: ' +
-  data.request.id +
-  '. Payment verification pending hai.';
-
-} catch(error) {
-  status.textContent =
-    'Request submit nahi hui: ' + error.message;
-}
-}
-
-  
-  
 
 function feature(name){
   closeMenu();
