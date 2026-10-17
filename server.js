@@ -882,12 +882,14 @@ app.get("/api/admin/orders", isAdmin, async (req, res) => {
 });
 
 function dripWireDuration(productName) {
-  const name = String(productName || "").trim().toLowerCase();
+  const original = String(productName || "").trim();
+  const name = original.toLowerCase().replace(/\\s+/g, " ");
   if (name === "drip wire - 6 hours") return "6 Hours";
   if (name === "drip wire - 12 hours") return "12 Hours";
   if (name === "drip wire - 1 day") return "1 Day";
   if (name === "drip wire - 7 days") return "7 Days";
-  return null;
+  const match = original.match(/^DRIP Wire\\s*-\\s*(.+)$/i);
+  return match ? match[1].trim() : null;
 }
 
 function aimHackDuration(productName) {
