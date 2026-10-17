@@ -1656,7 +1656,7 @@ app.patch("/api/admin/deposit-requests/:id", isAdmin, async (req, res) => {
 app.get("/api/products", async (req, res) => {
   if (!supabase) return res.status(503).json({ error: "Database is not configured" });
   const { data, error } = await supabase.from("products")
-    .select("id, name, price, image_url, video_url, description").eq("published", true).order("created_at", { ascending: false });
+    .select("id, name, price, image_url, video_url, description, created_at").eq("published", true).order("created_at", { ascending: false });
   if (error) { console.error("Public products load failed:", error.message); return res.status(500).json({ error: "Products load nahi ho sake." }); }
   const user = await getAuthenticatedUser(req);
   let products = data || [];
