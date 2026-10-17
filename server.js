@@ -1372,13 +1372,10 @@ async function creditVerifiedNovapayPayment(orderId, amount, utr, payload) {
 }
 
 async function activateResellerFromVerifiedPayment(request, utr, payload) {
-  const { data: settings, error: settingsError } = await supabase.from("reseller_settings").select("activation_price").eq("id",1).maybeSingle();
-  if (settingsError) throw new Error("Reseller activation setting load nahi hui.");
-  const activationPrice = Number(settings?.activation_price || 99);
+  const activationPrice = 99;
   if (Math.round(Number(request.amount)*100) !== Math.round(activationPrice*100)) throw new Error("Reseller activation amount mismatch.");
   const { error: paidError } = await supabase.from("payment_requests").update({
-    status:"paid", updated_at:new Date().toISOString(), utr:utr||null,
-    gateway_payload:payload||{}
+    status:"paid", updated_at:new Date().toISOString()
   }).eq("id",request.id).eq("status","pending");
   if (paidError) throw new Error("Verified reseller payment status save nahi hua.");
   const { error: activationError } = await supabase.from("reseller_accounts").upsert({
@@ -1458,7 +1455,7 @@ app.post("/api/payments/novapay/check-status", async (req, res) => {
     .in("provider", ["novapay","novapay_reseller"]).eq("provider_order_id", orderId).eq("user_id", user.id).maybeSingle();
   if (error) return res.status(500).json({ error: "Payment request load nahi hui." });
   if (!request) return res.status(404).json({ error: "Payment request nahi mili." });
-  if (request.status === "paid") return res.json({ success: true, paid: true, message: "Payment pehle hi verify ho chuka hai." });
+  if (request.status === "paid") return res.json({ success: true, paid: true, isReseller: request.provider === "novapay_reseller", message: request.provider === "novapay_reseller" ? "Reseller Partner pehle hi activate ho chuka hai." : "Payment pehle hi verify ho chuka hai." });
 
   try {
     const verified = await verifyNovapayOrder(orderId, Number(request.amount));
