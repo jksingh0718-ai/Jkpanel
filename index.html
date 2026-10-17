@@ -202,6 +202,7 @@ footer{display:none}
 
 <h3 class="section-title" id="products">Our Products</h3>
 
+<div style="margin:10px 0 14px"><input id="shopProductSearch" type="search" placeholder="Search" aria-label="Search" autocomplete="off" style="display:block;width:100%;box-sizing:border-box;padding:13px 14px;border:1px solid #334155;border-radius:10px;background:#111827;color:#f8fafc;font-size:14px;outline:none"></div>
 <div id="shopProducts"><p style="color:#94a3b8;font-size:12px;margin-top:10px">Products load ho rahe hain...</p></div>
 
 <div class="box">
@@ -1120,6 +1121,28 @@ function shopDurationRank(value){
  return 100000;
 }
 
+function setupShopProductSearch(){
+ const input=document.getElementById('shopProductSearch');
+ const root=document.getElementById('shopProducts');
+ if(!input||!root||input.dataset.bound==='1')return;
+ input.dataset.bound='1';
+ input.addEventListener('input',()=>{
+  const query=input.value.trim().toLocaleLowerCase();
+  const cards=Array.from(root.children).filter(card=>!card.hasAttribute('data-search-empty'));
+  let visible=0;
+  cards.forEach(card=>{
+   const show=!query||(card.textContent||'').toLocaleLowerCase().includes(query);
+   card.hidden=!show;
+   if(show)visible++;
+  });
+  let empty=root.querySelector('[data-search-empty]');
+  if(query&&visible===0){
+   if(!empty){empty=document.createElement('p');empty.dataset.searchEmpty='1';empty.style.cssText='color:#94a3b8;font-size:12px;margin-top:12px';empty.textContent='No products found.';root.appendChild(empty);}
+   empty.hidden=false;
+  }else if(empty){empty.hidden=true;}
+ });
+}
+
 async function loadShopProducts(){
  const root=document.getElementById('shopProducts');
  if(!root)return;
@@ -1129,6 +1152,7 @@ async function loadShopProducts(){
   const data=await response.json();
   if(!response.ok)throw new Error(data.error||'Products load nahi ho sake.');
   root.replaceChildren();
+   setupShopProductSearch();
   if(!Array.isArray(data.products)||!data.products.length){
    const empty=document.createElement('p');empty.textContent='Abhi products available nahi hain.';empty.style.cssText='color:#94a3b8;font-size:12px;margin-top:10px';root.appendChild(empty);return;
   }
