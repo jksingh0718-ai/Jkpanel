@@ -1145,9 +1145,10 @@ function setupShopProductSearch(){
    return {card,index,show,starts:query&&text.startsWith(query)};
   });
   ranked.sort((a,b)=>{
-   if(!query)return a.index-b.index;
-   if(a.show!==b.show)return a.show?-1:1;
-   if(a.starts!==b.starts)return a.starts?-1:1;
+   if(query&&a.show!==b.show)return a.show?-1:1;
+   if(query&&a.starts!==b.starts)return a.starts?-1:1;
+   const ta=Number(a.card.dataset.createdAt||0),tb=Number(b.card.dataset.createdAt||0);
+   if(ta!==tb)return tb-ta;
    return a.index-b.index;
   });
   ranked.forEach(item=>root.appendChild(item.card));
@@ -1184,6 +1185,7 @@ async function loadShopProducts(){
   if(dripProducts.length){
    const card=document.createElement('article');
    card.className='drip-product-card';
+   card.dataset.createdAt=String(Math.max(...dripProducts.map(p=>Date.parse(p.created_at||'')||0)));
    card.style.cssText='display:block;margin-top:12px;padding:14px;background:linear-gradient(160deg,#111827,#0b1220);border:1px solid #155e75;border-radius:16px;overflow:hidden;box-shadow:0 8px 26px #0003';
    const imageProduct=dripProducts.find(p=>p.image_url)||dripProducts[0];
    const videoProduct=dripProducts.find(p=>p.video_url);
@@ -1238,6 +1240,7 @@ async function loadShopProducts(){
   if(aimProducts.length){
    const card=document.createElement('article');
    card.className='aim-product-card';
+   card.dataset.createdAt=String(Math.max(...aimProducts.map(p=>Date.parse(p.created_at||'')||0)));
    card.style.cssText='display:block;margin-top:12px;padding:14px;background:linear-gradient(160deg,#111827,#0b1220);border:1px solid #7c3aed;border-radius:16px;overflow:hidden;box-shadow:0 8px 26px #0003';
    const imageProduct=aimProducts.find(p=>p.image_url)||aimProducts[0];
    const videoProduct=aimProducts.find(p=>p.video_url);
@@ -1290,6 +1293,7 @@ async function loadShopProducts(){
   });
   genericGroups.forEach((group,base)=>{
    const card=document.createElement('article');card.className='drip-product-card product';
+   card.dataset.createdAt=String(Math.max(...group.map(p=>Date.parse(p.created_at||'')||0)));
    card.style.cssText='display:block;margin-top:12px;padding:14px;background:linear-gradient(160deg,#111827,#0b1220);border:1px solid #334155;border-radius:16px;overflow:hidden;box-shadow:0 8px 26px #0003';
    const imageProduct=group.find(p=>p.image_url),videoProduct=group.find(p=>p.video_url);
    if(imageProduct?.image_url){
@@ -1332,6 +1336,8 @@ async function loadShopProducts(){
    }
    root.appendChild(card);
   });
+  Array.from(root.children).filter(card=>!card.hasAttribute('data-search-empty')).sort((a,b)=>Number(b.dataset.createdAt||0)-Number(a.dataset.createdAt||0)).forEach(card=>root.appendChild(card));
+  if(document.getElementById('shopProductSearch')?.value.trim())document.getElementById('shopProductSearch').dispatchEvent(new Event('input'));
  }catch(e){
   root.replaceChildren();const p=document.createElement('p');p.textContent=e.message||'Products load nahi ho sake.';p.style.cssText='color:#fca5a5;font-size:12px;margin-top:10px';root.appendChild(p);
  }
