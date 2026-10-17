@@ -464,8 +464,20 @@ small{color:#a6b2c0}
  <input id="keySearch" class="search-box" type="search" placeholder="Search key/order records...">
  <button id="refreshKeys">Refresh Key Records</button>
  <div id="keyList"></div>
- <h3 style="margin-top:18px">Orders / Key Requests</h3>
- <div id="orders"></div>
+ <h3 style="margin-top:18px">Add / Edit Key Product</h3>
+ <div class="card">
+  <form id="keyGroupForm">
+   <label for="keyGroupName">Key name</label><br><input id="keyGroupName" required maxlength="100" value="DRIP Wire" placeholder="DRIP Wire" style="width:100%"><br>
+   <label for="keyGroupImageFile">Key photo (phone Gallery)</label><br><input id="keyGroupImageFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif" style="width:100%"><input id="keyGroupImageUrl" type="hidden"><small>JPG, PNG, WebP, GIF • max 8 MB</small><p id="keyGroupImageStatus" role="status"></p>
+   <label for="keyGroupVideoFile">Key video (phone Gallery)</label><br><input id="keyGroupVideoFile" type="file" accept="video/mp4,video/webm,video/quicktime" style="width:100%"><input id="keyGroupVideoUrl" type="hidden"><small>MP4, WebM, MOV • max 100 MB</small><p id="keyGroupVideoStatus" role="status"></p>
+   <h4 style="margin:14px 0 6px">Duration and price options</h4><div id="keyPlanRows"></div>
+   <button type="button" id="addKeyPlan" style="background:#334155;color:white">+ Add duration</button>
+   <label style="display:block;margin:12px 0"><input id="keyGroupPublished" type="checkbox" checked> Show on shop</label>
+   <button type="submit" id="keyGroupSave">Save Key and Durations</button><button type="button" id="keyGroupClear" style="background:#475569;color:white">Clear</button>
+  </form><p id="keyGroupMessage" role="status"></p>
+ </div>
+ <h3 style="margin-top:18px">Saved Key Products</h3><div id="keyGroupList"></div>
+ <h3 style="margin-top:18px">Orders / Key Requests</h3><div id="orders"></div>
 </section>
 </section>
 <p id="message" role="status"></p>
@@ -563,6 +575,7 @@ document.getElementById("loginForm").onsubmit=async e=>{
   await loadOrders();
   await loadCustomers();
   await loadProducts();
+  await loadKeyGroups();
  }catch(err){message.textContent=err.message;}
 };
 
@@ -671,6 +684,67 @@ document.getElementById("productForm").onsubmit=async e=>{
  }catch(err){status.textContent=err.message;}
 };
 
+
+const keyPlanSeed=[{duration:"6 Hours",price:"70"},{duration:"12 Hours",price:"130"},{duration:"1 Day",price:"250"},{duration:"7 Days",price:"550"}];
+function addKeyPlanRow(duration="",price=""){
+ const root=document.getElementById("keyPlanRows"),row=document.createElement("div");row.className="card key-plan-row";row.style.cssText="padding:10px;margin:8px 0;border:1px solid #334155";
+ const fields=document.createElement("div");fields.style.cssText="display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:8px";
+ const time=document.createElement("input");time.className="key-plan-duration";time.required=true;time.maxLength=80;time.placeholder="Duration, e.g. 3 Hours";time.value=duration;time.style.width="100%";
+ const cost=document.createElement("input");cost.className="key-plan-price";cost.required=true;cost.type="number";cost.min="0";cost.max="1000000";cost.step="0.01";cost.placeholder="Price ₹";cost.value=price;cost.style.width="100%";
+ const remove=document.createElement("button");remove.type="button";remove.textContent="Remove duration";remove.style.cssText="background:#7f1d1d;color:white";remove.onclick=()=>row.remove();
+ fields.append(time,cost);row.append(fields,remove);root.appendChild(row);
+}
+function clearKeyGroupForm(){
+ document.getElementById("keyGroupForm").reset();document.getElementById("keyGroupName").value="DRIP Wire";
+ ["keyGroupImageUrl","keyGroupVideoUrl","keyGroupImageFile","keyGroupVideoFile","keyGroupImageStatus","keyGroupVideoStatus"].forEach(id=>{const e=document.getElementById(id);if(e)e.value!==undefined?e.value="":e.textContent="";});
+ document.getElementById("keyGroupPublished").checked=true;document.getElementById("keyPlanRows").replaceChildren();keyPlanSeed.forEach(p=>addKeyPlanRow(p.duration,p.price));
+ document.getElementById("keyGroupSave").textContent="Save Key and Durations";document.getElementById("keyGroupMessage").textContent="";
+}
+async function uploadKeyGroupMedia(){
+ let imageUrl=document.getElementById("keyGroupImageUrl").value.trim(),videoUrl=document.getElementById("keyGroupVideoUrl").value.trim();
+ const imageFile=document.getElementById("keyGroupImageFile").files[0],videoFile=document.getElementById("keyGroupVideoFile").files[0];
+ if(imageFile){if(imageFile.size>8*1024*1024)throw new Error("Photo 8 MB se chhoti honi chahiye.");const status=document.getElementById("keyGroupImageStatus");status.textContent="Photo upload ho rahi hai...";
+  const body=new FormData();body.append("image",imageFile);const r=await fetch("/api/admin/product-image",{method:"POST",body});const raw=await r.text();let d={};try{d=raw?JSON.parse(raw):{};}catch{}if(!r.ok)throw new Error(d.error||"Photo upload fail hua.");imageUrl=d.image_url;document.getElementById("keyGroupImageUrl").value=imageUrl;status.textContent="Photo upload ho gayi.";}
+ if(videoFile){if(videoFile.size>100*1024*1024)throw new Error("Video 100 MB se chhoti honi chahiye.");const status=document.getElementById("keyGroupVideoStatus");status.textContent="Video upload ho raha hai...";
+  const body=new FormData();body.append("video",videoFile);const r=await fetch("/api/admin/product-video",{method:"POST",body});const raw=await r.text();let d={};try{d=raw?JSON.parse(raw):{};}catch{}if(!r.ok)throw new Error(d.error||"Video upload fail hua.");videoUrl=d.video_url;document.getElementById("keyGroupVideoUrl").value=videoUrl;status.textContent="Video upload ho gaya.";}
+ return {imageUrl,videoUrl};
+}
+async function loadKeyGroups(){
+ const root=document.getElementById("keyGroupList");if(!root)return;
+ try{const data=await api("/api/admin/products");root.replaceChildren();const products=Array.isArray(data.products)?data.products:[];
+  const groups=new Map();products.forEach(p=>{const m=String(p.name||"").match(/^(.*?)\s*-\s*(.+)$/);const base=m?m[1].trim():p.name;if(!groups.has(base))groups.set(base,[]);groups.get(base).push(p);});
+  if(!groups.size){root.textContent="Abhi koi key product nahi hai.";return;}
+  [...groups.entries()].forEach(([base,items])=>{const card=document.createElement("article");card.className="card";const title=document.createElement("h3");title.textContent=base;
+   const active=items.filter(p=>p.published);const info=document.createElement("p");info.textContent=active.length+" active duration option(s) · "+items.length+" saved option(s)";
+   const options=document.createElement("p");options.style.cssText="white-space:pre-line;line-height:1.8";options.textContent=items.map(p=>String(p.name).slice(base.length).replace(/^\s*-\s*/,"")+" — ₹"+Number(p.price).toFixed(2)+(p.published?"":" (hidden)")).join("\n");
+   const edit=document.createElement("button");edit.textContent="Edit this key";edit.onclick=()=>{document.getElementById("keyGroupName").value=base;document.getElementById("keyGroupImageUrl").value=(items.find(p=>p.image_url)?.image_url)||"";document.getElementById("keyGroupVideoUrl").value=(items.find(p=>p.video_url)?.video_url)||"";
+    document.getElementById("keyGroupImageFile").value="";document.getElementById("keyGroupVideoFile").value="";
+    document.getElementById("keyGroupImageStatus").textContent=document.getElementById("keyGroupImageUrl").value?"Current photo saved. Nayi photo select karne par replace hogi.":"";
+    document.getElementById("keyGroupVideoStatus").textContent=document.getElementById("keyGroupVideoUrl").value?"Current video saved. Nayi video select karne par replace hogi.":"";
+    document.getElementById("keyGroupPublished").checked=active.length>0;document.getElementById("keyPlanRows").replaceChildren();active.forEach(p=>addKeyPlanRow(String(p.name).slice(base.length).replace(/^\s*-\s*/,""),String(p.price)));
+    document.getElementById("keyGroupSave").textContent="Update Key and Durations";document.getElementById("keyGroupMessage").textContent="Editing: "+base;document.getElementById("keyGroupForm").scrollIntoView({behavior:"smooth",block:"center"});};
+   card.append(title,info,options,edit);root.appendChild(card);});
+ }catch(e){root.textContent=e.message||"Key products load nahi ho sake.";}
+}
+document.getElementById("addKeyPlan").onclick=()=>addKeyPlanRow();
+document.getElementById("keyGroupClear").onclick=clearKeyGroupForm;
+document.getElementById("keyGroupForm").onsubmit=async e=>{
+ e.preventDefault();const status=document.getElementById("keyGroupMessage"),base=document.getElementById("keyGroupName").value.trim(),published=document.getElementById("keyGroupPublished").checked;
+ const rows=[...document.querySelectorAll("#keyPlanRows .key-plan-row")].map(row=>({duration:row.querySelector(".key-plan-duration").value.trim(),price:Number(row.querySelector(".key-plan-price").value)}));
+ if(!base||base.length>100){status.textContent="Valid key name enter karein.";return;}if(!rows.length){status.textContent="Kam se kam ek duration add karein.";return;}
+ const seen=new Set();for(const row of rows){const key=row.duration.toLowerCase();if(!row.duration||row.duration.length>80||seen.has(key)){status.textContent="Har duration ka naam bharein aur duplicate duration na rakhein.";return;}if(!Number.isFinite(row.price)||row.price<0||row.price>1000000){status.textContent="Har duration ki valid price enter karein.";return;}seen.add(key);}
+ const save=document.getElementById("keyGroupSave");save.disabled=true;
+ try{status.textContent="Photo/video aur duration options save ho rahe hain...";const media=await uploadKeyGroupMedia();const current=await api("/api/admin/products"),all=current.products||[];
+  const existing=all.filter(p=>String(p.name||"").startsWith(base+" - ")),wanted=new Set(rows.map(p=>(base+" - "+p.duration).toLowerCase()));
+  for(const old of existing){if(!wanted.has(String(old.name).toLowerCase())&&old.published)await api("/api/admin/products/"+encodeURIComponent(old.id),{method:"PATCH",body:JSON.stringify({published:false})});}
+  for(const plan of rows){const name=base+" - "+plan.duration,old=all.find(p=>String(p.name||"").toLowerCase()===name.toLowerCase());
+   const payload={name,price:plan.price,image_url:media.imageUrl||null,video_url:media.videoUrl||null,published,description:""};
+   if(old)await api("/api/admin/products/"+encodeURIComponent(old.id),{method:"PATCH",body:JSON.stringify(payload)});else await api("/api/admin/products",{method:"POST",body:JSON.stringify(payload)});
+  }
+  status.textContent="Key aur "+rows.length+" duration option(s) Supabase mein save ho gaye.";clearKeyGroupForm();await Promise.all([loadKeyGroups(),loadProducts()]);
+ }catch(err){status.textContent=err.message||"Key save nahi ho saki.";}finally{save.disabled=false;}
+};
+
 async function loadCustomers(){
  try{
   const data=await api("/api/admin/customers");
@@ -733,7 +807,7 @@ async function loadCustomers(){
 
 document.getElementById("refreshCustomers").onclick=async()=>{await loadCustomers();};
 document.getElementById("refreshProducts").onclick=async()=>{await loadProducts();};
-document.getElementById("refreshKeys").onclick=async()=>{await loadCustomers();};
+document.getElementById("refreshKeys").onclick=async()=>{await loadCustomers();await loadKeyGroups();};
 document.getElementById("logout").onclick=async()=>{
  try{await api("/api/admin/logout",{method:"POST"});}catch(e){}
  document.getElementById("dashboard").hidden=true;
@@ -743,6 +817,8 @@ document.getElementById("logout").onclick=async()=>{
 loadOrders();
 loadCustomers();
 loadProducts();
+loadKeyGroups();
+clearKeyGroupForm();
 </script>
 </main></body></html>`);
 });
