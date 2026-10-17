@@ -163,6 +163,41 @@ footer{display:none}
 .jk-profile-sky .sky-cloud{display:none!important}
 @media(prefers-reduced-motion:reduce){.jk-profile-sky{background-attachment:scroll}}
 @media(prefers-reduced-motion:reduce){.jk-profile-sky .sky-stars,.jk-profile-sky .sky-cloud{animation:none}}
+
+/* In-page deposit experience: no blocking modal */
+.jk-deposit-page{display:none;position:relative;isolation:isolate;margin:18px 0 24px;padding:18px 14px 22px;border:1px solid #1e3a5f;border-radius:24px;background:radial-gradient(ellipse at 50% 0%,#123451 0%,#0d1729 42%,#080d18 100%);box-shadow:0 18px 45px #0005;overflow:hidden;scroll-margin-top:12px}
+.jk-deposit-page:before{content:"";position:absolute;top:-90px;right:-80px;width:210px;height:210px;border-radius:50%;background:#0ea5e922;filter:blur(2px);pointer-events:none}
+.jk-deposit-top{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:25px}
+.jk-deposit-back{padding:9px 12px;border:1px solid #334155;border-radius:10px;background:#111d30;color:#dbeafe;font-size:12px}
+.jk-deposit-secure{font-size:9px;letter-spacing:.7px;color:#6ee7b7;background:#063a32;border:1px solid #0f766e;padding:8px 9px;border-radius:20px;white-space:nowrap}
+.jk-deposit-hero{position:relative;z-index:1;text-align:center;padding:4px 8px 22px}
+.jk-deposit-icon{display:flex;align-items:center;justify-content:center;width:64px;height:64px;margin:0 auto 15px;border-radius:21px;background:linear-gradient(145deg,#22d3ee,#2563eb);color:#031525;font-size:31px;font-weight:900;box-shadow:0 10px 30px #0284c755}
+.jk-deposit-eyebrow{font-size:10px;font-weight:800;letter-spacing:2.5px;color:#67e8f9;margin-bottom:8px}
+.jk-deposit-hero h2{font-size:29px;letter-spacing:-.7px;color:#f8fafc;margin-bottom:8px}
+.jk-deposit-lead{max-width:300px;margin:0 auto;color:#9caec5;font-size:12px;line-height:1.7}
+.jk-deposit-form-card{position:relative;z-index:1;padding:17px 15px 14px;background:linear-gradient(155deg,#141f32,#0d1422);border:1px solid #2b405d;border-radius:19px;box-shadow:0 12px 28px #0004}
+.jk-deposit-form-card label{display:block;font-size:13px;font-weight:700;color:#e2e8f0;margin:0 0 9px}
+.jk-deposit-form-card label span{color:#7dd3fc}
+.jk-deposit-amount-wrap{display:flex;align-items:center;gap:10px;padding:0 14px;border:1px solid #3b506c;border-radius:13px;background:#080f1c;box-shadow:inset 0 1px 4px #0005}
+.jk-deposit-amount-wrap>span{font-size:22px;font-weight:900;color:#67e8f9}
+.jk-deposit-amount-wrap input{width:100%;min-width:0;padding:17px 0;border:0;outline:0;background:transparent;color:#fff;font-size:21px;font-weight:800}
+.jk-deposit-amount-wrap input::placeholder{font-size:15px;font-weight:400;color:#64748b}
+.jk-deposit-quick-amounts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin:11px 0 22px}
+.jk-deposit-quick-amounts button{padding:10px 2px;border:1px solid #28506b;border-radius:9px;background:#10263a;color:#7dd3fc;font-size:12px}
+.jk-deposit-quick-amounts button:active{background:#164e63}
+.jk-deposit-form-card .jk-deposit-mobile-label{margin-top:0}
+.jk-deposit-mobile{display:block;width:100%;padding:15px 13px;border:1px solid #3b506c;border-radius:12px;background:#080f1c;color:#fff;font-size:15px;outline:none;margin-bottom:17px}
+.jk-deposit-mobile:focus,.jk-deposit-amount-wrap:focus-within{border-color:#22d3ee;box-shadow:0 0 0 3px #22d3ee16}
+.jk-deposit-mobile::placeholder{color:#64748b}
+.jk-deposit-pay{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:16px;border-radius:12px;background:linear-gradient(100deg,#06b6d4,#22c55e);color:#03231f;font-size:15px;font-weight:900;box-shadow:0 8px 20px #10b98126}
+.jk-deposit-pay:disabled{opacity:.65}
+.jk-deposit-status{overflow-wrap:anywhere;font-size:12px;line-height:1.6;color:#fcd34d;margin-top:10px}
+.jk-deposit-foot{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:15px;padding-top:13px;border-top:1px solid #263449;color:#8495aa;font-size:10px;line-height:1.5;text-align:center}
+.jk-deposit-benefits{position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:13px}
+.jk-deposit-benefits>div{display:flex;flex-direction:column;align-items:center;gap:7px;padding:13px 4px;border:1px solid #1e3047;border-radius:12px;background:#0b1422;color:#9fb0c5;font-size:10px;text-align:center}
+.jk-deposit-benefits b{font-size:18px;color:#67e8f9}
+@media(min-width:600px){.jk-deposit-page{max-width:620px;margin:24px auto;padding:25px}.jk-deposit-form-card{padding:24px}.jk-deposit-hero h2{font-size:34px}}
+
 </style>
 </head>
 <body>
@@ -764,28 +799,49 @@ function closePopup(){
 }
 
 function deposit(){
-  const defaultClose=document.getElementById('popupDefaultClose');if(defaultClose)defaultClose.style.display='block';
   closeMenu();
   if(!localStorage.getItem('jk_customer_access_token')){
     openAuth('login');
     return;
   }
-  document.getElementById('popupTitle').textContent = 'Deposit';
-  document.getElementById('popupMessage').innerHTML =
-    '<label for="depositAmount">Deposit Amount (₹)</label>' +
-    '<input id="depositAmount" type="number" min="1" max="50000" step="1" placeholder="Amount enter karein" style="width:100%;padding:12px;box-sizing:border-box;border:1px solid #ccc;border-radius:8px;margin:6px 0 12px;">' +
-    '<label for="depositMobile">Mobile Number</label>' +
-    '<input id="depositMobile" type="tel" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number" autocomplete="tel-national" style="width:100%;padding:12px;box-sizing:border-box;border:1px solid #ccc;border-radius:8px;margin:6px 0 12px;">' +
-    '<button class="action" type="button" id="createPaymentBtn" onclick="startNovapayPayment()">Pay Instantly</button>' +
-    '<div id="depositStatus" style="margin-top:12px;overflow-wrap:anywhere;"></div>';
-  document.getElementById('popup').style.display = 'flex';
-  // Automatically check any previous payment; customers should not need to press an update button.
-  if (localStorage.getItem('jk_novapay_pending_order')) {
-    document.getElementById('depositStatus').textContent = 'Pichhle payment ka status automatically check ho raha hai...';
-    setTimeout(() => checkNovapayPayment(), 250);
+  let page=document.getElementById('jkDepositPage');
+  if(!page){
+    page=document.createElement('section');
+    page.id='jkDepositPage';
+    page.className='jk-deposit-page';
+    page.innerHTML=
+      '<div class="jk-deposit-top"><button type="button" class="jk-deposit-back" onclick="closeDepositPage()">← Dashboard</button><span class="jk-deposit-secure">🔒 SECURE CHECKOUT</span></div>'+
+      '<div class="jk-deposit-hero"><div class="jk-deposit-icon">₹</div><p class="jk-deposit-eyebrow">WALLET SERVICES</p><h2>Add Balance</h2><p class="jk-deposit-lead">Apne wallet mein balance add karein aur products aasani se purchase karein.</p></div>'+
+      '<div class="jk-deposit-form-card"><label for="depositAmount">Deposit Amount <span>(₹)</span></label>'+
+      '<div class="jk-deposit-amount-wrap"><span>₹</span><input id="depositAmount" type="number" min="1" max="50000" step="1" placeholder="Amount enter karein" inputmode="numeric"></div>'+
+      '<div class="jk-deposit-quick-amounts"><button type="button" onclick="setDepositAmount(100)">₹100</button><button type="button" onclick="setDepositAmount(200)">₹200</button><button type="button" onclick="setDepositAmount(500)">₹500</button><button type="button" onclick="setDepositAmount(1000)">₹1000</button></div>'+
+      '<label for="depositMobile" class="jk-deposit-mobile-label">Mobile Number</label><input class="jk-deposit-mobile" id="depositMobile" type="tel" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number" autocomplete="tel-national">'+
+      '<button class="jk-deposit-pay" type="button" id="createPaymentBtn" onclick="startNovapayPayment()"><span>Pay Securely</span><span>→</span></button>'+
+      '<div id="depositStatus" class="jk-deposit-status" aria-live="polite"></div>'+
+      '<div class="jk-deposit-foot"><span>🔐</span><span>Your payment is processed by the payment gateway.</span></div></div>'+
+      '<div class="jk-deposit-benefits"><div><b>⚡</b><span>Fast checkout</span></div><div><b>🛡️</b><span>Secure payment</span></div><div><b>👛</b><span>Wallet balance</span></div></div>';
+    const header=document.querySelector('header');
+    if(header)header.insertAdjacentElement('afterend',page);
+    else document.body.insertBefore(page,document.body.firstChild);
+  }
+  page.style.display='block';
+  page.scrollIntoView({behavior:'smooth',block:'start'});
+  setBottomNavActive('deposit');
+  if(localStorage.getItem('jk_novapay_pending_order')){
+    const status=document.getElementById('depositStatus');
+    if(status){status.textContent='Pichhle payment ka status check ho raha hai...';setTimeout(()=>checkNovapayPayment(),250);}
   }
 }
-
+function setDepositAmount(amount){
+  const input=document.getElementById('depositAmount');
+  if(input)input.value=String(amount);
+}
+function closeDepositPage(){
+  const page=document.getElementById('jkDepositPage');
+  if(page)page.style.display='none';
+  setBottomNavActive('home');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
 async function startNovapayPayment(){
   const amount = Number(document.getElementById('depositAmount').value);
   const mobile = document.getElementById('depositMobile').value.replace(/\D/g,'');
