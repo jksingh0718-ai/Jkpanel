@@ -701,8 +701,8 @@ function clearProductForm(){
  document.getElementById("productMessage").textContent="";
  document.getElementById("productEditor").hidden=true;
 }
-document.getElementById("showProductForm").onclick=()=>{const editor=document.getElementById("productEditor");editor.hidden=!editor.hidden;if(!editor.hidden){clearProductForm();document.getElementById("productName").focus();}};
-document.getElementById("showKeyForm").onclick=()=>{const editor=document.getElementById("keyEditor");editor.hidden=!editor.hidden;if(!editor.hidden){clearKeyGroupForm();document.getElementById("keyGroupName").focus();}};
+document.getElementById("showProductForm").onclick=()=>{const editor=document.getElementById("productEditor");if(editor.hidden){clearProductForm();editor.hidden=false;document.getElementById("productName").focus();}else{editor.hidden=true;}};
+document.getElementById("showKeyForm").onclick=()=>{const editor=document.getElementById("keyEditor");if(editor.hidden){clearKeyGroupForm();editor.hidden=false;document.getElementById("keyGroupName").focus();}else{editor.hidden=true;}};
 document.getElementById("addProductPlan").onclick=()=>addProductPlanRow();
 productPlanSeed.forEach(p=>addProductPlanRow(p.duration,p.price));
 document.getElementById("productCancel").onclick=clearProductForm;
