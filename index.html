@@ -720,6 +720,8 @@ function navigateBottom(name){
   closeMenu();
   const depositPage=document.getElementById('jkDepositPage');
   if(depositPage)depositPage.style.display='none';
+  const mainContent=document.querySelector('main')||document.querySelector('#mainContent')||document.querySelector('.container');
+  if(mainContent)mainContent.style.display='';
   if(name==='home'){
     setBottomNavActive('home');
     window.scrollTo({top:0,behavior:'smooth'});
