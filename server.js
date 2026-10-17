@@ -795,18 +795,35 @@ async function loadCustomers(){
  try{
   const data=await api("/api/admin/customers");
   const root=document.getElementById("customerList");
-  if(!root){throw new Error("Users section missing. Page refresh karein.");}
+  if(!root)throw new Error("Users section missing. Page refresh karein.");
   root.replaceChildren();
   const summary=document.createElement("p");
   summary.textContent="Registered customers: "+data.customers.length+" | Old/guest deposits: "+data.unlinkedDeposits.length;
   root.appendChild(summary);
   data.customers.forEach(customer=>{
    const card=document.createElement("article");card.className="card";
-   const title=document.createElement("h3");title.textContent=customer.email||"No email";
-   const info=document.createElement("p");
-   info.textContent="Joined: "+(customer.created_at||"")+" | Email verified: "+(customer.confirmed?"Yes":"No")+" | Approved deposits: ₹"+Number(customer.totalDeposited||0).toFixed(2)+" | Pending: ₹"+Number(customer.pendingDeposits||0).toFixed(2);
-   card.append(title,info);
-   const creditTitle=document.createElement("h4");creditTitle.textContent="Manual Wallet Credit";card.appendChild(creditTitle);
+   card.style.padding="14px";
+   const title=document.createElement("h3");
+   title.textContent=customer.name||"Customer";
+   title.style.margin="0 0 10px";
+   const toggle=document.createElement("button");
+   toggle.type="button";toggle.textContent="See Activity";toggle.style.width="100%";
+   const details=document.createElement("div");
+   details.hidden=true;details.style.marginTop="14px";details.style.borderTop="1px solid #334155";details.style.paddingTop="10px";
+   toggle.onclick=()=>{details.hidden=!details.hidden;toggle.textContent=details.hidden?"See Activity":"Hide Activity";};
+   card.append(title,toggle,details);
+   const line=(label,value)=>{
+    const row=document.createElement("p");row.style.margin="8px 0";row.style.paddingBottom="7px";row.style.borderBottom="1px solid #263247";
+    const strong=document.createElement("strong");strong.textContent=label+": ";
+    const span=document.createElement("span");span.textContent=String(value??"—");
+    row.append(strong,span);details.appendChild(row);
+   };
+   line("Email",customer.email||"No email");
+   line("Joined",customer.created_at||"—");
+   line("Email verified",customer.confirmed?"Yes":"No");
+   line("Approved deposits","₹"+Number(customer.totalDeposited||0).toFixed(2));
+   line("Pending deposits","₹"+Number(customer.pendingDeposits||0).toFixed(2));
+   const creditTitle=document.createElement("h4");creditTitle.textContent="Manual Wallet Credit";details.appendChild(creditTitle);
    const creditForm=document.createElement("form");
    const creditAmount=document.createElement("input");creditAmount.type="number";creditAmount.min="1";creditAmount.max="50000";creditAmount.step="0.01";creditAmount.required=true;creditAmount.placeholder="Amount (₹)";creditAmount.style.width="100%";
    const creditReason=document.createElement("input");creditReason.type="text";creditReason.minLength=3;creditReason.maxLength=200;creditReason.required=true;creditReason.placeholder="Reason (Bonus / Promotion / Correction)";creditReason.style.width="100%";
@@ -818,7 +835,7 @@ async function loadCustomers(){
     const amount=Number(creditAmount.value),reason=creditReason.value.trim();
     if(!Number.isFinite(amount)||amount<=0||amount>50000||Math.round(amount*100)!==amount*100){creditStatus.textContent="Amount ₹1 se ₹50,000 tak aur maximum 2 decimal places hona chahiye.";return;}
     if(reason.length<3){creditStatus.textContent="Reason kam se kam 3 characters ka likhein.";return;}
-    if(!confirm(customer.email+" ke wallet mein ₹"+amount.toFixed(2)+" add karna hai?"))return;
+    if(!confirm((customer.name||customer.email)+" ke wallet mein ₹"+amount.toFixed(2)+" add karna hai?"))return;
     creditButton.disabled=true;creditStatus.textContent="Balance add ho raha hai...";
     try{
      const result=await api("/api/admin/wallet-credit",{method:"POST",body:JSON.stringify({user_id:customer.id,amount,reason})});
@@ -827,25 +844,33 @@ async function loadCustomers(){
     }catch(err){creditStatus.textContent=err.message;}
     finally{creditButton.disabled=false;}
    };
-   card.appendChild(creditForm);
-   const depositsTitle=document.createElement("h4");depositsTitle.textContent="Deposit history ("+customer.deposits.length+")";card.appendChild(depositsTitle);
+   details.appendChild(creditForm);
+   const depositsTitle=document.createElement("h4");depositsTitle.textContent="Deposit history ("+customer.deposits.length+")";details.appendChild(depositsTitle);
+   if(!customer.deposits.length)line("Deposit history","No deposits yet");
    customer.deposits.forEach(d=>{
-    const p=document.createElement("p");
-    p.textContent="₹"+d.amount+" | "+d.status+" | UTR: "+d.transaction_id+" | "+(d.created_at||"");
-    card.appendChild(p);
+    line("Deposit","₹"+d.amount);
+    line("Deposit status",d.status);
+    line("Transaction ID",d.transaction_id||"—");
+    line("Deposit date",d.created_at||"—");
    });
-   const keysTitle=document.createElement("h4");keysTitle.textContent="Customer keys ("+customer.keys.length+")";keysTitle.style.marginTop="10px";card.appendChild(keysTitle);
-   if(!customer.keys.length){const none=document.createElement("p");none.textContent="No keys assigned.";card.appendChild(none);}
+   const keysTitle=document.createElement("h4");keysTitle.textContent="Customer keys ("+customer.keys.length+")";keysTitle.style.marginTop="10px";details.appendChild(keysTitle);
+   if(!customer.keys.length)line("Keys","No keys assigned");
    customer.keys.forEach(k=>{
-    const p=document.createElement("p");p.textContent=k.product_name+" | KEY: "+k.key_value+" | "+k.status+" | "+(k.created_at||"");card.appendChild(p);
+    line("Product",k.product_name||"—");
+    line("Key",k.key_value||"—");
+    line("Key status",k.status||"—");
+    line("Key date",k.created_at||"—");
    });
    root.appendChild(card);
   });
   if(data.unlinkedDeposits.length){
    const old=document.createElement("article");old.className="card";
-   const heading=document.createElement("h3");heading.textContent="Old / unlinked deposit requests";
-   old.appendChild(heading);
-   data.unlinkedDeposits.forEach(d=>{const p=document.createElement("p");p.textContent=(d.customer_email||"Guest")+" | ₹"+d.amount+" | "+d.status+" | UTR: "+d.transaction_id;old.appendChild(p);});
+   const heading=document.createElement("h3");heading.textContent="Old / unlinked deposit requests";old.appendChild(heading);
+   data.unlinkedDeposits.forEach(d=>{
+    const row=document.createElement("div");row.style.borderBottom="1px solid #334155";row.style.padding="8px 0";
+    [("Customer: "+(d.customer_email||"Guest")),("Amount: ₹"+d.amount),("Status: "+d.status),("Transaction ID: "+(d.transaction_id||"—")),("Date: "+(d.created_at||"—"))].forEach(value=>{const p=document.createElement("p");p.textContent=value;p.style.margin="5px 0";row.appendChild(p);});
+    old.appendChild(row);
+   });
    root.appendChild(old);
   }
  }catch(e){message.textContent=e.message;}
@@ -1170,6 +1195,7 @@ app.get("/api/admin/customers", isAdmin, async (req, res) => {
       return {
         id: user.id,
         email: user.email || "",
+        name: String(user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0] || "Customer").slice(0,100),
         created_at: user.created_at,
         confirmed: Boolean(user.email_confirmed_at),
         totalDeposited: userDeposits.filter(d => d.status === "approved").reduce((sum,d) => sum + Number(d.amount || 0), 0),
