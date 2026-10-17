@@ -871,20 +871,52 @@ async function uploadKeyGroupMedia(){
 }
 async function loadKeyGroups(){
  const root=document.getElementById("keyGroupList");if(!root)return;
- try{const data=await api("/api/admin/products");root.replaceChildren();const products=Array.isArray(data.products)?data.products:[];
-  const groups=new Map();products.forEach(p=>{const m=String(p.name||"").match(/^(.*?)\\s*-\\s*(.+)$/);const base=m?m[1].trim():p.name;if(!groups.has(base))groups.set(base,[]);groups.get(base).push(p);});
+ try{
+  const data=await api("/api/admin/products");
+  root.replaceChildren();
+  const products=Array.isArray(data.products)?data.products:[];
+  const groups=new Map();
+  products.forEach(p=>{const m=String(p.name||"").match(/^(.*?)\\s*-\\s*(.+)$/);const base=m?m[1].trim():String(p.name||"Unnamed key");if(!groups.has(base))groups.set(base,[]);groups.get(base).push(p);});
   if(!groups.size){root.textContent="Abhi koi key product nahi hai.";return;}
-  [...groups.entries()].forEach(([base,items])=>{const card=document.createElement("article");card.className="card";const title=document.createElement("h3");title.textContent=base;
-   const active=items.filter(p=>p.published);const info=document.createElement("p");info.textContent=active.length+" active duration option(s) · "+items.length+" saved option(s)";
-   const options=document.createElement("p");options.style.cssText="white-space:pre-line;line-height:1.8";options.textContent=items.map(p=>String(p.name).slice(base.length).replace(/^\\s*-\\s*/,"")+" — ₹"+Number(p.price).toFixed(2)+(p.published?"":" (hidden)")).join("\\n");
-   const edit=document.createElement("button");edit.textContent="Edit this key";edit.onclick=()=>{document.getElementById("keyGroupName").value=base;document.getElementById("keyGroupImageUrl").value=(items.find(p=>p.image_url)?.image_url)||"";document.getElementById("keyGroupVideoUrl").value=(items.find(p=>p.video_url)?.video_url)||"";
+  [...groups.entries()].sort((a,b)=>a[0].localeCompare(b[0],"en",{numeric:true,sensitivity:"base"})).forEach(([base,items])=>{
+   const card=document.createElement("article");card.className="card";card.style.cssText="padding:14px;margin:10px 0;border:1px solid #273548;border-radius:12px;background:#101722";
+   const header=document.createElement("div");header.style.cssText="display:flex;align-items:flex-start;justify-content:space-between;gap:10px";
+   const titleWrap=document.createElement("div");titleWrap.style.cssText="min-width:0;flex:1";
+   const title=document.createElement("h3");title.textContent=base;title.style.cssText="font-size:16px;line-height:1.35;margin:0 0 6px;overflow-wrap:anywhere";
+   const active=items.filter(p=>p.published);
+   const info=document.createElement("p");info.textContent=active.length+" active · "+items.length+" saved";info.style.cssText="font-size:12px;color:#9caec1;margin:0";
+   titleWrap.append(title,info);
+   const toggle=document.createElement("button");toggle.type="button";toggle.textContent="View durations & prices";toggle.setAttribute("aria-expanded","false");toggle.style.cssText="flex:0 0 auto;max-width:48%;padding:9px 10px;font-size:11px;line-height:1.3;background:#1d3540;color:#a5f3fc;border:1px solid #285563;border-radius:8px";
+   header.append(titleWrap,toggle);
+   const panel=document.createElement("div");panel.hidden=true;panel.style.cssText="margin-top:12px";
+   const planList=document.createElement("div");planList.style.cssText="display:grid;gap:7px";
+   const durationRank=label=>{const d=String(label||"").toLowerCase();const h=d.match(/(\\d+(?:\\.\\d+)?)\\s*(?:h|hr|hrs|hour|hours)\\b/);if(h)return Number(h[1]);const day=d.match(/(\\d+(?:\\.\\d+)?)\\s*(?:d|day|days)\\b/);if(day)return Number(day[1])*24;const m=d.match(/(\\d+(?:\\.\\d+)?)\\s*(?:m|min|mins|minute|minutes)\\b/);return m?Number(m[1])/60:999999;};
+   [...items].sort((a,b)=>durationRank(String(a.name||"").slice(base.length).replace(/^\\s*-\\s*/,""))-durationRank(String(b.name||"").slice(base.length).replace(/^\\s*-\\s*/,""))).forEach(p=>{
+    const row=document.createElement("div");row.style.cssText="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 11px;border:1px solid #263449;border-radius:9px;background:#0b111b";
+    const left=document.createElement("div");left.style.cssText="min-width:0;flex:1";
+    const duration=document.createElement("p");duration.textContent=String(p.name||"").slice(base.length).replace(/^\\s*-\\s*/,"")||"Standard";duration.style.cssText="font-size:13px;font-weight:700;color:#f1f5f9;overflow-wrap:anywhere";
+    const price=document.createElement("p");price.textContent="₹"+Number(p.price||0).toLocaleString("en-IN",{maximumFractionDigits:2});price.style.cssText="font-size:12px;color:#6ee7b7;margin-top:4px";
+    left.append(duration,price);
+    const status=document.createElement("span");status.textContent=p.published?"ACTIVE":"HIDDEN";status.style.cssText="flex:0 0 auto;font-size:10px;font-weight:700;color:"+(p.published?"#86efac":"#fca5a5")+";background:"+(p.published?"#123323":"#3a2027")+";padding:5px 7px;border-radius:6px";
+    row.append(left,status);planList.appendChild(row);
+   });
+   const edit=document.createElement("button");edit.type="button";edit.textContent="Edit key, durations & prices";edit.style.cssText="width:100%;margin-top:10px;padding:11px;font-size:12px;background:#39f58b;color:#062012;border-radius:8px;font-weight:700";
+   edit.onclick=()=>{
+    document.getElementById("keyGroupName").value=base;
+    document.getElementById("keyGroupImageUrl").value=(items.find(p=>p.image_url)?.image_url)||"";
+    document.getElementById("keyGroupVideoUrl").value=(items.find(p=>p.video_url)?.video_url)||"";
     document.getElementById("keyGroupImageFile").value="";document.getElementById("keyGroupVideoFile").value="";
     document.getElementById("keyGroupImageStatus").textContent=document.getElementById("keyGroupImageUrl").value?"Current photo saved. Nayi photo select karne par replace hogi.":"";
     document.getElementById("keyGroupVideoStatus").textContent=document.getElementById("keyGroupVideoUrl").value?"Current video saved. Nayi video select karne par replace hogi.":"";
-    document.getElementById("keyGroupPublished").checked=active.length>0;document.getElementById("keyPlanRows").replaceChildren();active.forEach(p=>addKeyPlanRow(String(p.name).slice(base.length).replace(/^\\s*-\\s*/,""),String(p.price)));
-    document.getElementById("keyEditor").hidden=false;
-    document.getElementById("keyGroupSave").textContent="Update Key and Durations";document.getElementById("keyGroupMessage").textContent="Editing: "+base;document.getElementById("keyGroupForm").scrollIntoView({behavior:"smooth",block:"center"});};
-   card.append(title,info,options,edit);root.appendChild(card);});
+    document.getElementById("keyGroupPublished").checked=active.length>0;document.getElementById("keyPlanRows").replaceChildren();
+    active.forEach(p=>addKeyPlanRow(String(p.name).slice(base.length).replace(/^\\s*-\\s*/,""),String(p.price)));
+    document.getElementById("keyEditor").hidden=false;document.getElementById("keyGroupSave").textContent="Update Key and Durations";
+    document.getElementById("keyGroupMessage").textContent="Editing: "+base;document.getElementById("keyGroupForm").scrollIntoView({behavior:"smooth",block:"center"});
+   };
+   panel.append(planList,edit);
+   toggle.onclick=()=>{const open=panel.hidden;panel.hidden=!open;toggle.setAttribute("aria-expanded",String(open));toggle.textContent=open?"Hide durations & prices":"View durations & prices";};
+   card.append(header,panel);root.appendChild(card);
+  });
  }catch(e){root.textContent=e.message||"Key products load nahi ho sake.";}
 }
 document.getElementById("addKeyPlan").onclick=()=>addKeyPlanRow();
