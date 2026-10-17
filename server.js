@@ -712,16 +712,16 @@ async function uploadKeyGroupMedia(){
 async function loadKeyGroups(){
  const root=document.getElementById("keyGroupList");if(!root)return;
  try{const data=await api("/api/admin/products");root.replaceChildren();const products=Array.isArray(data.products)?data.products:[];
-  const groups=new Map();products.forEach(p=>{const m=String(p.name||"").match(/^(.*?)\s*-\s*(.+)$/);const base=m?m[1].trim():p.name;if(!groups.has(base))groups.set(base,[]);groups.get(base).push(p);});
+  const groups=new Map();products.forEach(p=>{const m=String(p.name||"").match(/^(.*?)\\s*-\\s*(.+)$/);const base=m?m[1].trim():p.name;if(!groups.has(base))groups.set(base,[]);groups.get(base).push(p);});
   if(!groups.size){root.textContent="Abhi koi key product nahi hai.";return;}
   [...groups.entries()].forEach(([base,items])=>{const card=document.createElement("article");card.className="card";const title=document.createElement("h3");title.textContent=base;
    const active=items.filter(p=>p.published);const info=document.createElement("p");info.textContent=active.length+" active duration option(s) · "+items.length+" saved option(s)";
-   const options=document.createElement("p");options.style.cssText="white-space:pre-line;line-height:1.8";options.textContent=items.map(p=>String(p.name).slice(base.length).replace(/^\s*-\s*/,"")+" — ₹"+Number(p.price).toFixed(2)+(p.published?"":" (hidden)")).join("\n");
+   const options=document.createElement("p");options.style.cssText="white-space:pre-line;line-height:1.8";options.textContent=items.map(p=>String(p.name).slice(base.length).replace(/^\\s*-\\s*/,"")+" — ₹"+Number(p.price).toFixed(2)+(p.published?"":" (hidden)")).join("\n");
    const edit=document.createElement("button");edit.textContent="Edit this key";edit.onclick=()=>{document.getElementById("keyGroupName").value=base;document.getElementById("keyGroupImageUrl").value=(items.find(p=>p.image_url)?.image_url)||"";document.getElementById("keyGroupVideoUrl").value=(items.find(p=>p.video_url)?.video_url)||"";
     document.getElementById("keyGroupImageFile").value="";document.getElementById("keyGroupVideoFile").value="";
     document.getElementById("keyGroupImageStatus").textContent=document.getElementById("keyGroupImageUrl").value?"Current photo saved. Nayi photo select karne par replace hogi.":"";
     document.getElementById("keyGroupVideoStatus").textContent=document.getElementById("keyGroupVideoUrl").value?"Current video saved. Nayi video select karne par replace hogi.":"";
-    document.getElementById("keyGroupPublished").checked=active.length>0;document.getElementById("keyPlanRows").replaceChildren();active.forEach(p=>addKeyPlanRow(String(p.name).slice(base.length).replace(/^\s*-\s*/,""),String(p.price)));
+    document.getElementById("keyGroupPublished").checked=active.length>0;document.getElementById("keyPlanRows").replaceChildren();active.forEach(p=>addKeyPlanRow(String(p.name).slice(base.length).replace(/^\\s*-\\s*/,""),String(p.price)));
     document.getElementById("keyGroupSave").textContent="Update Key and Durations";document.getElementById("keyGroupMessage").textContent="Editing: "+base;document.getElementById("keyGroupForm").scrollIntoView({behavior:"smooth",block:"center"});};
    card.append(title,info,options,edit);root.appendChild(card);});
  }catch(e){root.textContent=e.message||"Key products load nahi ho sake.";}
