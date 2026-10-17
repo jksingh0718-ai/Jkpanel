@@ -670,7 +670,6 @@ function deposit(){
   }
   document.getElementById('popupTitle').textContent = 'Deposit';
   document.getElementById('popupMessage').innerHTML =
-    
     '<label for="depositAmount">Deposit Amount (₹)</label>' +
     '<input id="depositAmount" type="number" min="1" max="50000" step="1" placeholder="Amount enter karein" style="width:100%;padding:12px;box-sizing:border-box;border:1px solid #ccc;border-radius:8px;margin:6px 0 12px;">' +
     '<label for="depositMobile">Mobile Number</label>' +
@@ -678,6 +677,10 @@ function deposit(){
     '<button class="action" type="button" id="createPaymentBtn" onclick="startNovapayPayment()">Pay Instantly</button>' +
     '<div id="depositStatus" style="margin-top:12px;overflow-wrap:anywhere;"></div>' +
     '<button class="action" type="button" id="verifyPaymentBtn" onclick="checkNovapayPayment()" style="display:none;margin-top:10px;">Verify Payment / Update Wallet</button>';
+  if (localStorage.getItem('jk_novapay_pending_order')) {
+    document.getElementById('verifyPaymentBtn').style.display = 'block';
+    document.getElementById('depositStatus').textContent = 'Pichhla payment verify karne ke liye neeche button dabayein.';
+  }
   document.getElementById('popup').style.display = 'flex';
 }
 
