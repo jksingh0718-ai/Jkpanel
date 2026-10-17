@@ -421,6 +421,7 @@ async function loadMyAccountSummary(){
   try{
     const data=await customerApi('/api/my-account');
     isResellerCustomer=Boolean(data.isReseller);
+    currentResellerActivationPrice=Number(data.resellerActivationPrice??99);
     updateResellerUI();
     updateAccountBar(data.user.email);
     const stat=document.getElementById('referralStatCount');
@@ -543,9 +544,10 @@ function openKeysPanel(){
   }).catch(e=>{root.replaceChildren();const p=document.createElement('p');p.textContent=e.message;root.appendChild(p);});
 }
 
+let currentResellerActivationPrice=99;
 function updateResellerUI(){
  const promo=document.getElementById('resellerPromo');
- if(promo)promo.style.display=isResellerCustomer?'none':'block';
+ if(promo){promo.style.display=isResellerCustomer?'none':'block';const button=promo.querySelector('button');if(button)button.textContent='MAKE RESELLER ONLY ₹'+currentResellerActivationPrice;}
  document.querySelectorAll('#shopProducts button').forEach(button=>{
   if(button.textContent==='PURCHASE KEY'||button.textContent==='BUY RESELLER KEY'){
    button.textContent=isResellerCustomer?'BUY RESELLER KEY':'PURCHASE KEY';
@@ -559,13 +561,13 @@ function openResellerActivation(){
  if(!root||!title||!popup)return;
  if(!localStorage.getItem('jk_customer_access_token')){openAuth('login');return;}
  root.replaceChildren();
- title.textContent='MAKE RESELLER · ₹99';
+ title.textContent='MAKE RESELLER · ₹'+currentResellerActivationPrice;
  const note=document.createElement('p');
- note.textContent='Reseller Partner activation ke liye ₹99 payment karein. Payment gateway par QR/UPI option available ho to wahan se scan karein.';
+ note.textContent='Reseller Partner activation ke liye ₹'+currentResellerActivationPrice+' payment karein. Payment gateway par QR/UPI option available ho to wahan se scan karein.';
  note.style.cssText='line-height:1.6;color:#cbd5e1;margin:4px 0 12px';
  root.appendChild(note);
  const amount=document.createElement('div');
- amount.textContent='PAYABLE AMOUNT  ₹99';
+ amount.textContent='PAYABLE AMOUNT  ₹'+currentResellerActivationPrice;
  amount.style.cssText='font-size:22px;font-weight:900;text-align:center;color:#facc15;padding:12px;border:1px solid #854d0e;border-radius:10px;margin-bottom:14px';
  root.appendChild(amount);
  const label=document.createElement('label');
@@ -577,7 +579,7 @@ function openResellerActivation(){
  mobile.style.cssText='width:100%;padding:13px;border:1px solid #475569;border-radius:9px;background:#0f172a;color:#fff;margin-bottom:10px';
  root.appendChild(mobile);
  const status=document.createElement('p');status.id='resellerPayStatus';status.style.cssText='font-size:12px;color:#cbd5e1;line-height:1.5;margin:8px 0';root.appendChild(status);
- const pay=document.createElement('button');pay.type='button';pay.textContent='PAY ₹99 & ACTIVATE';pay.style.cssText='display:block;width:100%;padding:14px;background:#facc15;color:#1c1917;font-weight:900;border-radius:10px';
+ const pay=document.createElement('button');pay.type='button';pay.textContent='PAY ₹'+currentResellerActivationPrice+' & ACTIVATE';pay.style.cssText='display:block;width:100%;padding:14px;background:#facc15;color:#1c1917;font-weight:900;border-radius:10px';
  pay.onclick=()=>startResellerPayment();root.appendChild(pay);
  const check=document.createElement('button');check.type='button';check.textContent='CHECK PAYMENT STATUS';check.style.cssText='display:block;width:100%;padding:12px;margin-top:8px;background:#334155;color:#f8fafc;font-weight:800;border-radius:10px';
  check.onclick=()=>checkResellerPayment();root.appendChild(check);
@@ -588,9 +590,9 @@ async function startResellerPayment(){
  const mobile=document.getElementById('resellerPayMobile')?.value.trim();
  const status=document.getElementById('resellerPayStatus');
  if(!/^[6-9]\d{9}$/.test(mobile||'')){if(status)status.textContent='Valid 10-digit Indian mobile number enter karein.';return;}
- if(status)status.textContent='₹99 payment order ban raha hai...';
+ if(status)status.textContent='₹'+currentResellerActivationPrice+' payment order ban raha hai...';
  try{
-  const result=await customerApi('/api/payments/novapay/create-order',{method:'POST',body:JSON.stringify({purpose:'reseller',amount:99,customer_mobile:mobile})});
+  const result=await customerApi('/api/payments/novapay/create-order',{method:'POST',body:JSON.stringify({purpose:'reseller',amount:currentResellerActivationPrice,customer_mobile:mobile})});
   resellerPaymentOrderId=result.order_id||'';
   if(!result.payment_url)throw new Error('Payment page link nahi mila.');
   if(status)status.textContent='Payment page khol raha hai. Payment complete karne ke baad website par wapas aakar CHECK PAYMENT STATUS dabayein.';
@@ -599,7 +601,7 @@ async function startResellerPayment(){
 }
 async function checkResellerPayment(){
  const status=document.getElementById('resellerPayStatus');
- if(!resellerPaymentOrderId){if(status)status.textContent='Pehle PAY ₹99 & ACTIVATE dabakar payment order banayein.';return;}
+ if(!resellerPaymentOrderId){if(status)status.textContent='Pehle PAY ₹'+currentResellerActivationPrice+' & ACTIVATE dabakar payment order banayein.';return;}
  if(status)status.textContent='Payment verify ho raha hai...';
  try{
   const result=await customerApi('/api/payments/novapay/check-status',{method:'POST',body:JSON.stringify({order_id:resellerPaymentOrderId})});
