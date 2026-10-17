@@ -1414,5 +1414,27 @@ loadShopProducts();
 <script>
 (function(){try{const token=localStorage.getItem('jk_customer_access_token');const cached=JSON.parse(localStorage.getItem('jk_wallet_balance_cache')||sessionStorage.getItem('jk_wallet_balance_cache')||'null');const promo=document.getElementById('resellerPromo');if(promo&&token){promo.style.display='none';}if(cached&&token&&Number.isFinite(cached.balance)){const el=document.getElementById('walletBalanceStat');if(el)el.textContent='₹'+cached.balance.toFixed(2);if(promo&&cached.isReseller)promo.style.display='none';}}catch(_){}})();
 </script>
+<script>
+/* JKPanel UI recovery: clear stale modal/menu layers on fresh load or browser restore. */
+(function () {
+  function jkResetStuckLayers() {
+    try {
+      const popup = document.getElementById('popup');
+      const sidebar = document.getElementById('sidebar');
+      const backdrop = document.getElementById('backdrop');
+      const depositPage = document.getElementById('jkDepositPage');
+      if (popup) popup.style.display = 'none';
+      if (sidebar) sidebar.style.display = 'none';
+      if (backdrop) backdrop.style.display = 'none';
+      if (depositPage) depositPage.style.display = 'none';
+      if (document.body) document.body.classList.remove('menu-open', 'popup-open');
+    } catch (error) {
+      console.error('JKPanel UI recovery:', error);
+    }
+  }
+  jkResetStuckLayers();
+  window.addEventListener('pageshow', jkResetStuckLayers);
+})();
+</script>
 </body>
 </html>
