@@ -1109,6 +1109,17 @@ function aimHackLabel(name){
  return value;
 }
 
+function shopDurationRank(value){
+ const d=String(value||'').toLowerCase().replace(/[_-]/g,' ').trim();
+ const hour=d.match(/(?:^|\s)(\d+(?:\.\d+)?)\s*(?:h|hr|hrs|hour|hours)\b/);
+ if(hour)return Number(hour[1]);
+ const day=d.match(/(?:^|\s)(\d+(?:\.\d+)?)\s*(?:d|day|days)\b/);
+ if(day)return Number(day[1])*24;
+ const minute=d.match(/(?:^|\s)(\d+(?:\.\d+)?)\s*(?:m|min|mins|minute|minutes)\b/);
+ if(minute)return Number(minute[1])/60;
+ return 100000;
+}
+
 async function loadShopProducts(){
  const root=document.getElementById('shopProducts');
  if(!root)return;
@@ -1166,9 +1177,8 @@ async function loadShopProducts(){
     purchase.setAttribute('aria-expanded',String(open));
     purchase.textContent=isResellerCustomer?'BUY RESELLER KEY':'PURCHASE KEY';
    };
-   const durationRank=duration=>{const d=String(duration).toLowerCase().replace(/\s+/g,'');if(d.includes('6hour')||d.includes('6hr'))return 6;if(d.includes('12hour')||d.includes('12hr'))return 12;if(d.includes('1day')||d.includes('24hour')||d.includes('24hr'))return 24;if(d.includes('7day'))return 168;return 9999;};
-   dripProducts.sort((a,b)=>durationRank((a.name||'').replace(/^DRIP Wire\s*-\s*/i,''))-durationRank((b.name||'').replace(/^DRIP Wire\s*-\s*/i,'')));
-   dripProducts.forEach(product=>{
+   dripProducts.sort((a,b)=>shopDurationRank((a.name||'').replace(/^DRIP Wire\s*-\s*/i,''))-shopDurationRank((b.name||'').replace(/^DRIP Wire\s*-\s*/i,'')));
+    dripProducts.forEach(product=>{
     const duration=(product.name||'DRIP Wire').replace(/^DRIP Wire\s*-\s*/i,'').trim()||'Duration';
     const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 0;border-bottom:1px solid #263247';
     const details=document.createElement('div');details.style.cssText='min-width:0;flex:1';
@@ -1212,9 +1222,8 @@ async function loadShopProducts(){
    purchase.style.cssText='display:block;width:100%;padding:14px;background:linear-gradient(90deg,#8b5cf6,#c084fc);color:#1e103d;font-size:14px;border-radius:10px';
    const plans=document.createElement('div');plans.hidden=true;plans.style.cssText='margin-top:12px;display:none';
    purchase.onclick=()=>{const open=plans.style.display==='none';plans.style.display=open?'block':'none';plans.hidden=!open;purchase.setAttribute('aria-expanded',String(open));purchase.textContent=isResellerCustomer?'BUY RESELLER KEY':'PURCHASE KEY';};
-   const durationRank=duration=>{const d=String(duration).toLowerCase().replace(/\s+/g,'');const ranks={'1hour':1,'3hours':3,'6hours':6,'12hours':12,'1day':24,'3days':72,'7days':168,'30days':720};return ranks[d]||9999;};
-   aimProducts.sort((a,b)=>durationRank(aimHackLabel(a.name))-durationRank(aimHackLabel(b.name)));
-   const seen=new Set();
+   aimProducts.sort((a,b)=>shopDurationRank(aimHackLabel(a.name))-shopDurationRank(aimHackLabel(b.name)));
+    const seen=new Set();
    aimProducts.forEach(product=>{
     const duration=aimHackLabel(product.name);
     const key=duration.toLowerCase();
@@ -1261,7 +1270,11 @@ async function loadShopProducts(){
     const purchase=document.createElement('button');purchase.type='button';purchase.textContent=isResellerCustomer?'BUY RESELLER KEY':'PURCHASE KEY';purchase.setAttribute('aria-expanded','false');purchase.style.cssText='display:block;width:100%;padding:14px;background:#06b6d4;color:#082f49;font-size:14px;border-radius:10px';
     const plans=document.createElement('div');plans.hidden=true;plans.style.cssText='display:none;margin-top:10px';
     purchase.onclick=()=>{const open=plans.style.display==='none';plans.style.display=open?'block':'none';plans.hidden=!open;purchase.setAttribute('aria-expanded',String(open));};
-    group.forEach(product=>{
+    [...group].sort((a,b)=>{
+      const da=String(a.name||'').slice(base.length).replace(/^\s*-\s*/,'').trim();
+      const db=String(b.name||'').slice(base.length).replace(/^\s*-\s*/,'').trim();
+      return shopDurationRank(da)-shopDurationRank(db);
+     }).forEach(product=>{
      const duration=String(product.name||'').slice(base.length).replace(/^\s*-\s*/,'').trim();
      const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid #263247';
      const details=document.createElement('div');details.style.cssText='min-width:0;flex:1';
