@@ -629,7 +629,7 @@ document.getElementById("loginForm").onsubmit=async e=>{
   document.getElementById("login").hidden=true;
   document.getElementById("dashboard").hidden=false;
   message.textContent="Login successful. Admin panel loading...";
-  await Promise.allSettled([loadOrders(),loadCustomers(),loadProducts(),loadKeyGroups()]);
+  await Promise.allSettled([loadOrders(),loadCustomers(),loadProducts(),loadKeyGroups(),loadResellers()]);
   if(!message.textContent) message.textContent="Admin panel ready.";
  }catch(err){
   message.textContent=err.message||"Login failed. Password aur Render environment setting check karein.";
@@ -918,7 +918,6 @@ loadOrders();
 loadCustomers();
 loadProducts();
 loadKeyGroups();
-loadResellers();
 clearKeyGroupForm();
 </script>
 </main></body></html>`);
