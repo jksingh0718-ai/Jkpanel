@@ -389,13 +389,19 @@ app.get("/admin", (req, res) => {
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>JKPanel Admin</title>
 <style>
-body{font-family:Arial;background:#080c12;color:white;padding:24px}
+body{font-family:Arial;background:#080c12;color:white;padding:14px}
 main{max-width:850px;margin:auto}
-input,button,select{padding:12px;margin:6px 0;border-radius:6px}
+input,button,select,textarea{padding:12px;margin:6px 0;border-radius:6px;max-width:100%;box-sizing:border-box}
 input{max-width:100%}
 button{cursor:pointer;background:#39f58b;border:0;font-weight:bold}
 .card{background:#111923;padding:16px;margin:12px 0;border-radius:10px;overflow-wrap:anywhere}
 small{color:#a6b2c0}
+.admin-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:18px 0}
+.admin-tabs button{padding:12px 6px;background:#1e293b;color:#e2e8f0;border:1px solid #334155}
+.admin-tabs button.active{background:#39f58b;color:#062012}
+.admin-section{display:none}.admin-section.active{display:block}
+.search-box{width:100%;background:#0b1220;color:white;border:1px solid #334155;padding:13px;margin:8px 0 14px}
+@media(max-width:480px){body{padding:10px}.admin-tabs button{font-size:12px}}
 </style>
 </head>
 <body><main>
@@ -408,12 +414,23 @@ small{color:#a6b2c0}
 </form>
 </section>
 <section id="dashboard" hidden>
-<button id="refresh">Refresh Orders</button>
-<button id="refreshCustomers">Customers / Deposits / Keys</button>
 <button id="logout">Logout</button>
-<div id="orders"></div>
-
-<h2 style="margin-top:24px">Manage Products</h2>
+<div class="admin-tabs" role="tablist">
+ <button type="button" class="active" data-tab="users">Users</button>
+ <button type="button" data-tab="products">Products</button>
+ <button type="button" data-tab="keys">Keys Management</button>
+</div>
+<section id="tab-users" class="admin-section active">
+ <h2>Users</h2>
+ <input id="userSearch" class="search-box" type="search" placeholder="Search users by name, email or ID...">
+ <button id="refreshCustomers">Refresh Users</button>
+ <div id="customerList"></div>
+</section>
+<section id="tab-products" class="admin-section">
+ <h2>Products</h2>
+ <input id="productSearch" class="search-box" type="search" placeholder="Search products...">
+ <button id="refreshProducts">Refresh Products</button>
+ <h3 style="margin-top:16px">Add / Edit Product</h3>
 <div class="card">
  <form id="productForm">
   <input id="productId" type="hidden">
@@ -440,13 +457,33 @@ small{color:#a6b2c0}
  <p id="productMessage" role="status"></p>
 </div>
 <div id="productList"></div>
-
-<h2 style="margin-top:24px">Customers, Deposits & Keys</h2>
-<div id="customerList"></div>
+</section>
+<section id="tab-keys" class="admin-section">
+ <h2>Keys Management</h2>
+ <p style="color:#a6b2c0">Key records linked to existing orders/users can be searched here.</p>
+ <input id="keySearch" class="search-box" type="search" placeholder="Search key/order records...">
+ <button id="refreshKeys">Refresh Key Records</button>
+ <div id="keyList"></div>
+</section>
 </section>
 <p id="message" role="status"></p>
 <script>
 const message=document.getElementById("message");
+document.querySelectorAll("[data-tab]").forEach(button=>button.addEventListener("click",()=>{
+ document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b===button));
+ document.querySelectorAll(".admin-section").forEach(section=>section.classList.toggle("active",section.id==="tab-"+button.dataset.tab));
+}));
+function filterCards(inputId,containerId){
+ const input=document.getElementById(inputId),container=document.getElementById(containerId);
+ if(!input||!container)return;
+ input.addEventListener("input",()=>{
+  const q=input.value.trim().toLowerCase();
+  container.querySelectorAll(".card").forEach(card=>card.style.display=card.textContent.toLowerCase().includes(q)?"":"none");
+ });
+}
+filterCards("userSearch","customerList");
+filterCards("productSearch","productList");
+filterCards("keySearch","keyList");
 async function api(url,options={}){
  const response=await fetch(url,{...options,headers:{"Content-Type":"application/json",...(options.headers||{})}});
  const data=await response.json();
@@ -689,8 +726,9 @@ async function loadCustomers(){
  }catch(e){message.textContent=e.message;}
 }
 
-document.getElementById("refreshCustomers").onclick=async()=>{await loadCustomers();await loadProducts();};
-document.getElementById("refresh").onclick=async()=>{await loadOrders();await loadCustomers();await loadProducts();};
+document.getElementById("refreshCustomers").onclick=async()=>{await loadCustomers();};
+document.getElementById("refreshProducts").onclick=async()=>{await loadProducts();};
+document.getElementById("refreshKeys").onclick=async()=>{await loadCustomers();};
 document.getElementById("logout").onclick=async()=>{
  try{await api("/api/admin/logout",{method:"POST"});}catch(e){}
  document.getElementById("dashboard").hidden=true;
