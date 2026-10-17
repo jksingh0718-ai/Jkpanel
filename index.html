@@ -716,36 +716,49 @@ function setBottomNavActive(name){
   });
 }
 function navigateBottom(name){
+  // Recover any stuck overlay first so the page remains clickable.
   try{closePopup();}catch(e){}
   try{closeMenu();}catch(e){}
+  document.body.classList.remove('menu-open','popup-open');
+  const popup=document.getElementById('popup');
+  if(popup)popup.style.display='none';
+  const sidebar=document.getElementById('sidebar');
+  if(sidebar)sidebar.style.display='none';
+  const backdrop=document.getElementById('backdrop');
+  if(backdrop)backdrop.style.display='none';
   const depositPage=document.getElementById('jkDepositPage');
   if(depositPage)depositPage.style.display='none';
-  if(name==='home'){
-    setBottomNavActive('home');
-    window.scrollTo({top:0,behavior:'smooth'});
-    return;
-  }
-  if(name==='store'){
-    setBottomNavActive('store');
-    const target=document.getElementById('products');
-    if(target)target.scrollIntoView({behavior:'smooth',block:'start'});
-    return;
-  }
-  if(name==='keys'){
-    setBottomNavActive('keys');
-    if(!localStorage.getItem('jk_customer_access_token')){openAuth('login');return;}
-    openKeysPanel();
-    return;
-  }
-  if(name==='deposit'){
-    setBottomNavActive('deposit');
-    deposit();
-    return;
-  }
-  if(name==='profile'){
-    setBottomNavActive('profile');
-    if(localStorage.getItem('jk_customer_access_token'))openProfilePanel();
-    else openAuth('login');
+  try{
+    if(name==='home'){
+      setBottomNavActive('home');
+      window.scrollTo({top:0,behavior:'smooth'});
+      return;
+    }
+    if(name==='store'){
+      setBottomNavActive('store');
+      const target=document.getElementById('products');
+      if(target)target.scrollIntoView({behavior:'smooth',block:'start'});
+      return;
+    }
+    if(name==='keys'){
+      setBottomNavActive('keys');
+      if(!localStorage.getItem('jk_customer_access_token')){openAuth('login');return;}
+      openKeysPanel();
+      return;
+    }
+    if(name==='deposit'){
+      setBottomNavActive('deposit');
+      deposit();
+      return;
+    }
+    if(name==='profile'){
+      setBottomNavActive('profile');
+      if(localStorage.getItem('jk_customer_access_token'))openProfilePanel();
+      else openAuth('login');
+    }
+  }catch(error){
+    console.error('Navigation error:',error);
+    try{showPopup('Please try again','Page ko open karne mein problem hui. Page refresh karke dobara try karein.');}catch(e){}
   }
 }
 
