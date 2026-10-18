@@ -1200,12 +1200,25 @@ function feature(name){
   showPopup(name, name + ' section abhi setup nahi hua hai. Is feature ko use karne ke liye admin/backend setup zaroori hai.');
 }
 
+function showHistoryDashboardBack(popup){
+  const card=popup?.querySelector('.popup-card');
+  const root=document.getElementById('popupMessage');
+  const btn=document.getElementById('popupDefaultClose');
+  if(card)card.style.cssText='display:flex!important;flex-direction:column!important;max-height:calc(100dvh - 24px)!important;overflow:hidden!important;box-sizing:border-box!important';
+  if(root)root.style.cssText='flex:1 1 auto!important;min-height:0!important;overflow-y:auto!important;padding-bottom:12px!important';
+  if(btn){
+    btn.style.cssText='display:block!important;position:relative!important;flex:0 0 auto!important;visibility:visible!important;opacity:1!important;z-index:99999!important;width:100%!important;min-height:50px!important;box-sizing:border-box!important;margin:10px 0 0!important;padding:14px!important;background:linear-gradient(110deg,#06b6d4,#2563eb,#7c3aed)!important;color:#fff!important;border:2px solid #93c5fd!important;border-radius:12px!important;font-size:15px!important;font-weight:900!important;box-shadow:0 4px 18px #2563eb77!important';
+    btn.textContent='← BACK TO DASHBOARD';
+    btn.onclick=closePopup;
+  }
+}
 async function openDepositHistoryPanel(){
   closeMenu();
   const popup=document.getElementById('popup');
   popup.classList.add('history-screen');
   const defaultClose=document.getElementById('popupDefaultClose');
   if(defaultClose){defaultClose.style.display='block';defaultClose.textContent='← DASHBOARD';defaultClose.onclick=closePopup;defaultClose.style.cssText='display:block!important;background:linear-gradient(110deg,#06b6d4,#2563eb,#7c3aed)!important;color:#fff!important;border:1px solid #93c5fd!important;width:100%!important;min-height:46px!important;padding:13px!important;margin:8px 0 10px!important;font-weight:900!important;border-radius:10px!important;box-shadow:0 4px 14px #2563eb55!important';}
+  showHistoryDashboardBack(popup);
   const root=document.getElementById('popupMessage');
   document.getElementById('popupTitle').textContent='Deposit History';
   root.replaceChildren();
@@ -1264,6 +1277,7 @@ async function openOrderHistoryPanel(){
   popup.classList.add('history-screen');
   const defaultClose=document.getElementById('popupDefaultClose');
   if(defaultClose){defaultClose.style.display='block';defaultClose.textContent='← DASHBOARD';defaultClose.onclick=closePopup;defaultClose.style.cssText='display:block!important;background:linear-gradient(110deg,#06b6d4,#2563eb,#7c3aed)!important;color:#fff!important;border:1px solid #93c5fd!important;width:100%!important;min-height:46px!important;padding:13px!important;margin:8px 0 10px!important;font-weight:900!important;border-radius:10px!important;box-shadow:0 4px 14px #2563eb55!important';}
+  showHistoryDashboardBack(popup);
   const root=document.getElementById('popupMessage');
   document.getElementById('popupTitle').textContent='Order History';
   root.replaceChildren();
