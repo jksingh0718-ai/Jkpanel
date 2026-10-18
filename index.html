@@ -291,6 +291,24 @@ body.jk-keys-only{padding-bottom:calc(80px + env(safe-area-inset-bottom))!import
 body.jk-keys-only #bottomNav,body.jk-referral-only #bottomNav{display:grid!important;visibility:visible!important;opacity:1!important;}
 @media(max-width:420px){#bottomNav{gap:2px;padding-left:5px;padding-right:5px;}#bottomNav button{font-size:10px;}}
 
+
+/* Logout confirmation is a designed screen rather than the default plain popup. */
+#popup.logout-screen{inset:0 0 calc(70px + env(safe-area-inset-bottom)) 0!important;background:linear-gradient(145deg,#0b2344,#172554 52%,#4c1d95)!important;z-index:250!important;}
+#popup.logout-screen .popup-card{background:transparent!important;}
+/* Give Order History a rich blue-violet backdrop and colorful order cards. */
+#popup.history-screen:not(.account-screen){background:radial-gradient(ellipse at 10% 0%,#1d4ed855,transparent 40%),radial-gradient(ellipse at 100% 100%,#7e22ce33,transparent 42%),linear-gradient(145deg,#07182b,#101a36 52%,#21163b)!important;}
+#popup.history-screen:not(.account-screen) .popup-card{background:linear-gradient(145deg,#0c1d35,#111b36 55%,#21183d)!important;border-color:#354b78!important;}
+#popup.history-screen:not(.account-screen) #popupTitle{color:#bfdbfe!important;}
+#popup.history-screen:not(.account-screen) #popupMessage{color:#e2e8f0!important;}
+#popup.history-screen:not(.account-screen) #popupMessage h4{color:#bfdbfe!important;}
+#popup.history-screen:not(.account-screen) #popupDefaultClose{background:linear-gradient(100deg,#ef4444,#be123c)!important;color:#fff!important;border:0!important;border-radius:10px!important;}
+/* Restore a clearly visible illustrated night-sky banner in the bottom Profile tab. */
+#popup.profile-sky-screen .jk-profile-sky{background-color:#172554!important;background-image:radial-gradient(circle at 12% 24%,#fff 0 1px,transparent 2px),radial-gradient(circle at 24% 62%,#bae6fd 0 1px,transparent 2px),radial-gradient(circle at 38% 17%,#fff 0 1px,transparent 2px),radial-gradient(circle at 58% 34%,#fff 0 1px,transparent 2px),radial-gradient(circle at 72% 19%,#c4b5fd 0 2px,transparent 3px),radial-gradient(circle at 86% 49%,#fff 0 1px,transparent 2px),radial-gradient(circle at 91% 17%,#bae6fd 0 1px,transparent 2px),radial-gradient(circle at 50% 115%,#7c3aed 0%,transparent 58%),linear-gradient(145deg,#020617 0%,#172554 43%,#2563eb 76%,#6d28d9 100%)!important;background-size:100% 100%!important;background-position:center!important;border-radius:0 0 26px 26px!important;box-shadow:inset 0 -25px 35px #02061766!important;}
+#popup.profile-sky-screen .jk-profile-sky .sky-stars,#popup.profile-sky-screen .jk-profile-sky .sky-moon{display:block!important;}
+#popup.profile-sky-screen .jk-profile-sky .sky-moon{position:absolute!important;display:block!important;width:38px!important;height:38px!important;right:13%!important;top:22%!important;border-radius:50%!important;background:#fef3c7!important;box-shadow:0 0 22px #fde68a99!important;}
+#popup.profile-sky-screen .jk-profile-sky .sky-cloud{display:block!important;position:absolute!important;width:150px!important;height:32px!important;bottom:10px!important;left:-18px!important;background:#64748b66!important;border-radius:50%!important;filter:blur(10px)!important;}
+#popup.profile-sky-screen .jk-profile-sky .sky-cloud.back{left:auto!important;right:-24px!important;bottom:0!important;background:#a78bfa55!important;}
+
 </style>
 </head>
 <body>
@@ -566,7 +584,20 @@ async function loginCustomer(){
   }catch(e){status.textContent=e.message;}
 }
 async function logoutCustomer(){
-  clearCustomerSession();isResellerCustomer=false;updateResellerUI();updateAccountBar('');showPopup('Logout','Aap logout ho gaye hain.');
+  clearCustomerSession();isResellerCustomer=false;updateResellerUI();updateAccountBar('');
+  closeMenu();
+  const popup=document.getElementById('popup');
+  const root=document.getElementById('popupMessage');
+  const title=document.getElementById('popupTitle');
+  const card=popup.querySelector('.popup-card');
+  popup.classList.remove('history-screen','auth-screen','account-screen','profile-sky-screen');popup.classList.add('logout-screen');
+  const close=document.getElementById('popupDefaultClose');if(close)close.style.display='none';
+  title.style.display='none';
+  popup.style.cssText='display:flex;position:fixed;inset:0 0 calc(70px + env(safe-area-inset-bottom)) 0;z-index:250;padding:0;overflow:hidden;align-items:stretch;justify-content:stretch;background:linear-gradient(145deg,#0b2344,#172554 52%,#4c1d95)';
+  card.style.cssText='display:flex;align-items:center;justify-content:center;box-sizing:border-box;width:100%;max-width:none;height:100%;max-height:none;min-height:0;overflow-y:auto;margin:0;padding:24px;border:0;border-radius:0;background:transparent;box-shadow:none';
+  root.style.cssText='display:block;width:100%;padding:0;margin:0;overflow:visible';
+  root.innerHTML='<div style="max-width:360px;margin:0 auto;text-align:center;color:#f8fafc;padding:28px 20px;border:1px solid #93c5fd55;border-radius:24px;background:linear-gradient(145deg,#172554dd,#312e81dd);box-shadow:0 18px 55px #02061788"><div style="width:76px;height:76px;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;border-radius:50%;font-size:36px;color:#d1fae5;background:linear-gradient(145deg,#059669,#0e7490);border:3px solid #a7f3d0">✓</div><div style="font-size:11px;letter-spacing:2px;color:#93c5fd;font-weight:900">JK PANEL SHOP</div><h2 style="font-size:25px;margin:12px 0 8px;color:#fff">Logout Successful</h2><p style="font-size:14px;line-height:1.7;color:#dbeafe;margin:0 0 24px">Aap logout ho gaye hain.</p><button type="button" onclick="closePopup();navigateBottom(\'home\')" style="width:100%;padding:14px;border:0;border-radius:12px;background:linear-gradient(100deg,#38bdf8,#818cf8);color:#07152d;font-size:14px;font-weight:900;cursor:pointer">HOME PAR JAYEIN</button></div>';
+  popup.style.display='flex';
 }
 async function loadMyAccountSummary(){
   try{
@@ -1170,7 +1201,7 @@ async function openDepositHistoryPanel(){
     const stats=document.createElement('div');
     stats.style.cssText='display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:2px 0 18px';
     [['TOTAL DEPOSIT',sum(successful)],['THIS MONTH',sum(successful.filter(x=>sameMonth(x.created_at?new Date(x.created_at):null)))],['TODAY',sum(successful.filter(x=>sameDay(x.created_at?new Date(x.created_at):null))) ]].forEach(([label,value])=>{
-      const card=document.createElement('div');card.style.cssText='min-width:0;padding:11px 7px;background:#0b1220;border:1px solid #155e75;border-radius:10px;text-align:center';
+      const card=document.createElement('div');card.style.cssText='min-width:0;padding:11px 7px;background:linear-gradient(145deg,#102c4c,#30215a);border:1px solid #3b82f6;border-radius:12px;text-align:center;box-shadow:0 7px 18px #02061755';
       const amount=document.createElement('b');amount.textContent='₹'+Number(value).toFixed(2);amount.style.cssText='display:block;color:#22d3ee;font-size:clamp(13px,3.7vw,18px);overflow-wrap:anywhere;margin-bottom:7px';
       const caption=document.createElement('span');caption.textContent=label;caption.style.cssText='font-size:8px;color:#a1a1aa;letter-spacing:.4px';
       card.append(amount,caption);stats.appendChild(card);
@@ -1227,7 +1258,7 @@ async function openOrderHistoryPanel(){
     const heading=document.createElement('h4');heading.textContent='ORDER HISTORY';heading.style.cssText='font-size:12px;letter-spacing:1px;color:#e2e8f0;margin:0 0 8px';root.appendChild(heading);
     if(!orders.length){const empty=document.createElement('p');empty.textContent='Abhi koi order record nahi hai.';empty.style.cssText='padding:18px 0;color:#94a3b8;text-align:center';root.appendChild(empty);return;}
     orders.slice().sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0)).forEach(order=>{
-      const card=document.createElement('div');card.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;padding:13px 11px;background:#0b0d12;border:1px solid #27272a;border-radius:10px;overflow-wrap:anywhere';
+      const card=document.createElement('div');card.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;padding:13px 11px;background:linear-gradient(115deg,#102b46,#20204a 60%,#321b50);border:1px solid #3b5e91;border-radius:13px;box-shadow:0 8px 20px #02061755;overflow-wrap:anywhere';
       const left=document.createElement('div');left.style.cssText='min-width:0;flex:1';
       const title=document.createElement('b');title.textContent=order.product_name||'Product order';title.style.cssText='display:block;font-size:13px;color:#f8fafc;margin-bottom:6px;overflow-wrap:anywhere';
       const amount=document.createElement('b');amount.textContent=money(order.amount);amount.style.cssText='display:block;font-size:15px;color:#22d3ee;margin-bottom:5px';
