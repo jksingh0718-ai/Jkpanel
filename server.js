@@ -785,12 +785,21 @@ async function loadProducts(){
   const products=Array.isArray(data.products)?data.products:[];
   if(!products.length){root.textContent="Abhi koi product nahi hai. Upar se product add karein.";return;}
   const groups=new Map();
-  products.forEach(p=>{const m=String(p.name||"").match(/^(.*?)\\s*-\\s*(.+)$/);const base=m?m[1].trim():String(p.name||"");if(!groups.has(base))groups.set(base,[]);groups.get(base).push(p);});
+  const productNameInfo=name=>{
+   const raw=String(name||"").trim();
+   if(/^prime\s*hook(?:\b|$)/i.test(raw)){
+    const duration=raw.replace(/^prime\s*hook/i,"").replace(/^\s*[-–:|]\s*/,"").replace(/^\s*[\[(]\s*/,"").replace(/\s*[\])]\s*$/,"").trim();
+    return {base:"Prime Hook",duration:duration||"Standard"};
+   }
+   const match=raw.match(/^(.*?)\s*-\s*(.+)$/);
+   return {base:match?match[1].trim():raw,duration:match?match[2].trim():"Standard"};
+  };
+  products.forEach(p=>{const info=productNameInfo(p.name);if(!groups.has(info.base))groups.set(info.base,[]);groups.get(info.base).push(p);});
   groups.forEach((items,base)=>{
    const card=document.createElement("article");card.className="card";
    const title=document.createElement("h3");title.textContent=base;
    const info=document.createElement("p");info.textContent=items.filter(p=>p.published).length+" active option(s) · "+items.length+" saved option(s)";
-   const options=document.createElement("p");options.style.cssText="white-space:pre-line;line-height:1.8";options.textContent=items.map(p=>{const m=String(p.name||"").match(/^(.*?)\\s*-\\s*(.+)$/);return (m?m[2]:"Standard")+" — ₹"+Number(p.price).toFixed(2)+(p.published?"":" (hidden)");}).join("\\n");
+   const options=document.createElement("p");options.style.cssText="white-space:pre-line;line-height:1.8";options.textContent=items.map(p=>productNameInfo(p.name).duration+" — ₹"+Number(p.price).toFixed(2)+(p.published?"":" (hidden)")).join("\n");
    const description=document.createElement("p");description.textContent=items.find(p=>p.description)?.description||"No description";
    const media=document.createElement("p");media.textContent=(items.find(p=>p.image_url)?.image_url||"No image")+(items.find(p=>p.video_url)?" · Video uploaded":"");
    const edit=document.createElement("button");edit.textContent="Edit product and durations";
@@ -806,7 +815,7 @@ async function loadProducts(){
     document.getElementById("imageUploadStatus").textContent=items.find(p=>p.image_url)?"Current photo saved. Nayi photo select karne par replace hogi.":"";
     document.getElementById("productPublished").checked=items.some(p=>p.published);
     const rows=document.getElementById("productPlanRows");rows.replaceChildren();
-    items.forEach(p=>{const m=String(p.name||"").match(/^(.*?)\\s*-\\s*(.+)$/);addProductPlanRow(m?m[2].trim():"Standard",String(p.price));});
+    items.forEach(p=>addProductPlanRow(productNameInfo(p.name).duration,String(p.price)));
     document.getElementById("productEditor").hidden=false;
     document.getElementById("productSave").textContent="Update Product and Durations";
     document.getElementById("productMessage").textContent="Editing: "+base;
@@ -865,15 +874,22 @@ document.getElementById("productForm").onsubmit=async e=>{
   let videoUrl=document.getElementById("productVideoUrl").value.trim();const videoFile=document.getElementById("productVideoFile").files[0];
   if(videoFile){if(videoFile.size>100*1024*1024)throw new Error("Video 100 MB se chhoti honi chahiye.");videoStatus.textContent="Gallery video upload ho rahi hai...";const formData=new FormData();formData.append("video",videoFile);const r=await fetch("/api/admin/product-video",{method:"POST",body:formData});const raw=await r.text();let d={};try{d=raw?JSON.parse(raw):{};}catch{}if(!r.ok)throw new Error(d.error||"Video upload fail hua.");videoUrl=d.video_url;document.getElementById("productVideoUrl").value=videoUrl;videoStatus.textContent="Video upload ho gaya.";}
   const current=await api("/api/admin/products"),all=Array.isArray(current.products)?current.products:[];
-  const existing=all.filter(p=>String(p.name||"").toLowerCase()===base.toLowerCase()||String(p.name||"").toLowerCase().startsWith((base+" - ").toLowerCase()));
-  const wanted=new Set(rows.map(p=>(base+" - "+p.duration).toLowerCase()));
-  for(const old of existing){if(!wanted.has(String(old.name||"").toLowerCase())&&old.published)await api("/api/admin/products/"+encodeURIComponent(old.id),{method:"PATCH",body:JSON.stringify({published:false})});}
+  const isPrimeHook=/^prime\s*hook$/i.test(base);
+  const existing=all.filter(p=>{
+   const name=String(p.name||"").trim();
+   return isPrimeHook?/^prime\s*hook(?:\b|$)/i.test(name):(name.toLowerCase()===base.toLowerCase()||name.toLowerCase().startsWith((base+" - ").toLowerCase()));
+  });
+  const durationKey=value=>String(value||"").toLowerCase().replace(/[\s()[\]_-]+/g,"").replace(/[–:|]/g,"");
+  const wanted=new Set(rows.map(p=>durationKey(p.duration)));
+  const matchedIds=new Set();
   for(const plan of rows){
    const name=base+" - "+plan.duration;
-   const old=existing.find(p=>String(p.name||"").toLowerCase()===name.toLowerCase())||(!existing.some(p=>String(p.name||"").toLowerCase()===name.toLowerCase())&&existing.find(p=>String(p.name||"").toLowerCase()===base.toLowerCase())&&rows.length===1?existing.find(p=>String(p.name||"").toLowerCase()===base.toLowerCase()):null);
+   const planKey=durationKey(plan.duration);
+   const old=existing.find(p=>!matchedIds.has(p.id)&&durationKey(productNameInfo(p.name).duration)===planKey);
    const payload={name,price:plan.price,image_url:imageUrl||null,video_url:videoUrl||null,published:document.getElementById("productPublished").checked,description:document.getElementById("productDescription").value.trim()};
-   if(old)await api("/api/admin/products/"+encodeURIComponent(old.id),{method:"PATCH",body:JSON.stringify(payload)});else await api("/api/admin/products",{method:"POST",body:JSON.stringify(payload)});
+   if(old){matchedIds.add(old.id);await api("/api/admin/products/"+encodeURIComponent(old.id),{method:"PATCH",body:JSON.stringify(payload)});}else{await api("/api/admin/products",{method:"POST",body:JSON.stringify(payload)});}
   }
+  for(const old of existing){if(!matchedIds.has(old.id)&&old.published)await api("/api/admin/products/"+encodeURIComponent(old.id),{method:"PATCH",body:JSON.stringify({published:false})});}
   clearProductForm();status.textContent="Product aur "+rows.length+" duration-price option(s) Supabase mein save ho gaye.";await loadProducts();
  }catch(err){status.textContent=err.message;}
 };
