@@ -1515,18 +1515,15 @@ function setupShopProductSearch(){
 async function loadShopProducts(){
  const root=document.getElementById('shopProducts');
  if(!root)return;
- let hasCachedProducts=false;
- try{
-  const cached=localStorage.getItem('jk_shop_products_html_v1');
-  if(cached){
-   root.innerHTML=cached;
-   hasCachedProducts=root.children.length>0;
-   setupShopProductSearch();
-  }
- }catch(_){}
+ // Never display cached product markup: it can contain another account's reseller prices.
+ try{localStorage.removeItem('jk_shop_products_html_v1');}catch(_){}
+ isResellerCustomer=false;
+ updateResellerUI();
+ root.replaceChildren();
+ const loading=document.createElement('p');loading.textContent='Loading latest prices…';loading.style.cssText='color:#94a3b8;text-align:center;padding:18px';root.appendChild(loading);
  try{
   const token=localStorage.getItem('jk_customer_access_token');
-  const response=await fetch('https://jkpanel-backend.onrender.com/api/products',{headers:token?{Authorization:'Bearer '+token}:{} });
+  const response=await fetch('https://jkpanel-backend.onrender.com/api/products',{cache:'no-store',headers:token?{Authorization:'Bearer '+token}:{}});
   const data=await response.json();
   if(!response.ok)throw new Error(data.error||'Products load nahi ho sake.');
   root.replaceChildren();
@@ -1565,7 +1562,7 @@ async function loadShopProducts(){
      img.onerror=()=>{img.style.display='none';};card.appendChild(img);
     }
    }else if(videoProduct?.video_url){
-    const video=document.createElement('video');video.src=imageProduct.video_url;video.controls=true;video.preload='metadata';video.playsInline=true;
+    const video=document.createElement('video');video.src=videoProduct.video_url;video.controls=true;video.preload='metadata';video.playsInline=true;
     video.style.cssText='display:block;width:100%;height:clamp(220px,62vw,360px);object-fit:contain;background:#030712;border-radius:12px;margin-bottom:14px';
     card.appendChild(video);
    }else{
@@ -1609,7 +1606,7 @@ async function loadShopProducts(){
    const videoProduct=aimProducts.find(p=>p.video_url);
    if(imageProduct.image_url){
     if(videoProduct?.video_url){
-     const thumb=document.createElement('button');thumb.type='button';thumb.className='product-video-thumb';thumb.setAttribute('aria-label','Play AIM HACK FF video');thumb.onclick=()=>openProductVideo(videoProduct.video_url,'AIM HACK FF');
+     const thumb=document.createElement('button');thumb.type='button';thumb.className='product-video-thumb';thumb.setAttribute('aria-label','Play AIM HACK FF video');thumb.onclick=()=>openProductVideo(videoProduct.video_url,'AIM HACK FF',thumb);
      const img=document.createElement('img');img.src=imageProduct.image_url;img.alt='AIM HACK FF video preview';img.loading='eager';img.onerror=()=>{img.style.display='none';};
      const play=document.createElement('span');play.className='product-video-play';play.textContent='▶';
      const hint=document.createElement('span');hint.className='product-video-hint';hint.textContent='TAP TO PLAY VIDEO';
@@ -1659,7 +1656,7 @@ async function loadShopProducts(){
    const videoProduct=balaProducts.find(p=>p.video_url);
    if(imageProduct?.image_url){
     if(videoProduct?.video_url){
-     const thumb=document.createElement('button');thumb.type='button';thumb.className='product-video-thumb';thumb.setAttribute('aria-label','Play BALA MODS FF NONROOT video');thumb.onclick=()=>openProductVideo(videoProduct.video_url,'BALA MODS ~FF NONROOT');
+     const thumb=document.createElement('button');thumb.type='button';thumb.className='product-video-thumb';thumb.setAttribute('aria-label','Play BALA MODS FF NONROOT video');thumb.onclick=()=>openProductVideo(videoProduct.video_url,'BALA MODS ~FF NONROOT',thumb);
      const img=document.createElement('img');img.src=imageProduct.image_url;img.alt='BALA MODS ~FF NONROOT video preview';img.loading='eager';img.onerror=()=>{img.style.display='none';};
      const play=document.createElement('span');play.className='product-video-play';play.textContent='▶';
      const hint=document.createElement('span');hint.className='product-video-hint';hint.textContent='TAP TO PLAY VIDEO';
@@ -1762,7 +1759,7 @@ async function loadShopProducts(){
   });
    Array.from(root.children).filter(card=>!card.hasAttribute('data-search-empty')).sort((a,b)=>Number(b.dataset.createdAt||0)-Number(a.dataset.createdAt||0)).forEach(card=>root.appendChild(card));
   if(document.getElementById('shopProductSearch')?.value.trim())document.getElementById('shopProductSearch').dispatchEvent(new Event('input'));
-  try{localStorage.setItem('jk_shop_products_html_v1',root.innerHTML);}catch(_){}
+  // Do not cache rendered product cards; prices are account-specific.
  }catch(e){
   if(!hasCachedProducts){
    root.replaceChildren();const p=document.createElement('p');p.textContent=e.message||'Products load nahi ho sake.';p.style.cssText='color:#fca5a5;font-size:12px;margin-top:10px';root.appendChild(p);
