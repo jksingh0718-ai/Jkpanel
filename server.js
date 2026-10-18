@@ -608,34 +608,33 @@ small{color:#a6b2c0}
 <nav class="admin-bottom-nav" aria-label="Bottom navigation"><button type="button" class="active" data-tab="users"><span class="nav-icon">⌂</span><span>Home</span></button><button type="button" data-tab="products"><span class="nav-icon">▣</span><span>Products</span></button><button type="button" data-tab="keys"><span class="nav-icon">⚿</span><span>Keys</span></button><button type="button" data-tab="resellers"><span class="nav-icon">♧</span><span>Resellers</span></button><button type="button" data-tab="profile"><span class="nav-icon">♙</span><span>Profile</span></button></nav>
 </section>
 <p id="message" role="status"></p>
+
 <script>
-(function(){
- const form=document.getElementById("loginForm");
- if(!form)return;
- form.addEventListener("submit",async function(e){
-  if(typeof form.onsubmit==="function")return;
-  e.preventDefault();
-  const input=document.getElementById("password");
-  const button=form.querySelector("button");
-  const message=document.getElementById("message");
-  button.disabled=true;button.textContent="Logging in...";
-  message.textContent="Checking admin login...";
-  try{
-   const response=await fetch("/api/admin/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:input.value})});
-   let data={};try{data=await response.json()}catch(_){}
-   if(!response.ok)throw new Error(data.error||("Login failed (HTTP "+response.status+")"));
-   document.getElementById("login").hidden=true;
-   document.getElementById("dashboard").hidden=false;
-   document.getElementById("adminMenuToggle").hidden=false;
-   input.value="";
-   message.textContent="Login successful. If sections do not load, refresh once.";
-  }catch(err){
-   message.textContent=err.message||"Login failed. Check password and Render ADMIN_PASSWORD.";
-  }finally{button.disabled=false;button.textContent="Login";}
- });
-})();
-</script>
-<script>
+document.getElementById("loginForm").onsubmit=async e=>{
+ e.preventDefault();
+ message.textContent="";
+ const passwordInput=document.getElementById("password");
+ const loginButton=document.querySelector("#loginForm button");
+ loginButton.disabled=true;
+ loginButton.textContent="Logging in...";
+ try{
+  await api("/api/admin/login",{method:"POST",body:JSON.stringify({password:passwordInput.value})});
+  passwordInput.value="";
+  document.getElementById("login").hidden=true;
+  document.getElementById("dashboard").hidden=false;
+  message.textContent="Login successful. Admin panel loading...";
+  await Promise.allSettled([loadOrders(),loadCustomers(),loadProducts(),loadKeyGroups(),loadResellers()]);
+  if(!message.textContent) message.textContent="Admin panel ready.";
+ }catch(err){
+  message.textContent=err.message||"Login failed. Password aur Render environment setting check karein.";
+  document.getElementById("dashboard").hidden=true;
+  document.getElementById("login").hidden=false;
+ }finally{
+  loginButton.disabled=false;
+  loginButton.textContent="Login";
+ }
+};
+
 const message=document.getElementById("message");
 document.querySelectorAll("[data-tab]").forEach(button=>button.addEventListener("click",()=>{
  document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===button.dataset.tab));
@@ -750,30 +749,7 @@ async function loadOrders(){
   message.textContent=e.message;
  }
 }
-document.getElementById("loginForm").onsubmit=async e=>{
- e.preventDefault();
- message.textContent="";
- const passwordInput=document.getElementById("password");
- const loginButton=document.querySelector("#loginForm button");
- loginButton.disabled=true;
- loginButton.textContent="Logging in...";
- try{
-  await api("/api/admin/login",{method:"POST",body:JSON.stringify({password:passwordInput.value})});
-  passwordInput.value="";
-  document.getElementById("login").hidden=true;
-  document.getElementById("dashboard").hidden=false;
-  message.textContent="Login successful. Admin panel loading...";
-  await Promise.allSettled([loadOrders(),loadCustomers(),loadProducts(),loadKeyGroups(),loadResellers()]);
-  if(!message.textContent) message.textContent="Admin panel ready.";
- }catch(err){
-  message.textContent=err.message||"Login failed. Password aur Render environment setting check karein.";
-  document.getElementById("dashboard").hidden=true;
-  document.getElementById("login").hidden=false;
- }finally{
-  loginButton.disabled=false;
-  loginButton.textContent="Login";
- }
-};
+
 
 
 function adminProductNameInfo(name){
@@ -1120,7 +1096,7 @@ document.getElementById("saveDripResellerPrices").onclick=async()=>{
  finally{button.disabled=false;}
 };
 document.getElementById("saveResellerPrice").onclick=async()=>{const productId=document.getElementById("resellerPriceProduct").value,userId=document.getElementById("resellerPriceCustomer").value||null,price=Number(document.getElementById("resellerPriceAmount").value),m=document.getElementById("resellerPriceMessage"),b=document.getElementById("saveResellerPrice");if(!productId){m.textContent="Key/duration select karein.";return;}if(!Number.isFinite(price)||price<0||price>1000000){m.textContent="Valid reseller price enter karein.";return;}b.disabled=true;try{await api("/api/admin/reseller-prices",{method:"POST",body:JSON.stringify({product_id:productId,reseller_user_id:userId,price})});m.textContent="Reseller key price Supabase mein save ho gaya.";}catch(e){m.textContent=e.message;}finally{b.disabled=false;}};
-document.getElementById("resellerPriceProduct").addEventListener("change",e=>{const o=e.target.selectedOptions[0];if(o)document.getElementById("resellerPriceAmount").value=o.dataset.price||"";});
+const legacyResellerProductSelect=document.getElementById("resellerPriceProduct");if(legacyResellerProductSelect)legacyResellerProductSelect.addEventListener("change",e=>{const o=e.target.selectedOptions[0];if(o){const amount=document.getElementById("resellerPriceAmount");if(amount)amount.value=o.dataset.price||"";}});
 document.getElementById("refreshCustomers").onclick=async()=>{await loadCustomers();await loadResellers();};
 document.getElementById("refreshProducts").onclick=async()=>{await loadProducts();};
 document.getElementById("refreshKeys").onclick=async()=>{await loadCustomers();await loadKeyGroups();};
