@@ -646,6 +646,20 @@ window.jkAdminLogin=async function(event){
 };
 </script>
 <script>
+/* Fallback handlers: keep navigation and refresh controls responsive even if an earlier inline handler failed. */
+window.addEventListener("error",function(event){
+ const m=document.getElementById("message");
+ if(m && !m.textContent) m.textContent="Admin script error: "+String(event.message||"unknown error").slice(0,180);
+});
+document.addEventListener("click",function(event){
+ const button=event.target.closest("button");
+ if(!button)return;
+ if(button.matches("[data-tab]"))return;
+ if(button.id==="refreshProducts"){event.preventDefault();loadProducts().catch(e=>{document.getElementById("message").textContent=e.message;});}
+ if(button.id==="refreshCustomers"){event.preventDefault();Promise.allSettled([loadCustomers(),loadResellers()]);}
+ if(button.id==="refreshKeys"){event.preventDefault();Promise.allSettled([loadCustomers(),loadKeyGroups()]);}
+ if(button.id==="showProductForm"){event.preventDefault();const editor=document.getElementById("productEditor");if(editor)editor.hidden=!editor.hidden;}
+},true);
 /* Reliable admin tab navigation, independent of the rest of the dashboard script. */
 document.addEventListener("click",function(event){
  const button=event.target.closest("button[data-tab]");
@@ -733,10 +747,19 @@ filterCards("userSearch","customerList");
 filterCards("productSearch","productList");
 filterCards("keySearch","keyList");
 async function api(url,options={}){
- const response=await fetch(url,{...options,headers:{"Content-Type":"application/json",...(options.headers||{})}});
- const data=await response.json();
- if(!response.ok)throw new Error(data.error||"Request failed");
- return data;
+ const controller=new AbortController();
+ const timeout=setTimeout(()=>controller.abort(),15000);
+ let response,data;
+ try{
+  response=await fetch(url,{...options,signal:controller.signal,credentials:"same-origin",headers:{"Content-Type":"application/json",...(options.headers||{})}});
+  const raw=await response.text();
+  try{data=raw?JSON.parse(raw):{};}catch{throw new Error("Server se valid response nahi mila ("+response.status+"). Page refresh karke dobara try karein.");}
+  if(!response.ok)throw new Error(data.error||("Request failed ("+response.status+")"));
+  return data;
+ }catch(error){
+  if(error.name==="AbortError")throw new Error("Server response mein 15 second se zyada lag rahe hain. Dobara try karein.");
+  throw error;
+ }finally{clearTimeout(timeout);}
 }
 async function loadOrders(){
  try{
