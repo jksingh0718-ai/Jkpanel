@@ -526,8 +526,8 @@ small{color:#a6b2c0}
 <h1 id="adminTitle"><button type="button" id="adminMenuToggle" aria-label="Open navigation menu" aria-expanded="false">☰</button> <span>JKPanel <span style="color:#39f58b">Admin</span></span></h1>
 <section id="login">
 <h2>Admin Login</h2>
-<form id="loginForm">
-<input id="password" type="password" placeholder="Admin password" required autocomplete="current-password">
+<form id="loginForm" autocomplete="off">
+<input id="adminLoginPassword" name="jkpanel-admin-login-secret" type="password" placeholder="Enter admin password" required autocomplete="new-password" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true">
 <br><button>Login</button>
 </form>
 </section>
@@ -613,7 +613,7 @@ small{color:#a6b2c0}
 document.getElementById("loginForm").onsubmit=async e=>{
  e.preventDefault();
  message.textContent="";
- const passwordInput=document.getElementById("password");
+ const passwordInput=document.getElementById("adminLoginPassword");
  const loginButton=document.querySelector("#loginForm button");
  loginButton.disabled=true;
  loginButton.textContent="Logging in...";
