@@ -529,7 +529,7 @@ small{color:#a6b2c0}
 <section id="login">
 <h2>Admin Login</h2>
 <form id="loginForm" autocomplete="off">
-<input id="adminLoginPassword" name="jkpanel-secret-entry" type="password" placeholder="Admin password" required autocomplete="new-password" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" readonly>
+<input id="adminLoginPassword" name="jkpanel-secret-entry" type="password" placeholder="Admin password" required autocomplete="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true">
 <br><button>Login</button>
 </form>
 </section>
