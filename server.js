@@ -241,6 +241,38 @@ app.post("/api/auth/login", async (req, res) => {
   });
 });
 
+app.post("/api/auth/change-password", async (req, res) => {
+  if (!authClient || !supabaseUrl) return res.status(503).json({ error: "Authentication is not configured" });
+  const accessToken = typeof req.body?.accessToken === "string" ? req.body.accessToken : "";
+  const currentPassword = typeof req.body?.currentPassword === "string" ? req.body.currentPassword : "";
+  const newPassword = typeof req.body?.newPassword === "string" ? req.body.newPassword : "";
+  if (!accessToken || !/^\\d{6}$/.test(currentPassword) || !/^\\d{6}$/.test(newPassword)) {
+    return res.status(400).json({ error: "Current aur new password dono exactly 6 digits ke hone chahiye." });
+  }
+  if (currentPassword === newPassword) return res.status(400).json({ error: "Naya password current password se alag hona chahiye." });
+  const { data: userData, error: userError } = await authClient.auth.getUser(accessToken);
+  const email = userData?.user?.email;
+  if (userError || !email) return res.status(401).json({ error: "Session expire ho gaya. Dobara login karein." });
+  const { error: verifyError } = await authClient.auth.signInWithPassword({ email, password: currentPassword });
+  if (verifyError) return res.status(401).json({ error: "Current password sahi nahi hai." });
+  try {
+    const response = await fetch(supabaseUrl.replace(/\\/+$/, "") + "/auth/v1/user", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", "apikey": supabasePublishableKey, "Authorization": "Bearer " + accessToken },
+      body: JSON.stringify({ password: newPassword })
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const msg = typeof result.msg === "string" ? result.msg : typeof result.message === "string" ? result.message : "";
+      return res.status(response.status >= 500 ? 502 : 400).json({ error: msg || "Password change nahi hua. Dobara try karein." });
+    }
+    return res.json({ success: true, message: "Password successfully change ho gaya." });
+  } catch (error) {
+    console.error("Customer password change failed:", error.message);
+    return res.status(502).json({ error: "Password service abhi available nahi hai." });
+  }
+});
+
 app.post("/api/auth/forgot-password", async (req, res) => {
   if (!authClient) return res.status(503).json({ error: "Authentication is not configured" });
   const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
