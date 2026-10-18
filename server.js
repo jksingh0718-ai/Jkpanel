@@ -1350,8 +1350,8 @@ function aimHackDuration(productName) {
 
 function primeHookDuration(productName) {
   const name = String(productName || "").trim().replace(/\\s+/g, " ");
-  if (!/prime\\s*hook/i.test(name)) return null;
-  const match = name.match(/(1|3|7|10)\\s*days?\\s*nonroot/i);
+  if (!/prime\s*hook/i.test(name)) return null;
+  const match = name.match(/(1|3|7|10)\s*days?\s*nonroot/i);
   if (!match) return null;
   return ({ "1": "1 Days Nonroot", "3": "3 Days Nonroot", "7": "7 Days Nonroot", "10": "10 Days Nonroot" })[match[1]] || null;
 }
@@ -1468,7 +1468,7 @@ app.patch("/api/admin/orders/:id/payment", isAdmin, async (req, res) => {
   const productName = existing["Product_name"] || "";
   const isDripWire = /^DRIP Wire - /i.test(productName);
   const isAimHack = /^AIM HACK FF(?: - |$)/i.test(productName);
-  const isPrimeHook = /prime\\s*hook/i.test(productName);
+  const isPrimeHook = /prime\s*hook/i.test(productName);
   const duration = isPrimeHook ? primeHookDuration(productName) : (isDripWire ? dripWireDuration(productName) : (isAimHack ? aimHackDuration(productName) : null));
   const usesSupplier = isDripWire || isAimHack || isPrimeHook;
   const supplierProductId = isPrimeHook ? "48" : (isAimHack ? "133" : "150");
@@ -2034,7 +2034,7 @@ app.post("/api/orders", async (req, res) => {
 
   const isDripWire = /^DRIP Wire - /i.test(product.name || "");
   const isAimHack = /^AIM HACK FF(?: - |$)/i.test(product.name || "");
-  const isPrimeHook = /prime\\s*hook/i.test(product.name || "");
+  const isPrimeHook = /prime\s*hook/i.test(product.name || "");
   if (isDripWire || isAimHack || isPrimeHook) {
     const duration = isPrimeHook ? primeHookDuration(product.name) : (isDripWire ? dripWireDuration(product.name) : aimHackDuration(product.name));
     const supplierProductId = isPrimeHook ? "48" : (isAimHack ? "133" : "150");
