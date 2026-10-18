@@ -887,13 +887,13 @@ function openProfilePanel(){
   try{
     const cached=JSON.parse(localStorage.getItem('jk_wallet_balance_cache')||sessionStorage.getItem('jk_wallet_balance_cache')||'null');
     if(cached){
-      const cachedEmail=cached.email||cached.user?.email||'';
+      const cachedEmail=cached.email||cached.user?.email||(String(cached.userId||'').includes('@')?String(cached.userId):'');
       const emailEl=document.getElementById('profileEmail');if(emailEl&&cachedEmail)emailEl.textContent=cachedEmail;
       const avatar=document.getElementById('profileAvatar');if(avatar&&cachedEmail)avatar.textContent=(cachedEmail.split('@')[0].replace(/[^a-z0-9]/gi,'').slice(0,2)||'JK').toUpperCase();
       const cachedId=cached.userId||cached.user?.id||'';
       const id=document.getElementById('profileUserId');if(id&&cachedId)id.textContent='User ID: '+String(cachedId).slice(0,10);
       const cachedReseller=Boolean(cached.isReseller);
-      const badge=document.getElementById('profilePartnerBadge');if(badge&&cached.email){badge.textContent=cachedReseller?'♛ RESELLER':'USER';badge.style.background=cachedReseller?'#30230b':'#172554';badge.style.color=cachedReseller?'#fbbf24':'#93c5fd';}
+      const badge=document.getElementById('profilePartnerBadge');if(badge&&(cached.email||cached.userId)){badge.textContent=cachedReseller?'♛ RESELLER':'USER';badge.style.background=cachedReseller?'#30230b':'#172554';badge.style.color=cachedReseller?'#fbbf24':'#93c5fd';}
       const cachedBalance=Number(cached.walletBalance??cached.wallet_balance??cached.balance);
       const wallet=document.getElementById('profileWalletBalance');if(wallet&&Number.isFinite(cachedBalance))wallet.textContent='₹'+cachedBalance.toFixed(2);
     }
