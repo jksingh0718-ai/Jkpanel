@@ -35,10 +35,12 @@ header{display:flex;align-items:center;justify-content:space-between;gap:8px;bor
 .product h4{font-size:13px}
 .product p{font-size:11px;color:#94a3b8;margin-top:5px}
 .buy{background:#06b6d4;color:#001018;padding:10px;font-size:11px}
-#backdrop{display:none;position:fixed;inset:0;background:#000b;z-index:99}
-#sidebar{display:none;position:fixed;top:0;left:0;width:270px;max-width:85%;height:100%;overflow-y:auto;background:#0f172a;padding:16px;z-index:100}
-.menu-heading{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-.menu-item{display:block;padding:14px 4px;color:#e2e8f0;text-decoration:none;border-bottom:1px solid #263247;font-size:13px}
+#backdrop{display:none;position:fixed;inset:0;background:rgba(8,12,28,.76);backdrop-filter:blur(3px);z-index:99}
+#sidebar{display:none;position:fixed;top:0;left:0;width:285px;max-width:88%;height:100%;overflow-y:auto;background:linear-gradient(160deg,#0f172a 0%,#172554 52%,#312e81 100%);padding:16px;z-index:100;box-sizing:border-box;box-shadow:12px 0 35px #02061799;border-right:1px solid #60a5fa55}
+.menu-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 4px 18px;border-bottom:1px solid #93c5fd33;margin-bottom:12px}
+.menu-item{display:block;min-height:46px;box-sizing:border-box;margin:7px 0;padding:12px 14px;border-radius:11px;background:linear-gradient(110deg,#ffffff0d,#ffffff05);border:1px solid #93c5fd22;color:#f8fafc;text-decoration:none;font-size:15px;font-weight:800;letter-spacing:.15px;box-shadow:0 3px 10px #02061722}
+.menu-item:active{background:linear-gradient(110deg,#0891b2,#4f46e5);border-color:#a5b4fc}
+.menu-item#menuLogin{background:linear-gradient(110deg,#0284c7,#4f46e5);border-color:#93c5fd66}
 #menuLogout{color:#f87171!important;background:transparent!important;border:0!important;border-bottom:1px solid #263247!important;border-radius:0!important;margin-top:0!important;padding:14px 4px!important;font-weight:400!important;letter-spacing:normal!important;box-shadow:none!important;text-align:left!important}
 #menuLogout::before{content:'⇥';display:inline-block;color:#f87171;font-size:16px;font-weight:bold;margin-right:7px;vertical-align:-1px}
 #menuLogout:active{background:#263247!important;color:#fca5a5!important}
@@ -1042,9 +1044,14 @@ function openProductVideo(url,title,thumb){
   video.style.cssText='display:block;width:100%;height:auto;max-height:70vh;min-height:220px;background:#000;border-radius:12px;object-fit:contain;margin:0 0 14px';
   video.onerror=()=>{video.insertAdjacentHTML('afterend','<p style="color:#fca5a5;font-size:13px">Video play nahi hua. Admin panel se video dobara upload karein.</p>');};
   // Restore the same thumbnail when playback ends so the product card never loses its video.
-  video.addEventListener('ended',()=>{if(video.parentNode&&thumb){video.replaceWith(thumb);}});
-  if(thumb&&thumb.parentNode)thumb.replaceWith(video);
-  else {const candidate=[...document.querySelectorAll('.product-video-thumb')].find(el=>el.getAttribute('aria-label')==='Play '+title+' video');if(candidate)candidate.replaceWith(video);else{showPopup('Video not available','Video player ko product card mein nahi dhoondh paaye.');return;}}
+  // Keep a stable placeholder in the card. Playback must never remove the product's video area.
+  const placeholder=document.createElement('div');
+  placeholder.className='product-video-slot';
+  placeholder.style.cssText='width:100%;margin:0 0 14px';
+  if(thumb&&thumb.parentNode){thumb.replaceWith(placeholder);}
+  else {const candidate=[...document.querySelectorAll('.product-video-thumb')].find(el=>el.getAttribute('aria-label')==='Play '+title+' video');if(candidate)candidate.replaceWith(placeholder);else{showPopup('Video not available','Video player ko product card mein nahi dhoondh paaye.');return;}}
+  video.addEventListener('ended',()=>{video.pause();video.currentTime=0;video.controls=true;});
+  placeholder.appendChild(video);
   video.scrollIntoView({behavior:'smooth',block:'center'});
   video.play().catch(()=>{});
 }
