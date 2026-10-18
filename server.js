@@ -1095,7 +1095,6 @@ document.getElementById("saveDripResellerPrices").onclick=async()=>{
  }catch(e){status.textContent="Save error: "+e.message;}
  finally{button.disabled=false;}
 };
-document.getElementById("saveResellerPrice").onclick=async()=>{const productId=document.getElementById("resellerPriceProduct").value,userId=document.getElementById("resellerPriceCustomer").value||null,price=Number(document.getElementById("resellerPriceAmount").value),m=document.getElementById("resellerPriceMessage"),b=document.getElementById("saveResellerPrice");if(!productId){m.textContent="Key/duration select karein.";return;}if(!Number.isFinite(price)||price<0||price>1000000){m.textContent="Valid reseller price enter karein.";return;}b.disabled=true;try{await api("/api/admin/reseller-prices",{method:"POST",body:JSON.stringify({product_id:productId,reseller_user_id:userId,price})});m.textContent="Reseller key price Supabase mein save ho gaya.";}catch(e){m.textContent=e.message;}finally{b.disabled=false;}};
 const legacyResellerProductSelect=document.getElementById("resellerPriceProduct");if(legacyResellerProductSelect)legacyResellerProductSelect.addEventListener("change",e=>{const o=e.target.selectedOptions[0];if(o){const amount=document.getElementById("resellerPriceAmount");if(amount)amount.value=o.dataset.price||"";}});
 document.getElementById("refreshCustomers").onclick=async()=>{await loadCustomers();await loadResellers();};
 document.getElementById("refreshProducts").onclick=async()=>{await loadProducts();};
