@@ -779,8 +779,9 @@ document.getElementById("loginForm").onsubmit=async e=>{
 function adminProductNameInfo(name){
  const raw=String(name||"").trim();
  if(/^prime\s*hook(?:\b|$)/i.test(raw)){
-  const duration=raw.replace(/^prime\s*hook/i,"").replace(/^\s*[-–:|]\s*/,"").replace(/^\s*[\[(]\s*/,"").replace(/\s*[\])]\s*$/,"").trim();
-  return {base:"Prime Hook",duration:duration||"Standard"};
+  const prefix=/^prime\s*hook\s+ff\s+nonroot\s+android\b/i.test(raw)?/^prime\s*hook\s+ff\s+nonroot\s+android/i:/^prime\s*hook/i;
+  const duration=raw.replace(prefix,"").replace(/^\s*[-–:|]\s*/,"").replace(/^\s*[\[(]\s*/,"").replace(/\s*[\])]\s*$/,"").trim();
+  return {base:"PRIME HOOK FF NONROOT ANDROID",duration:duration||"Standard"};
  }
  const match=raw.match(/^(.*?)\s*-\s*(.+)$/);
  return {base:match?match[1].trim():raw,duration:match?match[2].trim():"Standard"};
@@ -875,7 +876,7 @@ document.getElementById("productForm").onsubmit=async e=>{
   let videoUrl=document.getElementById("productVideoUrl").value.trim();const videoFile=document.getElementById("productVideoFile").files[0];
   if(videoFile){if(videoFile.size>100*1024*1024)throw new Error("Video 100 MB se chhoti honi chahiye.");videoStatus.textContent="Gallery video upload ho rahi hai...";const formData=new FormData();formData.append("video",videoFile);const r=await fetch("/api/admin/product-video",{method:"POST",body:formData});const raw=await r.text();let d={};try{d=raw?JSON.parse(raw):{};}catch{}if(!r.ok)throw new Error(d.error||"Video upload fail hua.");videoUrl=d.video_url;document.getElementById("productVideoUrl").value=videoUrl;videoStatus.textContent="Video upload ho gaya.";}
   const current=await api("/api/admin/products"),all=Array.isArray(current.products)?current.products:[];
-  const isPrimeHook=/^prime\s*hook$/i.test(base);
+  const isPrimeHook=/^prime\s*hook(?:\s+ff\s+nonroot\s+android)?$/i.test(base);
   const existing=all.filter(p=>{
    const name=String(p.name||"").trim();
    return isPrimeHook?/^prime\s*hook(?:\b|$)/i.test(name):(name.toLowerCase()===base.toLowerCase()||name.toLowerCase().startsWith((base+" - ").toLowerCase()));
