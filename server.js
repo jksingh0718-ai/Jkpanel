@@ -529,7 +529,7 @@ small{color:#a6b2c0}
 <section id="login">
 <h2>Admin Login</h2>
 <form id="loginForm" autocomplete="off">
-<input id="adminLoginPassword" name="jkpanel-secret-entry" type="password" placeholder="Admin password" required autocomplete="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true">
+<input id="adminLoginPassword" name="admin-password" type="password" placeholder="Admin password" required autocomplete="current-password" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true">
 <br><button>Login</button>
 </form>
 </section>
@@ -612,8 +612,6 @@ small{color:#a6b2c0}
 <p id="message" role="status"></p>
 
 <script>
-const adminPasswordField=document.getElementById("adminLoginPassword");
-adminPasswordField.addEventListener("focus",()=>adminPasswordField.removeAttribute("readonly"),{once:true});
 document.getElementById("loginForm").onsubmit=async e=>{
  e.preventDefault();
  message.textContent="";
