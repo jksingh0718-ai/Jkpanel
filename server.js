@@ -1192,7 +1192,7 @@ function dripWireDuration(productName) {
 }
 function aimHackDuration(productName) {
   const name = String(productName || "").trim().toLowerCase().replace(/\s+/g, " ");
-  if (name === "aim hack ff" || name === "aim hack ff - 1 hour") return "1 Hour";
+  if (name === "aim hack ff" || name === "aim hack ff - 1 hour" || name === "aim hack ff - 1 hours") return "1 Hours";
   if (name === "aim hack ff - 3 hours") return "3 Hours";
   if (name === "aim hack ff - 6 hours") return "6 Hours";
   if (name === "aim hack ff - 12 hours") return "12 Hours";
