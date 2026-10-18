@@ -1210,7 +1210,10 @@ function showHistoryDashboardBack(popup){
   if(oldTop)oldTop.remove();
   if(card)card.style.cssText='display:flex!important;flex-direction:column!important;max-height:calc(100dvh - 24px)!important;overflow-y:auto!important;box-sizing:border-box!important';
   if(title)title.style.cssText='display:block!important;flex:0 0 auto!important;margin:0 0 12px!important';
-  if(root)root.style.cssText='display:block!important;flex:0 0 auto!important;min-height:0!important;overflow:visible!important;padding-bottom:0!important';
+  if(root){
+    root.style.cssText='display:block!important;flex:0 0 auto!important;min-height:0!important;overflow:visible!important;padding-bottom:0!important';
+    root.querySelectorAll('button').forEach(item=>{if(/BACK TO DASHBOARD|← BACK|← DASHBOARD/i.test(item.textContent||''))item.remove();});
+  }
   if(btn){
     btn.style.cssText='display:block!important;position:relative!important;flex:0 0 auto!important;visibility:visible!important;opacity:1!important;z-index:99999!important;width:100%!important;min-height:50px!important;box-sizing:border-box!important;margin:12px 0 0!important;padding:14px!important;background:linear-gradient(110deg,#06b6d4,#2563eb,#7c3aed)!important;color:#fff!important;border:2px solid #93c5fd!important;border-radius:12px!important;font-size:15px!important;font-weight:900!important;box-shadow:0 4px 18px #2563eb77!important';
     btn.textContent='← BACK';
