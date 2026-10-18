@@ -501,9 +501,9 @@ function openAuth(mode='login'){
     (isRegister?'<label for="authConfirmPassword" style="display:block;color:#a1a1aa;font-size:12px;margin-bottom:6px">CONFIRM PASSWORD</label><input class="auth-input" id="authConfirmPassword" type="password" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="new-password" placeholder="CONFIRM 6 DIGIT PASSWORD">':'')+
     '<p id="authStatus" aria-live="polite"></p>'+
     '<button class="auth-main-btn" type="button" onclick="'+(isRegister?'registerCustomer()':'loginCustomer()')+'">'+(isRegister?'CREATE ACCOUNT':'LOGIN NOW')+'</button>'+
-    (!isRegister?'<div class="auth-divider">OR LOGIN WITH</div><button class="auth-google" type="button" onclick="showPopup(\'Google Login\',\'Google sign-in abhi configure nahi hai. Email aur password se login karein.\')"><svg aria-hidden="true" viewBox="0 0 48 48" width="24" height="24" style="vertical-align:middle;margin-right:12px"><path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.6c3.9-3.6 6.1-8.8 6.1-15Z"/><path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.9l-6.6-5.1c-1.8 1.2-4.1 2-6.9 2-5.3 0-9.8-3.6-11.4-8.4H5.8v5.3A20 20 0 0 0 24 44Z"/><path fill="#FBBC05" d="M12.6 27.6a12 12 0 0 1 0-7.2v-5.3H5.8a20 20 0 0 0 0 17.8l6.8-5.3Z"/><path fill="#EA4335" d="M24 12c3 0 5.7 1 7.8 3.1l5.8-5.8C34.1 6 29.5 4 24 4A20 20 0 0 0 5.8 15.1l6.8 5.3C14.2 15.6 18.7 12 24 12Z"/></svg> LOG IN WITH GOOGLE</button>':'')+
+    ''+
     '<div class="auth-links">'+
-      (!isRegister?'<a href="#" onclick="forgotCustomerPassword();return false">Forgot Password?</a><span class="muted"> &nbsp;|&nbsp; </span><a href="#" onclick="openChangeCustomerEmail();return false">Change Gmail</a><br>':'')+
+      ''+
       '<span class="muted">'+(isRegister?'Already a user?':'New User ?')+'</span> <a href="#" onclick="openAuth(\''+(isRegister?'login':'register')+'\');return false">'+(isRegister?'Login':'Create Account')+'</a>'+
     '</div><div class="auth-footer">© 2026 JK PANEL SYSTEM</div>';
   const card=document.querySelector('#popup .popup-card');
@@ -867,6 +867,32 @@ async function checkResellerPayment(){
   }else if(status)status.textContent=result.message||'Payment abhi confirm nahi hui. Thodi der baad dobara check karein.';
  }catch(e){if(status)status.textContent=e.message||'Payment status check nahi ho saka.';}
 }
+function toggleProfilePasswordForm(){
+  const form=document.getElementById('profilePasswordForm');
+  if(!form)return;
+  form.style.display=form.style.display==='none'?'block':'none';
+  if(form.style.display==='block')document.getElementById('profileCurrentPassword')?.focus();
+}
+async function submitProfilePasswordChange(event){
+  event.preventDefault();
+  const current=document.getElementById('profileCurrentPassword');
+  const next=document.getElementById('profileNewPassword');
+  const confirm=document.getElementById('profileConfirmPassword');
+  const status=document.getElementById('profilePasswordStatus');
+  const submit=document.getElementById('profilePasswordSubmit');
+  if(!current||!next||!confirm||!status||!submit)return;
+  if(!/^\\d{6}$/.test(current.value)||!/^\\d{6}$/.test(next.value)){status.textContent='All passwords must be exactly 6 digits.';return;}
+  if(next.value!==confirm.value){status.textContent='New password and confirm password do not match.';return;}
+  if(current.value===next.value){status.textContent='New password must be different from current password.';return;}
+  submit.disabled=true;submit.textContent='UPDATING…';status.textContent='Verifying current password…';
+  try{
+    const data=await customerApi('/api/auth/change-password',{method:'POST',body:JSON.stringify({accessToken:localStorage.getItem('jk_customer_access_token'),currentPassword:current.value,newPassword:next.value})});
+    status.textContent=data.message||'Password successfully changed.';
+    current.value='';next.value='';confirm.value='';
+    const form=document.getElementById('profilePasswordForm');if(form)form.style.display='none';
+  }catch(error){status.textContent=error.message||'Password change failed.';}
+  finally{submit.disabled=false;submit.textContent='UPDATE PASSWORD';}
+}
 function openProfilePanel(){
   closeMenu();
   const popup=document.getElementById('popup');
@@ -899,6 +925,7 @@ function openProfilePanel(){
       '<button type="button" onclick="closePopup();showPopup(\'Support Center\',\'Support ke liye WhatsApp par contact karein.\')" style="display:flex;align-items:center;justify-content:space-between;text-align:left;width:100%;margin-top:9px;padding:16px;background:#111a2c;color:#f8fafc;border:1px solid #202b40;border-radius:14px"><span><b style="color:#a78bfa;margin-right:10px">◉</b>Support Center</span><span style="color:#64748b">›</span></button>'+
       '<button type="button" onclick="closePopup();openOrderHistoryPanel()" style="display:flex;align-items:center;justify-content:space-between;text-align:left;width:100%;margin-top:9px;padding:16px;background:#111a2c;color:#f8fafc;border:1px solid #202b40;border-radius:14px"><span>Order History</span><span style="color:#64748b">›</span></button>'+
       '<button type="button" onclick="closePopup();openDepositHistoryPanel()" style="display:flex;align-items:center;justify-content:space-between;text-align:left;width:100%;margin-top:9px;padding:16px;background:#111a2c;color:#f8fafc;border:1px solid #202b40;border-radius:14px"><span>Deposit History</span><span style="color:#64748b">›</span></button>'+
+      '<button type="button" onclick="toggleProfilePasswordForm()" style="display:flex;align-items:center;justify-content:space-between;text-align:left;width:100%;margin-top:9px;padding:16px;background:linear-gradient(110deg,#172554,#312e81);color:#f8fafc;border:1px solid #818cf8;border-radius:14px"><span>🔐 Change Password</span><span style="color:#c4b5fd">›</span></button>'+\n      '<form id="profilePasswordForm" onsubmit="submitProfilePasswordChange(event)" style="display:none;margin-top:10px;padding:14px;background:#0b1220;border:1px solid #334155;border-radius:14px"><label style="display:block;margin:8px 0 5px;color:#cbd5e1">Enter Current Password</label><input id="profileCurrentPassword" type="password" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" autocomplete="current-password" required placeholder="6-digit current password" style="width:100%;box-sizing:border-box;padding:12px;background:#020617;color:#fff;border:1px solid #475569;border-radius:9px"><label style="display:block;margin:12px 0 5px;color:#cbd5e1">Create New Password</label><input id="profileNewPassword" type="password" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" autocomplete="new-password" required placeholder="6-digit new password" style="width:100%;box-sizing:border-box;padding:12px;background:#020617;color:#fff;border:1px solid #475569;border-radius:9px"><label style="display:block;margin:12px 0 5px;color:#cbd5e1">Confirm Password</label><input id="profileConfirmPassword" type="password" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" autocomplete="new-password" required placeholder="Re-enter new password" style="width:100%;box-sizing:border-box;padding:12px;background:#020617;color:#fff;border:1px solid #475569;border-radius:9px"><p id="profilePasswordStatus" aria-live="polite" style="font-size:12px;line-height:1.5;color:#cbd5e1"></p><button id="profilePasswordSubmit" type="submit" style="width:100%;padding:12px;background:linear-gradient(110deg,#06b6d4,#2563eb);color:#fff;border:0;border-radius:10px;font-weight:900">UPDATE PASSWORD</button></form>'+
       '<button type="button" onclick="closePopup()" style="display:block!important;width:100%!important;margin:12px 0 18px!important;padding:15px!important;background:linear-gradient(110deg,#ec4899 0%,#8b5cf6 48%,#2563eb 100%)!important;color:#fff!important;border:2px solid #c4b5fd!important;border-radius:13px!important;font-size:16px!important;font-weight:900!important;letter-spacing:1px!important;box-shadow:0 0 0 3px #a78bfa33,0 8px 24px #0007!important;cursor:pointer">✕ CLOSE</button>'+
     '</div></div>';
   popup.style.display='flex';
