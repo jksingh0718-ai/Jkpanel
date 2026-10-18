@@ -199,6 +199,17 @@ footer{display:none}
 @media(min-width:600px){.jk-deposit-page{max-width:620px;margin:24px auto;padding:25px}.jk-deposit-form-card{padding:24px}.jk-deposit-hero h2{font-size:34px}}
 
 
+/* Refer and Earn is a dedicated full-screen page like Deposit, not a popup. */
+.jk-referral-page{position:fixed;inset:0;z-index:180;display:none;flex-direction:column;gap:14px;overflow:hidden;padding:14px 14px calc(78px + env(safe-area-inset-bottom));background:#070b14;color:#fff}
+.jk-referral-top{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0 14px;border-bottom:1px solid #263449;background:#070b14;flex:0 0 auto}
+.jk-referral-eyebrow{font-size:10px;letter-spacing:2px;color:#38bdf8;font-weight:bold}
+.jk-referral-top h2{font-size:21px;margin-top:5px;color:#f8fafc}
+.jk-referral-close{flex:0 0 auto;background:#dc2626!important;color:#fff!important;padding:12px 13px;border:1px solid #f87171;border-radius:9px;font-size:11px;box-shadow:0 4px 14px #dc262644}
+.jk-referral-content{min-height:0;flex:1 1 auto;overflow-y:auto;overscroll-behavior:contain;padding:4px 2px 16px}
+body.jk-referral-only > :not(#jkReferralPage):not(#bottomNav){display:none!important}
+body.jk-referral-only{padding-bottom:80px}
+#popup.history-screen #popupDefaultClose{background:#dc2626!important;color:#fff!important;border:1px solid #f87171!important;font-weight:900!important}
+
 /* Deposit screen must be the only page content visible while active. */
 body.jk-deposit-only > :not(#jkDepositPage):not(#bottomNav) { display:none !important; }
 body.jk-deposit-only { padding-bottom:90px; }
@@ -851,7 +862,7 @@ function closePopup(){
   const title=document.getElementById('popupTitle');if(title)title.style.cssText='';
   const root=document.getElementById('popupMessage');if(root)root.style.cssText='';
   const close=document.querySelector('#popup .auth-close');if(close)close.remove();
-  const defaultClose=document.getElementById('popupDefaultClose');if(defaultClose)defaultClose.style.display='block';
+  const defaultClose=document.getElementById('popupDefaultClose');if(defaultClose){defaultClose.style.display='block';defaultClose.textContent='CLOSE';defaultClose.style.cssText='';}
 }
 
 function deposit(){
@@ -1026,7 +1037,7 @@ async function openDepositHistoryPanel(){
   const popup=document.getElementById('popup');
   popup.classList.add('history-screen');
   const defaultClose=document.getElementById('popupDefaultClose');
-  if(defaultClose)defaultClose.style.display='block';
+  if(defaultClose){defaultClose.style.display='block';defaultClose.textContent='CLOSE ✕';defaultClose.style.cssText='display:block!important;background:#dc2626!important;color:#fff!important;border:1px solid #f87171!important;width:100%!important;min-height:46px!important;padding:13px!important;margin:8px 0 10px!important;font-weight:900!important;border-radius:9px!important;';}
   const root=document.getElementById('popupMessage');
   document.getElementById('popupTitle').textContent='Deposit History';
   root.replaceChildren();
@@ -1136,22 +1147,31 @@ async function openOrderHistoryPanel(){
 
 async function openReferral(){
   closeMenu();
-  const defaultClose=document.getElementById('popupDefaultClose');if(defaultClose)defaultClose.style.display='block';
-  const root=document.getElementById('popupMessage');
-  document.getElementById('popupTitle').textContent='Refer and Earn 🎁';
+  closePopup();
+  let page=document.getElementById('jkReferralPage');
+  if(!page){
+    page=document.createElement('section');
+    page.id='jkReferralPage';
+    page.className='jk-referral-page';
+    page.innerHTML='<div class="jk-referral-top"><div><span class="jk-referral-eyebrow">JK PANEL SHOP</span><h2>Refer and Earn 🎁</h2></div><button type="button" class="jk-referral-close" onclick="closeReferralPage()">CLOSE ✕</button></div><div id="jkReferralContent" class="jk-referral-content"></div>';
+    document.body.appendChild(page);
+  }
+  document.body.classList.add('jk-referral-only');
+  page.style.display='flex';
+  page.scrollTop=0;
+  const root=document.getElementById('jkReferralContent');
   root.replaceChildren();
-  const opening=document.createElement('p');opening.textContent='OPENING...';opening.style.cssText='text-align:center;padding:18px 0;color:#38bdf8;font-size:13px;font-weight:bold;letter-spacing:2px';root.appendChild(opening);
-  document.getElementById('popup').classList.remove('auth-screen');
-  document.getElementById('popup').style.display='flex';
+  const opening=document.createElement('p');opening.textContent='LOADING REFERRAL DETAILS...';opening.style.cssText='text-align:center;padding:18px 0;color:#38bdf8;font-size:13px;font-weight:bold;letter-spacing:1px';root.appendChild(opening);
   if(!localStorage.getItem('jk_customer_access_token')){
     root.replaceChildren();
     const p=document.createElement('p');
     p.textContent='Apna referral link aur commission dekhne ke liye pehle login karein.';
+    p.style.cssText='color:#cbd5e1;line-height:1.6';
     root.appendChild(p);
     const login=document.createElement('button');
     login.textContent='LOGIN / REGISTER';
     login.style.cssText='width:100%;padding:12px;margin-top:12px;background:#10b981;color:#04130b';
-    login.onclick=()=>openAuth('login');
+    login.onclick=()=>{closeReferralPage();openAuth('login');};
     root.appendChild(login);
     return;
   }
@@ -1187,14 +1207,14 @@ async function openReferral(){
       }
     };
     root.appendChild(copy);
-    const historyTitle=document.createElement('h4');historyTitle.textContent='Commission History';historyTitle.style.cssText='margin-top:18px;margin-bottom:8px';root.appendChild(historyTitle);
+    const historyTitle=document.createElement('h4');historyTitle.textContent='Commission History';historyTitle.style.cssText='margin-top:18px;margin-bottom:8px;color:#e2e8f0';root.appendChild(historyTitle);
     const commissions=Array.isArray(referral.commissions)?referral.commissions:[];
     if(!commissions.length){
       const empty=document.createElement('p');empty.textContent='Abhi commission nahi mila. Referred user ka deposit approve hone par yahan dikhega.';empty.style.cssText='font-size:12px;color:#94a3b8;line-height:1.5';root.appendChild(empty);
     }else{
       commissions.forEach(item=>{
         const row=document.createElement('div');
-        row.style.cssText='padding:10px 0;border-bottom:1px solid #263247;font-size:12px;line-height:1.6';
+        row.style.cssText='padding:10px 0;border-bottom:1px solid #263247;font-size:12px;line-height:1.6;color:#cbd5e1';
         row.textContent='Deposit ₹'+Number(item.deposit_amount||0).toFixed(2)+' · Commission ₹'+Number(item.commission_amount||0).toFixed(2)+' · '+new Date(item.created_at).toLocaleDateString('en-IN');
         root.appendChild(row);
       });
@@ -1202,8 +1222,16 @@ async function openReferral(){
     const stat=document.getElementById('referralStatCount');if(stat)stat.textContent=String(referral.referredUsers||0);
   }catch(e){
     root.replaceChildren();
-    const p=document.createElement('p');p.textContent=e.message||'Referral details load nahi ho sake.';root.appendChild(p);
+    const p=document.createElement('p');p.textContent=e.message||'Referral details load nahi ho sake.';p.style.cssText='color:#fca5a5;padding:12px 0';root.appendChild(p);
   }
+}
+function closeReferralPage(){
+  const page=document.getElementById('jkReferralPage');
+  if(page)page.style.display='none';
+  document.body.classList.remove('jk-referral-only');
+  document.body.classList.remove('menu-open','popup-open');
+  setBottomNavActive('home');
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
 function aimHackLabel(name){
