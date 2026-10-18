@@ -1202,30 +1202,25 @@ function feature(name){
 
 function showHistoryDashboardBack(popup){
   const card=popup?.querySelector('.popup-card');
-  const title=document.getElementById('popupTitle');
   const root=document.getElementById('popupMessage');
   const btn=document.getElementById('popupDefaultClose');
-  /* Keep exactly one back button, below all history content. */
-  const oldTop=card?.querySelector('#jkHistoryTopBack');
-  if(oldTop)oldTop.remove();
-  if(card)card.style.cssText='display:flex!important;flex-direction:column!important;max-height:calc(100dvh - 24px)!important;overflow-y:auto!important;box-sizing:border-box!important';
+  const title=document.getElementById('popupTitle');
+  if(!card||!root||!btn)return;
+
+  /* History list scrolls inside its own area; the single BACK button stays fixed at the card bottom. */
+  card.style.cssText='display:flex!important;flex-direction:column!important;width:100%!important;max-width:640px!important;height:calc(100dvh - 20px)!important;max-height:calc(100dvh - 20px)!important;min-height:0!important;overflow:hidden!important;box-sizing:border-box!important;padding:16px!important';
   if(title)title.style.cssText='display:block!important;flex:0 0 auto!important;margin:0 0 12px!important';
-  if(root){
-    root.style.cssText='display:block!important;flex:0 0 auto!important;min-height:0!important;overflow:visible!important;padding-bottom:0!important';
-    root.querySelectorAll('button').forEach(item=>{if(/BACK TO DASHBOARD|← BACK|← DASHBOARD/i.test(item.textContent||''))item.remove();});
-  }
-  if(btn){
-    btn.style.cssText='display:block!important;position:relative!important;flex:0 0 auto!important;visibility:visible!important;opacity:1!important;z-index:99999!important;width:100%!important;min-height:50px!important;box-sizing:border-box!important;margin:12px 0 0!important;padding:14px!important;background:linear-gradient(110deg,#06b6d4,#2563eb,#7c3aed)!important;color:#fff!important;border:2px solid #93c5fd!important;border-radius:12px!important;font-size:15px!important;font-weight:900!important;box-shadow:0 4px 18px #2563eb77!important';
-    btn.textContent='← BACK';
-    btn.onclick=closePopup;
-  }
+  root.style.cssText='display:block!important;flex:1 1 0!important;height:0!important;min-height:0!important;max-height:none!important;overflow-y:auto!important;overscroll-behavior:contain!important;padding:0 3px 12px 0!important';
+  /* Remove any previously injected duplicate buttons from earlier versions. */
+  card.querySelectorAll('#jkHistoryTopBack,.jk-history-extra-back').forEach(el=>el.remove());
+  btn.textContent='← BACK';
+  btn.onclick=closePopup;
+  btn.style.cssText='display:block!important;visibility:visible!important;opacity:1!important;position:relative!important;flex:0 0 52px!important;align-self:stretch!important;width:100%!important;min-height:52px!important;height:52px!important;box-sizing:border-box!important;margin:10px 0 0!important;padding:14px!important;background:linear-gradient(110deg,#06b6d4,#2563eb,#7c3aed)!important;color:#fff!important;border:2px solid #93c5fd!important;border-radius:12px!important;font-size:15px!important;font-weight:900!important;box-shadow:0 -4px 18px #2563eb55!important;z-index:99999!important';
 }
 async function openDepositHistoryPanel(){
   closeMenu();
   const popup=document.getElementById('popup');
   popup.classList.add('history-screen');
-  const defaultClose=document.getElementById('popupDefaultClose');
-  if(defaultClose){defaultClose.style.display='block';defaultClose.textContent='← DASHBOARD';defaultClose.onclick=closePopup;defaultClose.style.cssText='display:block!important;background:linear-gradient(110deg,#06b6d4,#2563eb,#7c3aed)!important;color:#fff!important;border:1px solid #93c5fd!important;width:100%!important;min-height:46px!important;padding:13px!important;margin:8px 0 10px!important;font-weight:900!important;border-radius:10px!important;box-shadow:0 4px 14px #2563eb55!important';}
   showHistoryDashboardBack(popup);
   const root=document.getElementById('popupMessage');
   document.getElementById('popupTitle').textContent='Deposit History';
@@ -1283,8 +1278,6 @@ async function openOrderHistoryPanel(){
   closeMenu();
   const popup=document.getElementById('popup');
   popup.classList.add('history-screen');
-  const defaultClose=document.getElementById('popupDefaultClose');
-  if(defaultClose){defaultClose.style.display='block';defaultClose.textContent='← DASHBOARD';defaultClose.onclick=closePopup;defaultClose.style.cssText='display:block!important;background:linear-gradient(110deg,#06b6d4,#2563eb,#7c3aed)!important;color:#fff!important;border:1px solid #93c5fd!important;width:100%!important;min-height:46px!important;padding:13px!important;margin:8px 0 10px!important;font-weight:900!important;border-radius:10px!important;box-shadow:0 4px 14px #2563eb55!important';}
   showHistoryDashboardBack(popup);
   const root=document.getElementById('popupMessage');
   document.getElementById('popupTitle').textContent='Order History';
