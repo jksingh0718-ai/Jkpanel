@@ -1344,7 +1344,7 @@ async function openReferral(){
     return;
   }
   try{
-    const data=await customerApi('/api/my-account');
+    const data=await customerApi('/api/my-account?includeReferral=true');
     const referral=data.referral||{};
     root.replaceChildren();
     const intro=document.createElement('p');
