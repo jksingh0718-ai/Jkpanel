@@ -724,7 +724,6 @@ function openProfilePanel(){
       '<button type="button" onclick="closePopup();openOrderHistoryPanel()" style="display:flex;align-items:center;justify-content:space-between;text-align:left;width:100%;margin-top:9px;padding:16px;background:#111a2c;color:#f8fafc;border:1px solid #202b40;border-radius:14px"><span>Order History</span><span style="color:#64748b">›</span></button>'+
       '<button type="button" onclick="closePopup()" style="position:fixed;left:14px;right:14px;bottom:28px;z-index:9999;width:calc(100% - 28px);margin:0;padding:17px;background:#e3262e;color:#fff;border:0;border-radius:13px;font-size:16px;font-weight:900;box-shadow:0 8px 24px #0009;cursor:pointer">CLOSE</button>'+
       '<button type="button" onclick="closePopup();openDepositHistoryPanel()" style="display:flex;align-items:center;justify-content:space-between;text-align:left;width:100%;margin-top:9px;padding:16px;background:#111a2c;color:#f8fafc;border:1px solid #202b40;border-radius:14px"><span>Deposit History</span><span style="color:#64748b">›</span></button>'+
-    '<button type="button" onclick="closePopup()" style="display:block;width:100%;margin:12px 0 18px;padding:13px;background:#dc2626;color:#fff;border:0;border-radius:10px;font-size:14px;font-weight:900">CLOSE</button>'+
     '</div></div>';
   popup.style.display='flex';
   customerApi('/api/my-account').then(data=>{
