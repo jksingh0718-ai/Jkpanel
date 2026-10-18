@@ -490,6 +490,8 @@ app.get("/api/status", (req, res) => {
 });
 
 app.get("/admin", (req, res) => {
+  res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
+  res.set("Pragma", "no-cache");
   res.type("html").send(`<!doctype html>
 <html lang="en">
 <head>
@@ -527,7 +529,7 @@ small{color:#a6b2c0}
 <section id="login">
 <h2>Admin Login</h2>
 <form id="loginForm" autocomplete="off">
-<input id="adminLoginPassword" name="jkpanel-secret-entry" type="password" placeholder="Admin password" required autocomplete="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true">
+<input id="adminLoginPassword" name="jkpanel-secret-entry" type="password" placeholder="Admin password" required autocomplete="new-password" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" readonly>
 <br><button>Login</button>
 </form>
 </section>
@@ -610,6 +612,8 @@ small{color:#a6b2c0}
 <p id="message" role="status"></p>
 
 <script>
+const adminPasswordField=document.getElementById("adminLoginPassword");
+adminPasswordField.addEventListener("focus",()=>adminPasswordField.removeAttribute("readonly"),{once:true});
 document.getElementById("loginForm").onsubmit=async e=>{
  e.preventDefault();
  message.textContent="";
