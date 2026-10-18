@@ -199,6 +199,36 @@ footer{display:none}
 @media(min-width:600px){.jk-deposit-page{max-width:620px;margin:24px auto;padding:25px}.jk-deposit-form-card{padding:24px}.jk-deposit-hero h2{font-size:34px}}
 
 
+/* Polished full-screen account pages */
+.jk-referral-page{background:radial-gradient(ellipse at top right,#12365a 0%,#0b1830 38%,#080f1d 78%)!important}
+.jk-referral-top{background:linear-gradient(120deg,#102b48,#111b35 65%,#1b1740)!important;border:1px solid #27496b!important;border-radius:16px;padding:16px 13px!important;box-shadow:0 10px 30px #02061766}
+.jk-referral-eyebrow{color:#67e8f9!important}
+.jk-referral-top h2{font-size:22px!important;letter-spacing:.2px}
+.jk-referral-content{padding:8px 2px 18px!important}
+.jk-referral-content>p,.jk-referral-content>div{border-radius:12px}
+#jkReferralContent input{border-color:#315477!important;background:#081629!important}
+#jkReferralContent button:not(.jk-referral-close){border-radius:10px!important;background:linear-gradient(100deg,#06b6d4,#2563eb)!important;color:#fff!important;box-shadow:0 5px 15px #0891b233}
+.jk-keys-page{position:fixed;inset:0;z-index:181;display:none;flex-direction:column;gap:14px;overflow:hidden;padding:14px 14px calc(78px + env(safe-area-inset-bottom));background:radial-gradient(ellipse at top right,#12365a 0%,#0b1830 38%,#080f1d 78%);color:#fff}
+.jk-keys-top{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 13px;border:1px solid #27496b;border-radius:16px;background:linear-gradient(120deg,#102b48,#111b35 65%,#1b1740);box-shadow:0 10px 30px #02061766;flex:0 0 auto}
+.jk-keys-eyebrow{font-size:10px;letter-spacing:2px;color:#67e8f9;font-weight:900}
+.jk-keys-top h2{font-size:22px;margin-top:5px;color:#f8fafc}
+.jk-keys-top p{font-size:11px;color:#a9bdd4;margin-top:5px}
+.jk-keys-close{flex:0 0 auto;background:#dc2626!important;color:#fff!important;padding:12px 11px;border:1px solid #f87171;border-radius:9px;font-size:10px;box-shadow:0 4px 14px #dc262644}
+.jk-keys-content{min-height:0;flex:1 1 auto;overflow-y:auto;overscroll-behavior:contain;padding:3px 1px 16px}
+body.jk-keys-only > :not(#jkKeysPage):not(#bottomNav){display:none!important}
+body.jk-keys-only{padding-bottom:80px}
+.jk-keys-count{font-size:10px;letter-spacing:1.5px;color:#67e8f9;font-weight:900;margin:4px 0 12px;padding:10px 12px;background:#0b2035;border:1px solid #1d4968;border-radius:10px}
+.jk-key-card{display:flex;align-items:center;gap:12px;margin:9px 0;padding:14px;border:1px solid #254968;border-radius:14px;background:linear-gradient(135deg,#102238,#111a30 70%,#171a3a);box-shadow:0 7px 18px #02061755}
+.jk-key-icon{display:flex;align-items:center;justify-content:center;flex:0 0 44px;width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#164e63,#312e81);font-size:21px}
+.jk-key-info{display:flex;flex-direction:column;gap:6px;min-width:0;flex:1}
+.jk-key-info b{font-size:13px;color:#f1f5f9;overflow-wrap:anywhere}
+.jk-key-info small{font-size:10px;color:#94a3b8;line-height:1.5}
+.jk-key-status{align-self:flex-start;padding:4px 8px;border:1px solid #0f766e;border-radius:999px;background:#064e3b;color:#6ee7b7;font-size:9px;font-weight:900;letter-spacing:.6px}
+.jk-keys-empty{margin-top:12px;padding:28px 16px;text-align:center;border:1px solid #254968;border-radius:16px;background:linear-gradient(135deg,#102238,#111a30 70%,#171a3a)}
+.jk-keys-empty-icon{font-size:35px;margin-bottom:12px}
+.jk-keys-empty h3{font-size:17px;color:#f1f5f9;margin-bottom:8px}
+.jk-keys-empty p{font-size:12px;color:#a9bdd4;line-height:1.6}
+
 /* Refer and Earn is a dedicated full-screen page like Deposit, not a popup. */
 .jk-referral-page{position:fixed;inset:0;z-index:180;display:none;flex-direction:column;gap:14px;overflow:hidden;padding:14px 14px calc(78px + env(safe-area-inset-bottom));background:#070b14;color:#fff}
 .jk-referral-top{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0 14px;border-bottom:1px solid #263449;background:#070b14;flex:0 0 auto}
@@ -616,27 +646,58 @@ function openMyAccount(){
 
 
 function openKeysPanel(){
-  const defaultClose=document.getElementById('popupDefaultClose');if(defaultClose)defaultClose.style.display='block';
-  const root=document.getElementById('popupMessage');
-  document.getElementById('popupTitle').textContent='Purchased Keys';
+  closeMenu();
+  closePopup();
+  let page=document.getElementById('jkKeysPage');
+  if(!page){
+    page=document.createElement('section');
+    page.id='jkKeysPage';
+    page.className='jk-keys-page';
+    page.innerHTML='<div class="jk-keys-top"><div><span class="jk-keys-eyebrow">YOUR ACCOUNT</span><h2>🔑 My Keys</h2><p>Your purchased products</p></div><button type="button" class="jk-keys-close" onclick="closeKeysPage()">CLOSE ✕</button></div><div id="jkKeysContent" class="jk-keys-content"></div>';
+    document.body.appendChild(page);
+  }
+  document.body.classList.add('jk-keys-only');
+  page.style.display='flex';
+  page.scrollTop=0;
+  const root=document.getElementById('jkKeysContent');
   root.replaceChildren();
-  const loading=document.createElement('p');loading.textContent='OPENING...';root.appendChild(loading);
-  document.getElementById('popup').classList.remove('auth-screen');
-  document.getElementById('popup').style.display='flex';
+  const loading=document.createElement('p');loading.textContent='YOUR KEYS LOADING...';loading.style.cssText='text-align:center;padding:22px 0;color:#67e8f9;font-size:13px;font-weight:bold;letter-spacing:1px';root.appendChild(loading);
+  if(!localStorage.getItem('jk_customer_access_token')){
+    root.replaceChildren();
+    const p=document.createElement('p');p.textContent='Apni purchased keys dekhne ke liye pehle login karein.';p.style.cssText='color:#cbd5e1;line-height:1.6';root.appendChild(p);
+    const login=document.createElement('button');login.textContent='LOGIN / REGISTER';login.style.cssText='width:100%;padding:13px;margin-top:12px;background:linear-gradient(100deg,#38bdf8,#6366f1);color:#fff;border-radius:10px;font-weight:900';login.onclick=()=>{closeKeysPage();openAuth('login');};root.appendChild(login);
+    return;
+  }
   customerApi('/api/my-account').then(data=>{
     root.replaceChildren();
     const keys=Array.isArray(data.keys)?data.keys:[];
     if(!keys.length){
-      const p=document.createElement('p');p.textContent='Abhi koi purchased key assign nahi hui.';root.appendChild(p);
+      const empty=document.createElement('div');empty.className='jk-keys-empty';
+      empty.innerHTML='<div class="jk-keys-empty-icon">🔐</div><h3>No keys yet</h3><p>Abhi koi purchased key assign nahi hui.</p>';
+      root.appendChild(empty);
       return;
     }
+    const count=document.createElement('div');count.className='jk-keys-count';count.textContent=keys.length+' PURCHASED KEY'+(keys.length===1?'':'S');root.appendChild(count);
     keys.forEach(k=>{
-      const card=document.createElement('div');card.style.cssText='margin-top:8px;padding:12px;border:1px solid #334155;border-radius:8px';
-      const name=document.createElement('p');name.textContent=(k.product_name||'Key')+' · '+(k.status||'active');
-      const date=document.createElement('small');date.textContent='Key added: '+(k.created_at?new Date(k.created_at).toLocaleString('en-IN'):'—');
-      card.append(name,date);root.appendChild(card);
+      const card=document.createElement('div');card.className='jk-key-card';
+      const icon=document.createElement('div');icon.className='jk-key-icon';icon.textContent='🔑';
+      const info=document.createElement('div');info.className='jk-key-info';
+      const name=document.createElement('b');name.textContent=k.product_name||'Purchased Key';
+      const date=document.createElement('small');date.textContent='Added: '+(k.created_at?new Date(k.created_at).toLocaleString('en-IN'):'—');
+      const status=document.createElement('span');status.className='jk-key-status';status.textContent=String(k.status||'active').toUpperCase();
+      info.append(name,date,status);card.append(icon,info);root.appendChild(card);
     });
-  }).catch(e=>{root.replaceChildren();const p=document.createElement('p');p.textContent=e.message;root.appendChild(p);});
+  }).catch(e=>{
+    root.replaceChildren();const p=document.createElement('p');p.textContent=e.message||'Keys load nahi ho sake. Dobara try karein.';p.style.cssText='color:#fca5a5;padding:12px;line-height:1.5';root.appendChild(p);
+  });
+}
+function closeKeysPage(){
+  const page=document.getElementById('jkKeysPage');
+  if(page)page.style.display='none';
+  document.body.classList.remove('jk-keys-only');
+  document.body.classList.remove('menu-open','popup-open');
+  setBottomNavActive('home');
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
 let currentResellerActivationPrice=99;
