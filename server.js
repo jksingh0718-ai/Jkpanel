@@ -327,7 +327,7 @@ app.get("/api/my-account", async (req, res) => {
     supabase.from("wallet_transactions")
       .select("id, amount, transaction_type, status, reference, description, created_at")
       .eq("user_id", user.id).order("created_at", { ascending: false }).limit(200),
-    supabase.from("referral_profiles").select("user_id", { count: "exact", head: true }).eq("referred_by", user.id),
+    supabase.from("referral_profiles").select("user_id").eq("referred_by", user.id),
     supabase.from("referral_commissions")
       .select("id, referred_user_id, deposit_request_id, deposit_amount, commission_amount, status, created_at")
       .eq("referrer_user_id", user.id).order("created_at", { ascending: false }).limit(100),
@@ -369,7 +369,13 @@ app.get("/api/my-account", async (req, res) => {
     referral: {
       code: referralProfile.referral_code,
       link: "https://jkpanel.shop/?ref=" + encodeURIComponent(referralProfile.referral_code),
-      referredUsers: Number(referralsResult.count || 0),
+      referredUsers: (referralsResult.data || []).length,
+      referredUsersList: await Promise.all((referralsResult.data || []).map(async (profile) => {
+        const { data: referredAuth, error: referredAuthError } = await supabase.auth.admin.getUserById(profile.user_id);
+        if (referredAuthError || !referredAuth?.user) return { name: "User", email: "", created_at: null };
+        const email = referredAuth.user.email || "";
+        return { name: email ? email.split("@")[0] : "User", email, created_at: referredAuth.user.created_at || null };
+      })),
       totalEarned: commissions.reduce((sum, item) => sum + Number(item.commission_amount || 0), 0),
       commissions
     }
