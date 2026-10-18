@@ -765,7 +765,16 @@ function openKeysPanel(){
       const name=document.createElement('b');name.textContent=k.product_name||'Purchased Key';
       const date=document.createElement('small');date.textContent='Added: '+(k.created_at?new Date(k.created_at).toLocaleString('en-IN'):'—');
       const status=document.createElement('span');status.className='jk-key-status';status.textContent=String(k.status||'active').toUpperCase();
-      info.append(name,date,status);card.append(icon,info);root.appendChild(card);
+      info.append(name,date,status);
+      card.append(icon,info);
+      if(k.key_value){
+        const keyRow=document.createElement('div');keyRow.style.cssText='display:flex;align-items:center;gap:8px;width:100%;margin-top:10px;flex-wrap:wrap';
+        const keyText=document.createElement('code');keyText.textContent=String(k.key_value);keyText.style.cssText='display:block;flex:1 1 180px;min-width:0;overflow-wrap:anywhere;padding:10px;background:#070d1a;border:1px solid #334155;border-radius:8px;color:#a5f3fc;font-size:12px;user-select:text';
+        const copyBtn=document.createElement('button');copyBtn.type='button';copyBtn.textContent='📋 COPY KEY';copyBtn.style.cssText='flex:0 0 auto;padding:10px 12px;background:linear-gradient(110deg,#06b6d4,#2563eb);color:#fff;border:1px solid #7dd3fc;border-radius:9px;font-size:11px;font-weight:900';
+        copyBtn.onclick=async()=>{try{await navigator.clipboard.writeText(String(k.key_value));copyBtn.textContent='✓ COPIED';}catch(e){const range=document.createRange();range.selectNodeContents(keyText);const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range);copyBtn.textContent='KEY SELECTED';}};
+        keyRow.append(keyText,copyBtn);card.appendChild(keyRow);
+      }
+      root.appendChild(card);
     });
   }).catch(e=>{
     root.replaceChildren();const p=document.createElement('p');p.textContent=e.message||'Keys load nahi ho sake. Dobara try karein.';p.style.cssText='color:#fca5a5;padding:12px;line-height:1.5';root.appendChild(p);
@@ -1196,7 +1205,7 @@ async function openDepositHistoryPanel(){
   const popup=document.getElementById('popup');
   popup.classList.add('history-screen');
   const defaultClose=document.getElementById('popupDefaultClose');
-  if(defaultClose){defaultClose.style.display='block';defaultClose.textContent='CLOSE ✕';defaultClose.style.cssText='display:block!important;background:#dc2626!important;color:#fff!important;border:1px solid #f87171!important;width:100%!important;min-height:46px!important;padding:13px!important;margin:8px 0 10px!important;font-weight:900!important;border-radius:9px!important;';}
+  if(defaultClose){defaultClose.style.display='block';defaultClose.textContent='← DASHBOARD';defaultClose.onclick=closePopup;defaultClose.style.cssText='display:block!important;background:linear-gradient(110deg,#06b6d4,#2563eb,#7c3aed)!important;color:#fff!important;border:1px solid #93c5fd!important;width:100%!important;min-height:46px!important;padding:13px!important;margin:8px 0 10px!important;font-weight:900!important;border-radius:10px!important;box-shadow:0 4px 14px #2563eb55!important';}
   const root=document.getElementById('popupMessage');
   document.getElementById('popupTitle').textContent='Deposit History';
   root.replaceChildren();
@@ -1254,7 +1263,7 @@ async function openOrderHistoryPanel(){
   const popup=document.getElementById('popup');
   popup.classList.add('history-screen');
   const defaultClose=document.getElementById('popupDefaultClose');
-  if(defaultClose)defaultClose.style.display='block';
+  if(defaultClose){defaultClose.style.display='block';defaultClose.textContent='← DASHBOARD';defaultClose.onclick=closePopup;defaultClose.style.cssText='display:block!important;background:linear-gradient(110deg,#06b6d4,#2563eb,#7c3aed)!important;color:#fff!important;border:1px solid #93c5fd!important;width:100%!important;min-height:46px!important;padding:13px!important;margin:8px 0 10px!important;font-weight:900!important;border-radius:10px!important;box-shadow:0 4px 14px #2563eb55!important';}
   const root=document.getElementById('popupMessage');
   document.getElementById('popupTitle').textContent='Order History';
   root.replaceChildren();
