@@ -526,6 +526,15 @@ small{color:#a6b2c0}
 #tab-keys #showKeyForm{background:linear-gradient(135deg,#c084fc,#7c3aed);color:#fff}
 #tab-resellers button{border-radius:9px}#tab-resellers #saveDripResellerPrices{background:linear-gradient(135deg,#fb923c,#f43f5e);color:#fff}
 .admin-section{display:none}.admin-section.active{display:block}
+/* Compact single-line product controls and varied button colors, without animations. */
+#tab-products .search-box{width:100%;box-sizing:border-box}
+#tab-products #refreshProducts,#tab-products #showProductForm{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;width:auto;min-height:40px;margin:6px 6px 10px 0;padding:9px 13px;border:0;border-radius:10px;white-space:nowrap}
+#tab-products #refreshProducts{background:linear-gradient(135deg,#f59e0b,#ea580c);color:#fff}
+#tab-products #showProductForm{background:linear-gradient(135deg,#38bdf8,#6366f1);color:#fff}
+#tab-products #productSave{background:linear-gradient(135deg,#22c55e,#0d9488);color:#fff}
+#tab-products #productCancel{background:linear-gradient(135deg,#64748b,#475569);color:#fff}
+#tab-products #addProductPlan{background:linear-gradient(135deg,#c084fc,#7c3aed)!important;color:#fff!important;border:0;border-radius:9px}
+#adminMenu button:nth-child(1){background:linear-gradient(135deg,#0ea5e9,#2563eb);color:#fff}#adminMenu button:nth-child(2){background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff}#adminMenu button:nth-child(3){background:linear-gradient(135deg,#ec4899,#be185d);color:#fff}#adminMenu button:nth-child(4){background:linear-gradient(135deg,#10b981,#047857);color:#fff}#adminMenu button:nth-child(5){background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff}#adminMenu button[data-action="logout"]{background:linear-gradient(135deg,#f87171,#dc2626);color:#fff}
 .search-box{width:100%;background:#0b1220;color:white;border:1px solid #334155;padding:13px;margin:8px 0 14px}
 @media(max-width:480px){body{padding:10px}.admin-tabs button{font-size:12px}}
 </style>
