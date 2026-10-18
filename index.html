@@ -465,6 +465,8 @@ function updateAccountBar(email){
   const menuLogout=document.getElementById('menuLogout');
   if(menuLogin){menuLogin.textContent=email?'PROFILE':'LOGIN / REGISTER';menuLogin.onclick=()=>{closeMenu();if(email)openMyAccount();else openAuth('login');return false;};}
   if(menuLogout)menuLogout.style.display=email?'block':'none';
+  const dashboardAuthButton=document.getElementById('dashboardAuthButton');
+  if(dashboardAuthButton)dashboardAuthButton.style.display=email?'none':'block';
   const bar=document.getElementById('accountBar');
   if(!bar)return;
   bar.replaceChildren();
