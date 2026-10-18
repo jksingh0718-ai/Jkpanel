@@ -205,8 +205,9 @@ body.jk-deposit-only { padding-bottom:90px; }
 #jkDepositPage { position:relative; z-index:2; }
 
 
-/* Account/profile pages: prevent duplicate global close controls */
-#popup.account-screen #popupDefaultClose,#popup.profile-sky-screen #popupDefaultClose{display:none!important}
+/* Put the single CLOSE button on the correct profile variant */
+#popup.account-screen #popupDefaultClose{display:block!important}
+#popup.profile-sky-screen #popupDefaultClose{display:none!important}
 #popup.account-screen .popup-card{overflow:hidden!important}
 /* Compact, fixed profile and history pages on mobile */
 #popup.history-screen{position:fixed!important;inset:0!important;padding:0!important;overflow:hidden!important;align-items:stretch!important;justify-content:stretch!important;background:#070b14!important;z-index:200!important}
@@ -573,24 +574,26 @@ function openMyAccount(){
     const orders=Array.isArray(data.orders)?data.orders:[];
     if(!orders.length){const p=document.createElement('p');p.textContent='Abhi koi order nahi hai.';root.appendChild(p);}
     orders.forEach(o=>{
-      const card=document.createElement('div');card.style.cssText='margin-top:8px;padding:10px;border:1px solid #334155;border-radius:8px';
-      const title=document.createElement('p');title.textContent=(o.product_name||'Product')+' — ₹'+Number(o.amount||0).toFixed(2);
-      const payment=document.createElement('p');payment.textContent='Payment: '+(o.payment_status||'pending')+' | Order: '+(o.order_status||'pending');
-      const date=document.createElement('small');date.textContent='Purchased/ordered: '+(o.created_at?new Date(o.created_at).toLocaleString('en-IN'):'—')+' | ID: '+o.id;
-      card.append(title,payment,date);root.appendChild(card);
+      const card=document.createElement('div');card.style.cssText='display:flex;align-items:center;gap:8px;flex-wrap:nowrap;overflow-x:auto;white-space:nowrap;margin-top:8px;padding:10px 12px;background:#0c1423;border:1px solid #26364d;border-radius:10px;box-shadow:0 3px 10px #0002;font-size:12px';
+      const title=document.createElement('strong');title.textContent=(o.product_name||'Product')+' · ₹'+Number(o.amount||0).toFixed(2);title.style.cssText='flex:0 0 auto;color:#e2e8f0';
+      const payment=document.createElement('span');payment.textContent='Pay: '+(o.payment_status||'pending');payment.style.cssText='flex:0 0 auto;color:#fbbf24';
+      const status=document.createElement('span');status.textContent='Order: '+(o.order_status||'pending');status.style.cssText='flex:0 0 auto;color:#7dd3fc';
+      const date=document.createElement('small');date.textContent=o.created_at?new Date(o.created_at).toLocaleDateString('en-IN'):'—';date.style.cssText='flex:0 0 auto;color:#94a3b8';
+      card.append(title,payment,status,date);root.appendChild(card);
     });
 
     const keysTitle=document.createElement('h4');keysTitle.textContent='My Keys';keysTitle.style.marginTop='16px';root.appendChild(keysTitle);
     const keys=Array.isArray(data.keys)?data.keys:[];
     if(!keys.length){const p=document.createElement('p');p.textContent='Abhi koi key assign nahi hui.';root.appendChild(p);}
     keys.forEach(k=>{
-      const card=document.createElement('div');card.style.cssText='margin-top:8px;padding:10px;border:1px solid #334155;border-radius:8px';
-      const name=document.createElement('p');name.textContent=(k.product_name||'Key')+' · '+(k.status||'active');
-      const date=document.createElement('small');date.textContent='Key added: '+(k.created_at?new Date(k.created_at).toLocaleString('en-IN'):'—');
-      card.append(name,date);root.appendChild(card);
+      const card=document.createElement('div');card.style.cssText='display:flex;align-items:center;gap:8px;flex-wrap:nowrap;overflow-x:auto;white-space:nowrap;margin-top:7px;padding:10px 12px;background:#0c1423;border:1px solid #26364d;border-radius:10px;font-size:12px';
+      const name=document.createElement('strong');name.textContent=k.product_name||'Key';name.style.cssText='flex:0 0 auto;color:#e2e8f0';
+      const status=document.createElement('span');status.textContent=String(k.status||'active').toUpperCase();status.style.cssText='flex:0 0 auto;color:#6ee7b7';
+      const date=document.createElement('small');date.textContent=k.created_at?new Date(k.created_at).toLocaleDateString('en-IN'):'—';date.style.cssText='flex:0 0 auto;color:#94a3b8';
+      card.append(name,status,date);root.appendChild(card);
     });
     const support=document.createElement('a');support.href='https://wa.me/917645957071';support.target='_blank';support.rel='noopener';support.textContent='Contact Support';support.style.cssText='display:block;text-align:center;text-decoration:none;margin:16px 0 8px;padding:13px;background:#10271f;color:#86efac;border:1px solid #166534;border-radius:10px;font-weight:800';root.appendChild(support);
-    const close=document.createElement('button');close.type='button';close.textContent='CLOSE';close.onclick=closePopup;close.style.cssText='display:block;width:100%;margin:0 0 12px;padding:13px;background:#dc2626;color:#fff;border:0;border-radius:10px;font-size:13px;font-weight:900';root.appendChild(close);
+    
   }).catch(e=>{root.replaceChildren();const p=document.createElement('p');p.textContent=e.message;root.appendChild(p);});
 }
 
