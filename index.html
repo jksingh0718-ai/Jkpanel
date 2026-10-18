@@ -256,6 +256,21 @@ body.jk-deposit-only { padding-bottom:90px; }
 #popup.history-screen #popupTitle{position:relative!important;top:auto!important;flex:0 0 auto!important;padding:9px 0 12px!important;margin:0 0 8px!important;border-bottom:1px solid #263449!important;background:#070b14!important;font-size:16px!important}
 #popup.history-screen #popupMessage{flex:1 1 0!important;height:0!important;min-height:0!important;overflow-y:auto!important;overscroll-behavior:contain!important;padding:0 0 10px!important}
 #popup.history-screen #popupDefaultClose{position:relative!important;bottom:auto!important;flex:0 0 auto!important;align-self:stretch!important;width:100%!important;min-height:44px!important;margin:8px 0 10px!important;padding:12px!important;border-radius:10px!important;box-shadow:0 -6px 16px #0005!important}
+
+/* Profile and Keys should sit above the page but BELOW the persistent bottom navigation. */
+#bottomNav{z-index:300!important;background:linear-gradient(110deg,#101b35,#111827 55%,#1e1b4b)!important;border-top:1px solid #315477!important;box-shadow:0 -8px 26px #020617aa!important}
+.jk-keys-page{inset:0 0 calc(66px + env(safe-area-inset-bottom)) 0!important;z-index:250!important;padding-bottom:16px!important;background:radial-gradient(ellipse at 85% 0%,#1d4ed833 0%,transparent 42%),linear-gradient(145deg,#101e35 0%,#0b1426 52%,#11112b 100%)!important}
+body.jk-keys-only{padding-bottom:96px!important}
+#popup.profile-sky-screen{inset:0 0 calc(66px + env(safe-area-inset-bottom)) 0!important;z-index:250!important;background:transparent!important}
+#popup.profile-sky-screen .popup-card{height:100%!important;max-height:100%!important;min-height:0!important;overflow-y:auto!important;background:linear-gradient(145deg,#101e35 0%,#0b1426 55%,#171633 100%)!important}
+#popup.profile-sky-screen #popupMessage>div{min-height:100%!important;background:radial-gradient(ellipse at 50% 0%,#1e40af55 0%,transparent 42%),linear-gradient(145deg,#101e35 0%,#0b1426 55%,#171633 100%)!important;padding-bottom:24px!important}
+#popup.profile-sky-screen .jk-profile-sky{background-image:linear-gradient(180deg,#0b173000 15%,#111a30cc 100%),url("https://images.unsplash.com/photo-1595094616578-b99ad9b5f38d?auto=format&fit=crop&fm=jpg&q=90&w=1800")!important;background-position:center 48%!important;border-radius:0 0 24px 24px!important}
+#popup.profile-sky-screen #popupMessage button:not([style*="position:fixed"]){background:linear-gradient(115deg,#142943,#1b2340)!important;border-color:#315477!important;box-shadow:0 7px 18px #02061766!important}
+#popup.profile-sky-screen #popupMessage button[style*="position:fixed"]{bottom:calc(76px + env(safe-area-inset-bottom))!important}
+#popup.history-screen.account-screen{inset:0 0 calc(66px + env(safe-area-inset-bottom)) 0!important;z-index:250!important;background:linear-gradient(145deg,#101e35 0%,#0b1426 55%,#171633 100%)!important}
+#popup.history-screen.account-screen .popup-card{height:100%!important;max-height:100%!important;background:linear-gradient(145deg,#101e35 0%,#0b1426 55%,#171633 100%)!important}
+#popup.history-screen.account-screen #popupMessage{padding-bottom:18px!important}
+
 </style>
 </head>
 <body>
@@ -657,6 +672,7 @@ function openKeysPanel(){
     document.body.appendChild(page);
   }
   document.body.classList.add('jk-keys-only');
+  setBottomNavActive('keys');
   page.style.display='flex';
   page.scrollTop=0;
   const root=document.getElementById('jkKeysContent');
@@ -771,7 +787,7 @@ async function checkResellerPayment(){
 function openProfilePanel(){
   closeMenu();
   const popup=document.getElementById('popup');
-  popup.classList.remove('history-screen','auth-screen','account-screen');popup.classList.add('profile-sky-screen');
+  popup.classList.remove('history-screen','auth-screen','account-screen','profile-sky-screen');popup.classList.add('profile-sky-screen');
   const defaultClose=document.getElementById('popupDefaultClose');
   if(defaultClose)defaultClose.style.display='none';
   const card=popup.querySelector('.popup-card');
@@ -835,6 +851,9 @@ function navigateBottom(name){
   if(backdrop)backdrop.style.display='none';
   const depositPage=document.getElementById('jkDepositPage');
   if(depositPage)depositPage.style.display='none';
+  const keysPage=document.getElementById('jkKeysPage');
+  if(keysPage)keysPage.style.display='none';
+  document.body.classList.remove('jk-keys-only','jk-referral-only');
   // Critical: clear deposit-only mode on every tab change. deposit() re-enables it
   // only when the Deposit tab is actually selected.
   document.body.classList.remove('jk-deposit-only');
