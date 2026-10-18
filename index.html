@@ -41,9 +41,9 @@ header{display:flex;align-items:center;justify-content:space-between;gap:8px;bor
 .menu-item{display:block;min-height:46px;box-sizing:border-box;margin:7px 0;padding:12px 14px;border-radius:11px;background:linear-gradient(110deg,#ffffff0d,#ffffff05);border:1px solid #93c5fd22;color:#f8fafc;text-decoration:none;font-size:15px;font-weight:800;letter-spacing:.15px;box-shadow:0 3px 10px #02061722}
 .menu-item:active{background:linear-gradient(110deg,#0891b2,#4f46e5);border-color:#a5b4fc}
 .menu-item#menuLogin{background:linear-gradient(110deg,#0284c7,#4f46e5);border-color:#93c5fd66}
-#menuLogout{color:#f87171!important;background:transparent!important;border:0!important;border-bottom:1px solid #263247!important;border-radius:0!important;margin-top:0!important;padding:14px 4px!important;font-weight:400!important;letter-spacing:normal!important;box-shadow:none!important;text-align:left!important}
-#menuLogout::before{content:'⇥';display:inline-block;color:#f87171;font-size:16px;font-weight:bold;margin-right:7px;vertical-align:-1px}
-#menuLogout:active{background:#263247!important;color:#fca5a5!important}
+#menuLogout{display:block!important;color:#fff!important;background:linear-gradient(110deg,#ef4444,#be123c)!important;border:1px solid #fda4af!important;border-radius:12px!important;margin-top:14px!important;padding:14px!important;font-size:15px!important;font-weight:900!important;letter-spacing:.35px!important;box-shadow:0 6px 16px #be123c44!important;text-align:center!important}
+#menuLogout::before{content:'⇥';display:inline-block;color:#fff;font-size:17px;font-weight:900;margin-right:8px;vertical-align:-1px}
+#menuLogout:active{background:linear-gradient(110deg,#be123c,#9f1239)!important;color:#fff!important}
 #popup{display:none;position:fixed;inset:0;background:#000c;z-index:200;align-items:center;justify-content:center;padding:16px}
  #popup .popup-card.video-player-card{width:100%;max-width:900px;background:#05070b;border:1px solid #334155;padding:12px}
  #popup .popup-card.video-player-card #popupMessage{width:100%}
@@ -651,6 +651,7 @@ function openMyAccount(){
   const topTitle=document.createElement('b');topTitle.textContent='MY ACCOUNT';topTitle.style.cssText='font-size:15px;letter-spacing:.5px;color:#7dd3fc';
   const x=document.createElement('button');x.type='button';x.textContent='×';x.setAttribute('aria-label','Close profile');x.style.cssText='display:flex;align-items:center;justify-content:center;width:42px;height:42px;flex:0 0 42px;padding:0;margin:0;border:2px solid #fda4af;border-radius:13px;background:linear-gradient(135deg,#fb7185 0%,#e11d48 48%,#7c3aed 100%);color:#fff;font-size:29px;font-weight:900;line-height:1;box-shadow:0 0 0 3px #fb718533,0 5px 18px #e11d4866';x.onclick=closePopup;
   top.append(topTitle,x);root.appendChild(top);
+  const earlyLogout=document.createElement('button');earlyLogout.type='button';earlyLogout.textContent='⇥  LOG OUT';earlyLogout.style.cssText='display:none;width:100%;margin:0 0 12px;padding:13px;background:linear-gradient(110deg,#ef4444,#be123c);color:#fff;border:1px solid #fda4af;border-radius:11px;font-weight:900;letter-spacing:.4px';earlyLogout.onclick=logoutCustomer;root.appendChild(earlyLogout);
   const loading=document.createElement('div');
   loading.style.cssText='display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:28px 8px;color:#94a3b8;text-align:center';
   const spinner=document.createElement('div');
@@ -665,6 +666,7 @@ function openMyAccount(){
     const topTitle=document.createElement('b');topTitle.textContent='MY ACCOUNT';topTitle.style.cssText='font-size:15px;letter-spacing:.5px;color:#7dd3fc';
     const x=document.createElement('button');x.type='button';x.textContent='×';x.setAttribute('aria-label','Close profile');x.style.cssText='flex:0 0 40px;width:40px;height:40px;padding:0;margin:0;border:1px solid #334155;border-radius:10px;background:#172033;color:#fff;font-size:29px;line-height:1;cursor:pointer';x.onclick=closePopup;
     top.append(topTitle,x);root.appendChild(top);
+    const profileLogout=document.createElement('button');profileLogout.type='button';profileLogout.textContent='⇥  LOG OUT';profileLogout.style.cssText='display:block;width:100%;margin:0 0 12px;padding:13px;background:linear-gradient(110deg,#ef4444,#be123c);color:#fff;border:1px solid #fda4af;border-radius:11px;font-weight:900;letter-spacing:.4px;box-shadow:0 5px 14px #be123c44';profileLogout.onclick=logoutCustomer;root.appendChild(profileLogout);
     const avatarWrap=document.createElement('div');
     avatarWrap.style.cssText='display:flex;align-items:center;gap:13px;padding:14px;margin:0 0 14px;background:#0b1220;border:1px solid #334155;border-radius:14px';
     const avatar=document.createElement('div');
@@ -1043,13 +1045,12 @@ function openProductVideo(url,title,thumb){
     const slot=existing.closest('.product-video-slot');
     const savedTitle=slot?.dataset.productTitle||existing.dataset.productTitle||'Product';
     const savedUrl=slot?.dataset.videoUrl||existing.currentSrc||existing.src;
-    const restored=document.createElement('button');
+    const restored=slot&&slot._jkThumbnail?slot._jkThumbnail.cloneNode(true):document.createElement('button');
     restored.type='button';restored.className='product-video-thumb';
     restored.setAttribute('aria-label','Play '+savedTitle+' video');
     restored.dataset.videoUrl=savedUrl;restored.dataset.productTitle=savedTitle;
     restored.style.cssText='position:relative;display:block;width:100%;padding:0;border:0;background:#030712;border-radius:12px;overflow:hidden;cursor:pointer;margin-bottom:14px';
-    const poster=document.createElement('div');poster.textContent='▶  PLAY VIDEO AGAIN';poster.style.cssText='display:flex;align-items:center;justify-content:center;width:100%;min-height:220px;color:#fff;font-weight:800;font-size:16px;background:linear-gradient(135deg,#0f172a,#1e3a8a,#312e81)';
-    restored.appendChild(poster);
+    if(!restored.querySelector('img')){const poster=document.createElement('div');poster.textContent='▶';poster.style.cssText='display:flex;align-items:center;justify-content:center;width:100%;min-height:220px;color:#fff;font-weight:800;font-size:32px;background:linear-gradient(135deg,#0f172a,#1e3a8a,#312e81)';restored.appendChild(poster);}
     restored.onclick=()=>openProductVideo(restored.dataset.videoUrl,restored.dataset.productTitle,restored);
     if(slot)slot.replaceWith(restored);else existing.replaceWith(restored);
   });
@@ -1063,6 +1064,7 @@ function openProductVideo(url,title,thumb){
   placeholder.className='product-video-slot';
   placeholder.dataset.productTitle=title;placeholder.dataset.videoUrl=url;
   placeholder.style.cssText='width:100%;margin:0 0 14px';
+  placeholder._jkThumbnail=thumb.cloneNode(true);
   thumb.replaceWith(placeholder);
   const video=document.createElement('video');
   video.dataset.productTitle=title;video.src=url;video.controls=true;video.autoplay=true;video.playsInline=true;video.preload='metadata';
