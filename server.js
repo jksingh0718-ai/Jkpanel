@@ -246,7 +246,7 @@ app.post("/api/auth/change-password", async (req, res) => {
   const accessToken = typeof req.body?.accessToken === "string" ? req.body.accessToken : "";
   const currentPassword = typeof req.body?.currentPassword === "string" ? req.body.currentPassword : "";
   const newPassword = typeof req.body?.newPassword === "string" ? req.body.newPassword : "";
-  if (!accessToken || !/^\\d{6}$/.test(currentPassword) || !/^\\d{6}$/.test(newPassword)) {
+  if (!accessToken || !/^\d{6}$/.test(currentPassword) || !/^\d{6}$/.test(newPassword)) {
     return res.status(400).json({ error: "Current aur new password dono exactly 6 digits ke hone chahiye." });
   }
   if (currentPassword === newPassword) return res.status(400).json({ error: "Naya password current password se alag hona chahiye." });
@@ -256,7 +256,7 @@ app.post("/api/auth/change-password", async (req, res) => {
   const { error: verifyError } = await authClient.auth.signInWithPassword({ email, password: currentPassword });
   if (verifyError) return res.status(401).json({ error: "Current password sahi nahi hai." });
   try {
-    const response = await fetch(supabaseUrl.replace(/\\/+$/, "") + "/auth/v1/user", {
+    const response = await fetch(supabaseUrl.replace(/\/+$/, "") + "/auth/v1/user", {
       method: "PUT",
       headers: { "Content-Type": "application/json", "apikey": supabasePublishableKey, "Authorization": "Bearer " + accessToken },
       body: JSON.stringify({ password: newPassword })
@@ -1070,7 +1070,7 @@ async function loadKeyGroups(){
    header.append(titleWrap,toggle);
    const panel=document.createElement("div");panel.hidden=true;panel.style.cssText="margin-top:12px";
    const planList=document.createElement("div");planList.style.cssText="display:grid;gap:7px";
-   const durationRank=label=>{const d=String(label||"").toLowerCase();const h=d.match(/(\\d+(?:\\.\\d+)?)\\s*(?:h|hr|hrs|hour|hours)\\b/);if(h)return Number(h[1]);const day=d.match(/(\\d+(?:\\.\\d+)?)\\s*(?:d|day|days)\\b/);if(day)return Number(day[1])*24;const m=d.match(/(\\d+(?:\\.\\d+)?)\\s*(?:m|min|mins|minute|minutes)\\b/);return m?Number(m[1])/60:999999;};
+   const durationRank=label=>{const d=String(label||"").toLowerCase();const h=d.match(/(\d+(?:\\.\d+)?)\\s*(?:h|hr|hrs|hour|hours)\\b/);if(h)return Number(h[1]);const day=d.match(/(\d+(?:\\.\d+)?)\\s*(?:d|day|days)\\b/);if(day)return Number(day[1])*24;const m=d.match(/(\d+(?:\\.\d+)?)\\s*(?:m|min|mins|minute|minutes)\\b/);return m?Number(m[1])/60:999999;};
    [...items].sort((a,b)=>durationRank(String(a.name||"").slice(base.length).replace(/^\\s*-\\s*/,""))-durationRank(String(b.name||"").slice(base.length).replace(/^\\s*-\\s*/,""))).forEach(p=>{
     const row=document.createElement("div");row.style.cssText="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 11px;border:1px solid #263449;border-radius:9px;background:#0b111b";
     const left=document.createElement("div");left.style.cssText="min-width:0;flex:1";
@@ -1207,7 +1207,7 @@ async function loadResellers(){
   const allProducts=[...(data.products||[])].sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),"en",{numeric:true,sensitivity:"base"}));
   const groups=new Map();
   allProducts.forEach(p=>{const name=String(p.name||"Unnamed product");const match=name.match(/^(.*?)\\s+-\\s+(.+)$/);const base=match?match[1].trim():name;const duration=match?match[2].trim():"Standard";if(!groups.has(base))groups.set(base,[]);groups.get(base).push({...p,_duration:duration});});
-  const durationRank=value=>{const v=String(value||"").toLowerCase().replace(/\\s+/g,"");const m=v.match(/(\\d+(?:\\.\\d+)?)(h|hr|hrs|hour|hours|d|day|days|w|week|weeks|m|month|months)/);if(!m)return 999999;let n=Number(m[1]);const unit=m[2];if(["h","hr","hrs","hour","hours"].includes(unit))return n;if(["d","day","days"].includes(unit))return n*24;if(["w","week","weeks"].includes(unit))return n*168;if(["m","month","months"].includes(unit))return n*720;return 999999;};
+  const durationRank=value=>{const v=String(value||"").toLowerCase().replace(/\\s+/g,"");const m=v.match(/(\d+(?:\\.\d+)?)(h|hr|hrs|hour|hours|d|day|days|w|week|weeks|m|month|months)/);if(!m)return 999999;let n=Number(m[1]);const unit=m[2];if(["h","hr","hrs","hour","hours"].includes(unit))return n;if(["d","day","days"].includes(unit))return n*24;if(["w","week","weeks"].includes(unit))return n*168;if(["m","month","months"].includes(unit))return n*720;return 999999;};
   if(!allProducts.length){dripRoot.textContent="Abhi koi product nahi hai. Products ya Keys Management mein product add karein.";}
   [...groups.entries()].sort((a,b)=>a[0].localeCompare(b[0],"en",{numeric:true,sensitivity:"base"})).forEach(([base,plans])=>{
    plans.sort((a,b)=>durationRank(a._duration)-durationRank(b._duration)||a._duration.localeCompare(b._duration,"en",{numeric:true,sensitivity:"base"}));
