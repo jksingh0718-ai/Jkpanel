@@ -528,8 +528,8 @@ small{color:#a6b2c0}
 <h1 id="adminTitle"><button type="button" id="adminMenuToggle" aria-label="Open navigation menu" aria-expanded="false">☰</button> <span>JKPanel <span style="color:#39f58b">Admin</span></span></h1>
 <section id="login">
 <h2>Admin Login</h2>
-<form id="loginForm" autocomplete="off">
-<input id="adminLoginPassword" name="password" type="password" placeholder="Admin password" required autocomplete="current-password" autocapitalize="off" spellcheck="false">
+<form id="loginForm" autocomplete="off" onsubmit="return window.jkAdminLogin(event)">
+<input id="adminLoginPassword" name="jkpanel-secret-entry" type="password" placeholder="Admin password" required autocomplete="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true">
 <br><button>Login</button>
 </form>
 </section>
@@ -611,6 +611,40 @@ small{color:#a6b2c0}
 </section>
 <p id="message" role="status"></p>
 
+<script>
+window.jkAdminLogin=async function(event){
+ event.preventDefault();
+ event.stopImmediatePropagation();
+ const form=document.getElementById("loginForm");
+ const input=document.getElementById("adminLoginPassword");
+ const button=form.querySelector("button");
+ const message=document.getElementById("message");
+ const attempted=String(input.value||"");
+ if(!attempted){message.textContent="Admin password enter karein.";input.focus();return false;}
+ button.disabled=true;button.textContent="Logging in...";message.textContent="";
+ try{
+  const response=await fetch("/api/admin/login",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:attempted})});
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(data.error||"Login failed.");
+  document.getElementById("login").hidden=true;
+  document.getElementById("dashboard").hidden=false;
+  message.textContent="Login successful. Admin panel loading...";
+  for(const name of ["loadOrders","loadCustomers","loadProducts","loadKeyGroups","loadResellers"]){
+   if(typeof window[name]==="function"){try{await window[name]();}catch(e){}}
+  }
+  if(message.textContent==="Login successful. Admin panel loading...")message.textContent="Admin panel ready.";
+ }catch(error){
+  document.getElementById("dashboard").hidden=true;
+  document.getElementById("login").hidden=false;
+  message.textContent=error.message||"Login failed. Check password and try again.";
+  input.value=attempted;
+  input.focus();
+ }finally{
+  button.disabled=false;button.textContent="Login";
+ }
+ return false;
+};
+</script>
 <script>
 const loginForm=document.getElementById("loginForm");
 const message=document.getElementById("message");
