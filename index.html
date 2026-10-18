@@ -881,7 +881,7 @@ async function submitProfilePasswordChange(event){
   const status=document.getElementById('profilePasswordStatus');
   const submit=document.getElementById('profilePasswordSubmit');
   if(!current||!next||!confirm||!status||!submit)return;
-  if(!/^\\d{6}$/.test(current.value)||!/^\\d{6}$/.test(next.value)){status.textContent='All passwords must be exactly 6 digits.';return;}
+  if(!/^\d{6}$/.test(current.value)||!/^\d{6}$/.test(next.value)){status.textContent='All passwords must be exactly 6 digits.';return;}
   if(next.value!==confirm.value){status.textContent='New password and confirm password do not match.';return;}
   if(current.value===next.value){status.textContent='New password must be different from current password.';return;}
   submit.disabled=true;submit.textContent='UPDATING…';status.textContent='Verifying current password…';
