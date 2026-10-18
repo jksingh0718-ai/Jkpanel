@@ -1348,6 +1348,14 @@ function aimHackDuration(productName) {
   return null;
 }
 
+function primeHookDuration(productName) {
+  const name = String(productName || "").trim().replace(/\\s+/g, " ");
+  if (!/prime\\s*hook/i.test(name)) return null;
+  const match = name.match(/(1|3|7|10)\\s*days?\\s*nonroot/i);
+  if (!match) return null;
+  return ({ "1": "1 Days Nonroot", "3": "3 Days Nonroot", "7": "7 Days Nonroot", "10": "10 Days Nonroot" })[match[1]] || null;
+}
+
 async function purchaseDripWireKey({ orderId, userId, productName, duration, supplierProductId = "150" }) {
   // Support both the original Banti configuration and the newer variable names.
   // The original integration used RESELLER_ACCESS_TOKEN as api_key and
@@ -1460,9 +1468,10 @@ app.patch("/api/admin/orders/:id/payment", isAdmin, async (req, res) => {
   const productName = existing["Product_name"] || "";
   const isDripWire = /^DRIP Wire - /i.test(productName);
   const isAimHack = /^AIM HACK FF(?: - |$)/i.test(productName);
-  const duration = isDripWire ? dripWireDuration(productName) : (isAimHack ? aimHackDuration(productName) : null);
-  const usesSupplier = isDripWire || isAimHack;
-  const supplierProductId = isAimHack ? "133" : "150";
+  const isPrimeHook = /prime\\s*hook/i.test(productName);
+  const duration = isPrimeHook ? primeHookDuration(productName) : (isDripWire ? dripWireDuration(productName) : (isAimHack ? aimHackDuration(productName) : null));
+  const usesSupplier = isDripWire || isAimHack || isPrimeHook;
+  const supplierProductId = isPrimeHook ? "48" : (isAimHack ? "133" : "150");
   const nextSupplierStatus = usesSupplier ? (duration ? "processing" : "failed") : "not_applicable";
 
   const { data, error } = await supabase.from("orders")
@@ -2025,9 +2034,10 @@ app.post("/api/orders", async (req, res) => {
 
   const isDripWire = /^DRIP Wire - /i.test(product.name || "");
   const isAimHack = /^AIM HACK FF(?: - |$)/i.test(product.name || "");
-  if (isDripWire || isAimHack) {
-    const duration = isDripWire ? dripWireDuration(product.name) : aimHackDuration(product.name);
-    const supplierProductId = isAimHack ? "133" : "150";
+  const isPrimeHook = /prime\\s*hook/i.test(product.name || "");
+  if (isDripWire || isAimHack || isPrimeHook) {
+    const duration = isPrimeHook ? primeHookDuration(product.name) : (isDripWire ? dripWireDuration(product.name) : aimHackDuration(product.name));
+    const supplierProductId = isPrimeHook ? "48" : (isAimHack ? "133" : "150");
     if (!duration) return res.status(400).json({ error: "Product duration configured nahi hai." });
 
     const { data: purchase, error: walletError } = await supabase.rpc("create_wallet_product_order", {
