@@ -891,11 +891,13 @@ async function loadProducts(){
   groups.forEach((items,base)=>{
    const card=document.createElement("article");card.className="card";
    const title=document.createElement("h3");title.textContent=base;
-   const info=document.createElement("p");info.textContent=items.filter(p=>p.published).length+" active option(s) · "+items.length+" saved option(s)";
-   const options=document.createElement("p");options.style.cssText="white-space:pre-line;line-height:1.8";options.textContent=items.map(p=>productNameInfo(p.name).duration+" — ₹"+Number(p.price).toFixed(2)+(p.published?"":" (hidden)")).join("\\n");
-   const description=document.createElement("p");description.textContent=items.find(p=>p.description)?.description||"No description";
-   const media=document.createElement("p");media.textContent=(items.find(p=>p.image_url)?.image_url||"No image")+(items.find(p=>p.video_url)?" · Video uploaded":"");
-   const edit=document.createElement("button");edit.textContent="Edit product and durations";
+   const titleRow=document.createElement("div");titleRow.style.cssText="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px";
+   title.style.cssText="margin:0;min-width:0;overflow-wrap:anywhere";
+   const options=document.createElement("div");options.hidden=true;options.style.cssText="white-space:pre-line;line-height:1.8;margin:8px 0";
+   options.textContent=items.map(p=>productNameInfo(p.name).duration+" — ₹"+Number(p.price).toFixed(2)+(p.published?"":" (hidden)")).join("\\n");
+   const description=document.createElement("p");description.hidden=true;description.textContent=items.find(p=>p.description)?.description||"No description";
+   const media=document.createElement("p");media.hidden=true;media.textContent=(items.find(p=>p.image_url)?.image_url||"No image")+(items.find(p=>p.video_url)?" · Video uploaded":"");
+   const edit=document.createElement("button");edit.textContent="✎ Edit product details";edit.style.cssText="background:linear-gradient(135deg,#38bdf8,#6366f1);color:#fff;border:0;border-radius:9px;margin:4px 6px 0 0";
    edit.onclick=()=>{
     document.getElementById("productId").value=items[0].id;
     document.getElementById("productName").value=base;
@@ -914,9 +916,11 @@ async function loadProducts(){
     document.getElementById("productMessage").textContent="Editing: "+base;
     document.getElementById("productForm").scrollIntoView({behavior:"smooth",block:"center"});
    };
-   const visibility=document.createElement("button");visibility.style.marginLeft="8px";visibility.style.background="#475569";visibility.style.color="white";visibility.textContent=items.some(p=>p.published)?"Hide from Shop":"Show in Shop";
-   visibility.onclick=async()=>{try{const publish=!items.some(p=>p.published);for(const p of items)await api("/api/admin/products/"+encodeURIComponent(p.id),{method:"PATCH",body:JSON.stringify({published:publish})});await loadProducts();}catch(e){document.getElementById("productMessage").textContent=e.message;}};
-   card.append(title,info,options,description,media,edit,visibility);root.appendChild(card);
+   const visibility=document.createElement("button");visibility.style.cssText="background:linear-gradient(135deg,#fb923c,#f43f5e);color:#fff;border:0;border-radius:9px;margin:4px 0 0";visibility.textContent=items.some(p=>p.published)?"Hide from Shop":"Show in Shop";
+   const activity=document.createElement("button");activity.type="button";activity.textContent="See Activity";activity.style.cssText="background:linear-gradient(135deg,#c084fc,#7c3aed);color:#fff;border:0;border-radius:9px;margin:4px 0 0";
+   activity.onclick=()=>{options.hidden=!options.hidden;description.hidden=options.hidden;media.hidden=options.hidden;activity.textContent=options.hidden?"See Activity":"Hide Activity";};
+   visibility.onclick=async()=>{visibility.disabled=true;try{const publish=!items.some(p=>p.published);for(const p of items)await api("/api/admin/products/"+encodeURIComponent(p.id),{method:"PATCH",body:JSON.stringify({published:publish})});await loadProducts();}catch(e){document.getElementById("productMessage").textContent=e.message;}finally{visibility.disabled=false;}};
+   titleRow.append(title);card.append(titleRow,edit,visibility,activity,options,description,media);root.appendChild(card);
   });
  }catch(e){document.getElementById("productMessage").textContent=e.message;}
 }
@@ -1096,13 +1100,14 @@ async function loadCustomers(){
    card.style.padding="14px";
    const title=document.createElement("h3");
    title.textContent=customer.name||"Customer";
-   title.style.margin="0 0 10px";
+   title.style.cssText="margin:0;min-width:0;overflow-wrap:anywhere";
+   const titleRow=document.createElement("div");titleRow.style.cssText="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap";
    const toggle=document.createElement("button");
-   toggle.type="button";toggle.textContent="See Activity";toggle.style.width="100%";
+   toggle.type="button";toggle.textContent="See Activity";toggle.style.cssText="width:auto;white-space:nowrap;background:linear-gradient(135deg,#c084fc,#7c3aed);color:#fff;border:0;border-radius:9px";
    const details=document.createElement("div");
    details.hidden=true;details.style.marginTop="14px";details.style.borderTop="1px solid #334155";details.style.paddingTop="10px";
    toggle.onclick=()=>{details.hidden=!details.hidden;toggle.textContent=details.hidden?"See Activity":"Hide Activity";};
-   card.append(title,toggle,details);
+   titleRow.append(title,toggle);card.append(titleRow,details);
    const line=(label,value)=>{
     const row=document.createElement("p");row.style.margin="8px 0";row.style.paddingBottom="7px";row.style.borderBottom="1px solid #263247";
     const strong=document.createElement("strong");strong.textContent=label+": ";
