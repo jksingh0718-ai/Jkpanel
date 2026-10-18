@@ -529,7 +529,7 @@ small{color:#a6b2c0}
 <section id="login">
 <h2>Admin Login</h2>
 <form id="loginForm" autocomplete="off">
-<input id="adminLoginPassword" name="jkpanel-secret-entry" type="text" style="-webkit-text-security:disc;text-security:disc" placeholder="Admin password" required autocomplete="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true">
+<input id="adminLoginPassword" name="password" type="password" placeholder="Admin password" required autocomplete="current-password" autocapitalize="off" spellcheck="false">
 <br><button>Login</button>
 </form>
 </section>
@@ -612,34 +612,40 @@ small{color:#a6b2c0}
 <p id="message" role="status"></p>
 
 <script>
-document.getElementById("loginForm").onsubmit=async e=>{
+const loginForm=document.getElementById("loginForm");
+const message=document.getElementById("message");
+loginForm.addEventListener("submit",async e=>{
  e.preventDefault();
- message.textContent="";
+ e.stopPropagation();
  const passwordInput=document.getElementById("adminLoginPassword");
- const attemptedPassword=passwordInput.value;
- const loginButton=document.querySelector("#loginForm button");
+ const attemptedPassword=String(passwordInput.value||"");
+ if(!attemptedPassword){message.textContent="Admin password enter karein.";passwordInput.focus();return;}
+ const loginButton=loginForm.querySelector("button");
  loginButton.disabled=true;
  loginButton.textContent="Logging in...";
+ message.textContent="";
+ let authenticated=false;
  try{
   await api("/api/admin/login",{method:"POST",body:JSON.stringify({password:attemptedPassword})});
+  authenticated=true;
   document.getElementById("login").hidden=true;
   document.getElementById("dashboard").hidden=false;
   message.textContent="Login successful. Admin panel loading...";
   await Promise.allSettled([loadOrders(),loadCustomers(),loadProducts(),loadKeyGroups(),loadResellers()]);
-  if(!message.textContent) message.textContent="Admin panel ready.";
+  if(message.textContent==="Login successful. Admin panel loading...") message.textContent="Admin panel ready.";
  }catch(err){
-  message.textContent=err.message||"Login failed. Password aur Render environment setting check karein.";
   document.getElementById("dashboard").hidden=true;
   document.getElementById("login").hidden=false;
+  message.textContent=err.message||"Login failed. Password aur Render environment setting check karein.";
   passwordInput.value=attemptedPassword;
-  passwordInput.focus();
+  requestAnimationFrame(()=>{passwordInput.focus();passwordInput.setSelectionRange(passwordInput.value.length,passwordInput.value.length);});
  }finally{
   loginButton.disabled=false;
   loginButton.textContent="Login";
+  if(!authenticated && passwordInput.value!==attemptedPassword) passwordInput.value=attemptedPassword;
  }
-};
+});
 
-const message=document.getElementById("message");
 document.querySelectorAll("[data-tab]").forEach(button=>button.addEventListener("click",()=>{
  document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===button.dataset.tab));
  document.querySelectorAll(".admin-section").forEach(section=>section.classList.toggle("active",section.id==="tab-"+button.dataset.tab));
