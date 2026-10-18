@@ -1037,20 +1037,38 @@ function makeProductVideoThumb(video){
 }
 function openProductVideo(url,title,thumb){
   if(!url){showPopup('Video not available','Is product ka video abhi upload nahi hua hai.');return;}
-  document.querySelectorAll('#shopProducts video').forEach(existing=>{existing.pause();});
-  document.querySelectorAll('#shopProducts video').forEach(existing=>{if(existing.parentNode)existing.parentNode.replaceChild(makeProductVideoThumb(existing),existing);});
-  const video=document.createElement('video');
-  video.src=url;video.controls=true;video.autoplay=true;video.playsInline=true;video.preload='metadata';
-  video.style.cssText='display:block;width:100%;height:auto;max-height:70vh;min-height:220px;background:#000;border-radius:12px;object-fit:contain;margin:0 0 14px';
-  video.onerror=()=>{video.insertAdjacentHTML('afterend','<p style="color:#fca5a5;font-size:13px">Video play nahi hua. Admin panel se video dobara upload karein.</p>');};
-  // Restore the same thumbnail when playback ends so the product card never loses its video.
-  // Keep a stable placeholder in the card. Playback must never remove the product's video area.
+  // First restore every other active player, preserving its original product card and video URL.
+  document.querySelectorAll('#shopProducts video').forEach(existing=>{
+    existing.pause();
+    const slot=existing.closest('.product-video-slot');
+    const savedTitle=slot?.dataset.productTitle||existing.dataset.productTitle||'Product';
+    const savedUrl=slot?.dataset.videoUrl||existing.currentSrc||existing.src;
+    const restored=document.createElement('button');
+    restored.type='button';restored.className='product-video-thumb';
+    restored.setAttribute('aria-label','Play '+savedTitle+' video');
+    restored.dataset.videoUrl=savedUrl;restored.dataset.productTitle=savedTitle;
+    restored.style.cssText='position:relative;display:block;width:100%;padding:0;border:0;background:#030712;border-radius:12px;overflow:hidden;cursor:pointer;margin-bottom:14px';
+    const poster=document.createElement('div');poster.textContent='▶  PLAY VIDEO AGAIN';poster.style.cssText='display:flex;align-items:center;justify-content:center;width:100%;min-height:220px;color:#fff;font-weight:800;font-size:16px;background:linear-gradient(135deg,#0f172a,#1e3a8a,#312e81)';
+    restored.appendChild(poster);
+    restored.onclick=()=>openProductVideo(restored.dataset.videoUrl,restored.dataset.productTitle,restored);
+    if(slot)slot.replaceWith(restored);else existing.replaceWith(restored);
+  });
+  // Resolve the clicked thumbnail again after restoring other players; stale detached DOM references are unsafe.
+  if(!thumb||!thumb.isConnected){
+    thumb=[...document.querySelectorAll('#shopProducts .product-video-thumb')].find(el=>el.dataset.videoUrl===url&&el.dataset.productTitle===title)
+      ||[...document.querySelectorAll('#shopProducts .product-video-thumb')].find(el=>el.getAttribute('aria-label')==='Play '+title+' video');
+  }
+  if(!thumb||!thumb.parentNode){showPopup('Video not available','Product video preview ko restore nahi kar paaye. Page refresh karke dobara try karein.');return;}
   const placeholder=document.createElement('div');
   placeholder.className='product-video-slot';
+  placeholder.dataset.productTitle=title;placeholder.dataset.videoUrl=url;
   placeholder.style.cssText='width:100%;margin:0 0 14px';
-  if(thumb&&thumb.parentNode){thumb.replaceWith(placeholder);}
-  else {const candidate=[...document.querySelectorAll('.product-video-thumb')].find(el=>el.getAttribute('aria-label')==='Play '+title+' video');if(candidate)candidate.replaceWith(placeholder);else{showPopup('Video not available','Video player ko product card mein nahi dhoondh paaye.');return;}}
-  video.addEventListener('ended',()=>{video.pause();video.currentTime=0;video.controls=true;});
+  thumb.replaceWith(placeholder);
+  const video=document.createElement('video');
+  video.dataset.productTitle=title;video.src=url;video.controls=true;video.autoplay=true;video.playsInline=true;video.preload='metadata';
+  video.style.cssText='display:block;width:100%;height:auto;max-height:70vh;min-height:220px;background:#000;border-radius:12px;object-fit:contain;margin:0 0 14px';
+  video.onerror=()=>{const err=document.createElement('p');err.style.cssText='color:#fca5a5;font-size:13px';err.textContent='Video play nahi hua. Admin panel se video dobara upload karein.';placeholder.appendChild(err);};
+  video.addEventListener('ended',()=>{video.pause();video.currentTime=0;});
   placeholder.appendChild(video);
   video.scrollIntoView({behavior:'smooth',block:'center'});
   video.play().catch(()=>{});
@@ -1560,7 +1578,7 @@ async function loadShopProducts(){
    const videoProduct=dripProducts.find(p=>p.video_url);
    if(imageProduct.image_url){
     if(videoProduct?.video_url){
-     const thumb=document.createElement('button');thumb.type='button';thumb.className='product-video-thumb';thumb.setAttribute('aria-label','Play DRIP Wire video');thumb.onclick=()=>openProductVideo(videoProduct.video_url,'DRIP Wire',thumb);
+     const thumb=document.createElement('button');thumb.type='button';thumb.className='product-video-thumb';thumb.setAttribute('aria-label','Play DRIP Wire video');thumb.dataset.videoUrl=videoProduct.video_url;thumb.dataset.productTitle='DRIP Wire';thumb.onclick=()=>openProductVideo(videoProduct.video_url,'DRIP Wire',thumb);
      const img=document.createElement('img');img.src=imageProduct.image_url;img.alt='DRIP Wire video preview';img.loading='eager';img.onerror=()=>{img.style.display='none';};
      const play=document.createElement('span');play.className='product-video-play';play.textContent='▶';
      const hint=document.createElement('span');hint.className='product-video-hint';hint.textContent='TAP TO PLAY VIDEO';
@@ -1615,7 +1633,7 @@ async function loadShopProducts(){
    const videoProduct=aimProducts.find(p=>p.video_url);
    if(imageProduct.image_url){
     if(videoProduct?.video_url){
-     const thumb=document.createElement('button');thumb.type='button';thumb.className='product-video-thumb';thumb.setAttribute('aria-label','Play AIM HACK FF video');thumb.onclick=()=>openProductVideo(videoProduct.video_url,'AIM HACK FF',thumb);
+     const thumb=document.createElement('button');thumb.type='button';thumb.className='product-video-thumb';thumb.setAttribute('aria-label','Play AIM HACK FF video');thumb.dataset.videoUrl=videoProduct.video_url;thumb.dataset.productTitle='AIM HACK FF';thumb.onclick=()=>openProductVideo(videoProduct.video_url,'AIM HACK FF',thumb);
      const img=document.createElement('img');img.src=imageProduct.image_url;img.alt='AIM HACK FF video preview';img.loading='eager';img.onerror=()=>{img.style.display='none';};
      const play=document.createElement('span');play.className='product-video-play';play.textContent='▶';
      const hint=document.createElement('span');hint.className='product-video-hint';hint.textContent='TAP TO PLAY VIDEO';
@@ -1665,7 +1683,7 @@ async function loadShopProducts(){
    const videoProduct=balaProducts.find(p=>p.video_url);
    if(imageProduct?.image_url){
     if(videoProduct?.video_url){
-     const thumb=document.createElement('button');thumb.type='button';thumb.className='product-video-thumb';thumb.setAttribute('aria-label','Play BALA MODS FF NONROOT video');thumb.onclick=()=>openProductVideo(videoProduct.video_url,'BALA MODS ~FF NONROOT',thumb);
+     const thumb=document.createElement('button');thumb.type='button';thumb.className='product-video-thumb';thumb.setAttribute('aria-label','Play BALA MODS FF NONROOT video');thumb.dataset.videoUrl=videoProduct.video_url;thumb.dataset.productTitle='BALA MODS ~FF NONROOT';thumb.onclick=()=>openProductVideo(videoProduct.video_url,'BALA MODS ~FF NONROOT',thumb);
      const img=document.createElement('img');img.src=imageProduct.image_url;img.alt='BALA MODS ~FF NONROOT video preview';img.loading='eager';img.onerror=()=>{img.style.display='none';};
      const play=document.createElement('span');play.className='product-video-play';play.textContent='▶';
      const hint=document.createElement('span');hint.className='product-video-hint';hint.textContent='TAP TO PLAY VIDEO';
@@ -1712,7 +1730,7 @@ async function loadShopProducts(){
    const videoProduct=primeHookProducts.find(p=>p.video_url);
    if(imageProduct?.image_url){
     if(videoProduct?.video_url){
-     const thumb=document.createElement('button');thumb.type='button';thumb.className='product-video-thumb';thumb.setAttribute('aria-label','Play PRIME HOOK FF NONROOT ANDROID video');thumb.onclick=()=>openProductVideo(videoProduct.video_url,'PRIME HOOK FF NONROOT ANDROID',thumb);
+     const thumb=document.createElement('button');thumb.type='button';thumb.className='product-video-thumb';thumb.setAttribute('aria-label','Play PRIME HOOK FF NONROOT ANDROID video');thumb.dataset.videoUrl=videoProduct.video_url;thumb.dataset.productTitle='PRIME HOOK FF NONROOT ANDROID';thumb.onclick=()=>openProductVideo(videoProduct.video_url,'PRIME HOOK FF NONROOT ANDROID',thumb);
      const img=document.createElement('img');img.src=imageProduct.image_url;img.alt='PRIME HOOK FF NONROOT ANDROID video preview';img.loading='lazy';img.onerror=()=>{img.style.display='none';};
      const play=document.createElement('span');play.className='product-video-play';play.textContent='▶';
      const hint=document.createElement('span');hint.className='product-video-hint';hint.textContent='TAP TO PLAY VIDEO';
