@@ -528,6 +528,11 @@ function openMyAccount(){
   popup.style.display='flex';
   customerApi('/api/my-account').then(data=>{
     root.replaceChildren();
+    const top=document.createElement('div');
+    top.style.cssText='position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;min-height:54px;padding:0 2px;background:#070b14;border-bottom:1px solid #263449;margin:0 0 12px';
+    const topTitle=document.createElement('b');topTitle.textContent='MY ACCOUNT';topTitle.style.cssText='font-size:15px;letter-spacing:.5px;color:#7dd3fc';
+    const x=document.createElement('button');x.type='button';x.textContent='×';x.setAttribute('aria-label','Close profile');x.style.cssText='flex:0 0 40px;width:40px;height:40px;padding:0;margin:0;border:1px solid #334155;border-radius:10px;background:#172033;color:#fff;font-size:29px;line-height:1;cursor:pointer';x.onclick=closePopup;
+    top.append(topTitle,x);root.appendChild(top);
     const avatarWrap=document.createElement('div');
     avatarWrap.style.cssText='display:flex;align-items:center;gap:13px;padding:14px;margin:0 0 14px;background:#0b1220;border:1px solid #334155;border-radius:14px';
     const avatar=document.createElement('div');
@@ -593,8 +598,7 @@ function openMyAccount(){
       card.append(name,status,date);root.appendChild(card);
     });
     const support=document.createElement('a');support.href='https://wa.me/917645957071';support.target='_blank';support.rel='noopener';support.textContent='Contact Support';support.style.cssText='display:block;text-align:center;text-decoration:none;margin:16px 0 8px;padding:13px;background:#10271f;color:#86efac;border:1px solid #166534;border-radius:10px;font-weight:800';root.appendChild(support);
-    const closeBtn=document.createElement('button');closeBtn.type='button';closeBtn.textContent='CLOSE';closeBtn.onclick=closePopup;closeBtn.style.cssText='display:block;width:100%;margin:8px 0 16px;padding:13px;background:#dc2626;color:#fff;border:0;border-radius:10px;font-size:14px;font-weight:900';root.appendChild(closeBtn);
-    
+
   }).catch(e=>{root.replaceChildren();const p=document.createElement('p');p.textContent=e.message;root.appendChild(p);});
 }
 
