@@ -529,7 +529,7 @@ small{color:#a6b2c0}
 <section id="login">
 <h2>Admin Login</h2>
 <form id="loginForm" autocomplete="off">
-<input id="adminLoginPassword" name="admin-password" type="password" placeholder="Admin password" required autocomplete="current-password" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true">
+<input id="adminLoginPassword" name="jkpanel-secret-entry" type="password" placeholder="Admin password" required autocomplete="new-password" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true">
 <br><button>Login</button>
 </form>
 </section>
@@ -616,6 +616,7 @@ document.getElementById("loginForm").onsubmit=async e=>{
  e.preventDefault();
  message.textContent="";
  const passwordInput=document.getElementById("adminLoginPassword");
+ const attemptedPassword=passwordInput.value;
  const loginButton=document.querySelector("#loginForm button");
  loginButton.disabled=true;
  loginButton.textContent="Logging in...";
@@ -630,6 +631,8 @@ document.getElementById("loginForm").onsubmit=async e=>{
   message.textContent=err.message||"Login failed. Password aur Render environment setting check karein.";
   document.getElementById("dashboard").hidden=true;
   document.getElementById("login").hidden=false;
+  passwordInput.value=attemptedPassword;
+  passwordInput.focus();
  }finally{
   loginButton.disabled=false;
   loginButton.textContent="Login";
