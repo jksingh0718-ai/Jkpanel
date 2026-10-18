@@ -330,19 +330,23 @@ footer{background:linear-gradient(90deg,#101b35,#241544);border-top:1px solid #4
 #sidebar{padding-bottom:calc(118px + env(safe-area-inset-bottom))!important;scroll-padding-bottom:calc(118px + env(safe-area-inset-bottom))!important}
 #sidebar .menu-item:last-child{margin-bottom:18px!important}
 
-/* Colorful, clearer bottom navigation icons */
+/* Monochrome animated bottom navigation icons */
 #bottomNav{gap:4px!important;padding:8px 6px calc(8px + env(safe-area-inset-bottom))!important}
-#bottomNav button{min-height:62px!important;padding:7px 1px 6px!important;gap:5px!important;border-radius:13px!important}
-#bottomNav button .nav-icon{width:32px!important;height:30px!important;border-radius:10px!important;background:linear-gradient(145deg,#172338,#0b1220)!important;box-shadow:inset 0 0 0 1px #ffffff12,0 3px 8px #0003!important}
-#bottomNav button .nav-icon svg{width:27px!important;height:27px!important;stroke-width:2.1!important}
-#bottomNav button[data-nav="home"] .nav-icon{color:#38bdf8!important;background:linear-gradient(145deg,#12334b,#0b1727)!important}
-#bottomNav button[data-nav="store"] .nav-icon{color:#a78bfa!important;background:linear-gradient(145deg,#2b2051,#15152e)!important}
-#bottomNav button[data-nav="keys"] .nav-icon{color:#fbbf24!important;background:linear-gradient(145deg,#3b2c13,#20180b)!important}
-#bottomNav button[data-nav="deposit"] .nav-icon{color:#4ade80!important;background:linear-gradient(145deg,#123c2c,#0b211b)!important}
-#bottomNav button[data-nav="profile"] .nav-icon{color:#f9a8d4!important;background:linear-gradient(145deg,#49213f,#241326)!important}
-#bottomNav button>span:last-child{font-size:clamp(9px,2.7vw,11px)!important;line-height:1.15!important;font-weight:750!important;letter-spacing:.1px!important;overflow:visible!important}
-#bottomNav button.active{color:#e0f2fe!important;background:linear-gradient(145deg,#17334b,#102235)!important;border-color:#38bdf866!important;box-shadow:inset 0 0 0 1px #38bdf81a,0 3px 10px #0002!important}
-#bottomNav button.active .nav-icon{filter:drop-shadow(0 0 5px currentColor);transform:translateY(-1px)}
+#bottomNav button{min-height:62px!important;padding:7px 1px 6px!important;gap:5px!important;border-radius:13px!important;color:#cbd5e1!important;transition:background .22s ease,transform .22s ease,border-color .22s ease!important}
+#bottomNav button .nav-icon{width:32px!important;height:30px!important;border-radius:10px!important;color:#e2e8f0!important;background:linear-gradient(145deg,#17202e,#0b1220)!important;box-shadow:inset 0 0 0 1px #ffffff12,0 3px 8px #0003!important;transition:transform .28s cubic-bezier(.2,.8,.2,1),box-shadow .28s ease,background .28s ease!important;animation:jkNavFloat 3s ease-in-out infinite}
+#bottomNav button .nav-icon svg{width:27px!important;height:27px!important;stroke-width:2.1!important;stroke:#e2e8f0!important;fill:none!important;transition:transform .28s ease,stroke-width .28s ease!important}
+#bottomNav button:nth-child(2) .nav-icon{animation-delay:.2s}
+#bottomNav button:nth-child(3) .nav-icon{animation-delay:.4s}
+#bottomNav button:nth-child(4) .nav-icon{animation-delay:.6s}
+#bottomNav button:nth-child(5) .nav-icon{animation-delay:.8s}
+#bottomNav button>span:last-child{font-size:clamp(9px,2.7vw,11px)!important;line-height:1.15!important;font-weight:750!important;letter-spacing:.1px!important;overflow:visible!important;color:inherit!important}
+#bottomNav button.active{color:#fff!important;background:linear-gradient(145deg,#202b3b,#111827)!important;border-color:#64748b88!important;box-shadow:inset 0 0 0 1px #ffffff08,0 3px 10px #0002!important}
+#bottomNav button.active .nav-icon{color:#fff!important;background:linear-gradient(145deg,#263548,#121a28)!important;box-shadow:inset 0 0 0 1px #ffffff20,0 0 14px #cbd5e11c!important;transform:translateY(-2px) scale(1.05)!important;animation:jkNavActive 1.8s ease-in-out infinite!important}
+#bottomNav button.active .nav-icon svg{stroke:#fff!important;stroke-width:2.3!important}
+#bottomNav button:active .nav-icon{transform:translateY(-2px) scale(1.1)!important}
+@keyframes jkNavFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+@keyframes jkNavActive{0%,100%{transform:translateY(-1px) scale(1.03);box-shadow:inset 0 0 0 1px #ffffff18,0 0 8px #cbd5e111}50%{transform:translateY(-3px) scale(1.08);box-shadow:inset 0 0 0 1px #ffffff28,0 0 16px #cbd5e122}}
+@media(prefers-reduced-motion:reduce){#bottomNav button .nav-icon,#bottomNav button.active .nav-icon{animation:none!important;transition:none!important}}
 @media(max-width:360px){#bottomNav{gap:1px!important;padding-left:3px!important;padding-right:3px!important}#bottomNav button{padding-left:0!important;padding-right:0!important}#bottomNav button .nav-icon{width:29px!important;height:28px!important}#bottomNav button .nav-icon svg{width:24px!important;height:24px!important}#bottomNav button>span:last-child{font-size:9px!important}}
 </style>
 </head>
