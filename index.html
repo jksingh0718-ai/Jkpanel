@@ -1086,7 +1086,13 @@ function openProductVideo(url,title,thumb){
   thumb.replaceWith(placeholder);
   const video=document.createElement('video');
   video.dataset.productTitle=title;video.src=url;video.controls=true;video.autoplay=true;video.playsInline=true;video.preload='metadata';
-  video.style.cssText='display:block;width:100%;height:auto;max-height:70vh;min-height:220px;background:#000;border-radius:12px;object-fit:contain;margin:0 0 14px';
+  const isBalaModVideo=/bala\s*mods?/i.test(title);
+  if(isBalaModVideo){
+    placeholder.style.cssText='width:100%;margin:0 0 14px;overflow:hidden;border-radius:12px;background:#000';
+    video.style.cssText='display:block;width:100%;height:auto;max-height:70vh;min-height:220px;background:#000;border-radius:12px;object-fit:contain;margin:0;transform:scale(1.07);transform-origin:center center';
+  }else{
+    video.style.cssText='display:block;width:100%;height:auto;max-height:70vh;min-height:220px;background:#000;border-radius:12px;object-fit:contain;margin:0 0 14px';
+  }
   video.onerror=()=>{const err=document.createElement('p');err.style.cssText='color:#fca5a5;font-size:13px';err.textContent='Video play nahi hua. Admin panel se video dobara upload karein.';placeholder.appendChild(err);};
   video.addEventListener('ended',()=>{video.pause();video.currentTime=0;});
   placeholder.appendChild(video);
