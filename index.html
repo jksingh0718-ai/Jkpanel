@@ -1504,8 +1504,8 @@ async function loadShopProducts(){
   const aimProducts=products.filter(product=>/^AIM HACK FF(?:\s*-|$)/i.test(product.name||''));
   const balaProducts=products.filter(product=>/^BALA\s*MODS?\s*~?\s*(?:V?6|FF\s+NONROOT)(?:\b|\s*[-–:]|$)/i.test(String(product.name||'').trim()));
   // Prime Hook plans are separate admin records but appear together under one named shop card.
-  const primeHookProducts=products.filter(product=>/^PRIME\s*HOOK(?:\s*[-–:]\s*.*|\s+\d.*)?$/i.test(String(product.name||'').trim()));
-  const otherProducts=products.filter(product=>!/^DRIP Wire\s*-\s*/i.test(product.name||'')&&!/^AIM HACK FF(?:\s*-|$)/i.test(product.name||'')&&!/^BALA\s*MODS?\s*~?\s*(?:V?6|FF\s+NONROOT)(?:\b|\s*[-–:]|$)/i.test(String(product.name||'').trim())&&!/^PRIME\s*HOOK(?:\s*[-–:]\s*.*|\s+\d.*)?$/i.test(String(product.name||'').trim()));
+  const primeHookProducts=products.filter(product=>/^PRIME\s*HOOK(?:\b.*)?$/i.test(String(product.name||'').trim()));
+  const otherProducts=products.filter(product=>!/^DRIP Wire\s*-\s*/i.test(product.name||'')&&!/^AIM HACK FF(?:\s*-|$)/i.test(product.name||'')&&!/^BALA\s*MODS?\s*~?\s*(?:V?6|FF\s+NONROOT)(?:\b|\s*[-–:]|$)/i.test(String(product.name||'').trim())&&!/^PRIME\s*HOOK(?:\b.*)?$/i.test(String(product.name||'').trim()));
 
   if(dripProducts.length){
    const card=document.createElement('article');
