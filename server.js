@@ -519,6 +519,12 @@ small{color:#a6b2c0}
 @media(min-width:701px){.admin-bottom-nav{display:flex;gap:8px;margin:14px 0}.admin-bottom-nav button{display:flex;align-items:center;gap:7px;padding:10px 14px;background:#1e293b;color:#e2e8f0;border-radius:7px}.admin-bottom-nav button.active{background:#39f58b;color:#062012}.admin-bottom-nav .nav-icon{font-size:18px}}
 .admin-tabs button{padding:12px 6px;background:#1e293b;color:#e2e8f0;border:1px solid #334155}
 .admin-tabs button.active{background:#39f58b;color:#062012}
+/* Colorful but lightweight admin controls; no animations that can stall mobile devices. */
+.admin-tabs button:nth-child(2n){border-color:#6366f1}.admin-tabs button:nth-child(2n):not(.active){background:#252044}
+.admin-bottom-nav button:nth-child(2){color:#60a5fa}.admin-bottom-nav button:nth-child(3){color:#c084fc}.admin-bottom-nav button:nth-child(4){color:#34d399}.admin-bottom-nav button:nth-child(5){color:#fbbf24}
+#tab-products #showProductForm{background:linear-gradient(135deg,#38bdf8,#6366f1);color:#fff}
+#tab-keys #showKeyForm{background:linear-gradient(135deg,#c084fc,#7c3aed);color:#fff}
+#tab-resellers button{border-radius:9px}#tab-resellers #saveDripResellerPrices{background:linear-gradient(135deg,#fb923c,#f43f5e);color:#fff}
 .admin-section{display:none}.admin-section.active{display:block}
 .search-box{width:100%;background:#0b1220;color:white;border:1px solid #334155;padding:13px;margin:8px 0 14px}
 @media(max-width:480px){body{padding:10px}.admin-tabs button{font-size:12px}}
@@ -1161,15 +1167,14 @@ async function loadResellers(){
    plans.sort((a,b)=>durationRank(a._duration)-durationRank(b._duration)||a._duration.localeCompare(b._duration,"en",{numeric:true,sensitivity:"base"}));
    const card=document.createElement("article");card.className="card reseller-product-price-row";card.dataset.search=(base+" "+plans.map(p=>p._duration).join(" ")).toLowerCase();card.style.margin="8px 0";card.style.padding="12px";
    const heading=document.createElement("div");heading.style.fontWeight="700";heading.style.marginBottom="4px";heading.textContent=base;
-   const summary=document.createElement("small");summary.textContent=plans.length+" duration/plan"+(plans.length===1?"":"s")+" · "+plans.map(p=>p._duration).join(", ");summary.style.display="block";summary.style.marginBottom="8px";
-   const toggle=document.createElement("button");toggle.type="button";toggle.textContent="Edit price details";toggle.style.width="100%";toggle.setAttribute("aria-expanded","false");
+   const toggle=document.createElement("button");toggle.type="button";toggle.textContent="✎ Edit price details";toggle.style.width="auto";toggle.style.marginLeft="12px";toggle.style.padding="8px 12px";toggle.style.background="linear-gradient(135deg,#38bdf8,#6366f1)";toggle.style.color="#fff";toggle.style.borderRadius="9px";toggle.style.whiteSpace="nowrap";toggle.setAttribute("aria-expanded","false");
    const details=document.createElement("div");details.hidden=true;details.style.marginTop="10px";
    plans.forEach(p=>{const line=document.createElement("div");line.style.display="grid";line.style.gridTemplateColumns="minmax(0,1fr) minmax(90px,0.8fr)";line.style.gap="8px";line.style.alignItems="center";line.style.padding="9px 0";line.style.borderTop="1px solid #334155";
     const info=document.createElement("div");const duration=document.createElement("div");duration.style.fontWeight="600";duration.textContent=p._duration;const shop=document.createElement("small");shop.textContent="Shop ₹"+Number(p.price||0).toFixed(2);shop.style.display="block";info.append(duration,shop);
     const input=document.createElement("input");input.type="number";input.min="0";input.max="1000000";input.step="0.01";input.value=String(p.reseller_price===null||p.reseller_price===undefined?p.price:p.reseller_price);input.dataset.productId=p.id;input.style.width="100%";input.setAttribute("aria-label",base+" "+p._duration+" reseller price");input.title="Reseller price in rupees";line.append(info,input);details.appendChild(line);
    });
    toggle.onclick=()=>{details.hidden=!details.hidden;toggle.textContent=details.hidden?"Edit price details":"Hide price details";toggle.setAttribute("aria-expanded",String(!details.hidden));};
-   card.append(heading,summary,toggle,details);dripRoot.appendChild(card);
+   const titleRow=document.createElement("div");titleRow.style.display="flex";titleRow.style.alignItems="center";titleRow.style.justifyContent="space-between";titleRow.style.gap="8px";titleRow.style.flexWrap="wrap";heading.style.marginBottom="0";titleRow.append(heading,toggle);card.append(titleRow,details);dripRoot.appendChild(card);
   });
   const priceSearch=document.getElementById("resellerProductsSearch");if(priceSearch){priceSearch.value="";priceSearch.oninput=()=>{const q=priceSearch.value.trim().toLowerCase();dripRoot.querySelectorAll(".reseller-product-price-row").forEach(row=>row.style.display=row.dataset.search.includes(q)?"":"none");};}const root=document.getElementById("resellerList");if(!root)throw new Error("Reseller list section missing. Admin page refresh karein.");root.replaceChildren();const list=(data.customers||[]).filter(c=>c.is_reseller);
   if(!list.length){root.textContent="Abhi koi reseller nahi hai.";return;}
