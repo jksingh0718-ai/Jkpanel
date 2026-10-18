@@ -620,7 +620,6 @@ document.getElementById("loginForm").onsubmit=async e=>{
  loginButton.textContent="Logging in...";
  try{
   await api("/api/admin/login",{method:"POST",body:JSON.stringify({password:passwordInput.value})});
-  passwordInput.value="";
   document.getElementById("login").hidden=true;
   document.getElementById("dashboard").hidden=false;
   message.textContent="Login successful. Admin panel loading...";
