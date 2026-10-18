@@ -206,7 +206,7 @@ body.jk-deposit-only { padding-bottom:90px; }
 
 
 /* Put the single CLOSE button on the correct profile variant */
-#popup.account-screen #popupDefaultClose{display:block!important}
+#popup.account-screen #popupDefaultClose{display:none!important}
 #popup.profile-sky-screen #popupDefaultClose{display:none!important}
 #popup.account-screen .popup-card{overflow:hidden!important}
 /* Compact, fixed profile and history pages on mobile */
@@ -593,6 +593,7 @@ function openMyAccount(){
       card.append(name,status,date);root.appendChild(card);
     });
     const support=document.createElement('a');support.href='https://wa.me/917645957071';support.target='_blank';support.rel='noopener';support.textContent='Contact Support';support.style.cssText='display:block;text-align:center;text-decoration:none;margin:16px 0 8px;padding:13px;background:#10271f;color:#86efac;border:1px solid #166534;border-radius:10px;font-weight:800';root.appendChild(support);
+    const closeBtn=document.createElement('button');closeBtn.type='button';closeBtn.textContent='CLOSE';closeBtn.onclick=closePopup;closeBtn.style.cssText='display:block;width:100%;margin:8px 0 16px;padding:13px;background:#dc2626;color:#fff;border:0;border-radius:10px;font-size:14px;font-weight:900';root.appendChild(closeBtn);
     
   }).catch(e=>{root.replaceChildren();const p=document.createElement('p');p.textContent=e.message;root.appendChild(p);});
 }
