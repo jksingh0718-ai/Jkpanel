@@ -1205,24 +1205,15 @@ function showHistoryDashboardBack(popup){
   const title=document.getElementById('popupTitle');
   const root=document.getElementById('popupMessage');
   const btn=document.getElementById('popupDefaultClose');
-  /* Put a separate back control directly under the title, outside the scrolling history list. */
-  if(card&&title){
-    let topBack=card.querySelector('#jkHistoryTopBack');
-    if(!topBack){
-      topBack=document.createElement('button');
-      topBack.id='jkHistoryTopBack';
-      topBack.type='button';
-      topBack.textContent='← BACK TO DASHBOARD';
-      topBack.onclick=closePopup;
-      title.insertAdjacentElement('afterend',topBack);
-    }
-    topBack.style.cssText='display:block!important;visibility:visible!important;opacity:1!important;position:relative!important;z-index:999999!important;flex:0 0 auto!important;width:100%!important;min-height:50px!important;margin:0 0 12px!important;padding:14px!important;background:linear-gradient(110deg,#06b6d4,#2563eb,#7c3aed)!important;color:#fff!important;border:2px solid #93c5fd!important;border-radius:12px!important;font-size:15px!important;font-weight:900!important;box-shadow:0 4px 18px #2563eb77!important';
-    card.style.cssText='display:flex!important;flex-direction:column!important;max-height:calc(100dvh - 24px)!important;overflow-y:auto!important;box-sizing:border-box!important';
-  }
-  if(root)root.style.cssText='display:block!important;flex:0 0 auto!important;min-height:0!important;overflow:visible!important;padding-bottom:12px!important';
+  /* Keep exactly one back button, below all history content. */
+  const oldTop=card?.querySelector('#jkHistoryTopBack');
+  if(oldTop)oldTop.remove();
+  if(card)card.style.cssText='display:flex!important;flex-direction:column!important;max-height:calc(100dvh - 24px)!important;overflow-y:auto!important;box-sizing:border-box!important';
+  if(title)title.style.cssText='display:block!important;flex:0 0 auto!important;margin:0 0 12px!important';
+  if(root)root.style.cssText='display:block!important;flex:0 0 auto!important;min-height:0!important;overflow:visible!important;padding-bottom:0!important';
   if(btn){
-    btn.style.cssText='display:block!important;position:relative!important;flex:0 0 auto!important;visibility:visible!important;opacity:1!important;z-index:99999!important;width:100%!important;min-height:50px!important;box-sizing:border-box!important;margin:10px 0 0!important;padding:14px!important;background:linear-gradient(110deg,#06b6d4,#2563eb,#7c3aed)!important;color:#fff!important;border:2px solid #93c5fd!important;border-radius:12px!important;font-size:15px!important;font-weight:900!important;box-shadow:0 4px 18px #2563eb77!important';
-    btn.textContent='← BACK TO DASHBOARD';
+    btn.style.cssText='display:block!important;position:relative!important;flex:0 0 auto!important;visibility:visible!important;opacity:1!important;z-index:99999!important;width:100%!important;min-height:50px!important;box-sizing:border-box!important;margin:12px 0 0!important;padding:14px!important;background:linear-gradient(110deg,#06b6d4,#2563eb,#7c3aed)!important;color:#fff!important;border:2px solid #93c5fd!important;border-radius:12px!important;font-size:15px!important;font-weight:900!important;box-shadow:0 4px 18px #2563eb77!important';
+    btn.textContent='← BACK';
     btn.onclick=closePopup;
   }
 }
