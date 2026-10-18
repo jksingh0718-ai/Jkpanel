@@ -427,6 +427,12 @@ function clearCustomerSession(){
   localStorage.removeItem('jk_customer_refresh_token');
   localStorage.removeItem('jk_customer_expires_at');
 }
+window.addEventListener('pagehide',()=>{
+  if(!localStorage.getItem('jk_customer_access_token'))return;
+  const exits=Number(localStorage.getItem('jk_customer_site_exits')||0)+1;
+  localStorage.setItem('jk_customer_site_exits',String(exits));
+  if(exits>=3)clearCustomerSession();
+});
 async function customerApi(url,options={},retry=true){
   const token=localStorage.getItem('jk_customer_access_token');
   const response=await fetch('https://jkpanel-backend.onrender.com'+url,{
@@ -511,7 +517,7 @@ async function registerCustomer(){
   status.textContent='Account ban raha hai...';
   try{
     const data=await customerApi('/api/auth/register',{method:'POST',body:JSON.stringify({email,password,referralCode:new URLSearchParams(location.search).get('ref')||''})},false);
-    if(data.session){saveCustomerSession(data.session);updateAccountBar(data.user?.email||email);closePopup();await loadMyAccountSummary();}
+    if(data.session){localStorage.setItem('jk_customer_site_exits','0');saveCustomerSession(data.session);updateAccountBar(data.user?.email||email);closePopup();await loadMyAccountSummary();}
     else{status.textContent=data.message||'Account ban gaya hai. Ab Login karein.';}
   }catch(e){status.textContent=e.message;}
 }
@@ -593,7 +599,7 @@ async function loginCustomer(){
   status.textContent='Login ho raha hai...';
   try{
     const data=await customerApi('/api/auth/login',{method:'POST',body:JSON.stringify({email,password})},false);
-    saveCustomerSession(data.session);updateAccountBar(data.user.email);closePopup();await loadMyAccountSummary();
+    localStorage.setItem('jk_customer_site_exits','0');saveCustomerSession(data.session);updateAccountBar(data.user.email);closePopup();await loadMyAccountSummary();
   }catch(e){status.textContent=e.message;}
 }
 async function logoutCustomer(){
@@ -1665,18 +1671,30 @@ async function loadShopProducts(){
    card.dataset.createdAt=String(Math.max(...primeHookProducts.map(p=>Date.parse(p.created_at||'')||0)));
    card.style.cssText='display:block;margin-top:12px;padding:14px;background:linear-gradient(160deg,#111827,#0b1220);border:1px solid #a855f7;border-radius:16px;overflow:hidden;box-shadow:0 8px 26px #0003';
    const imageProduct=primeHookProducts.find(p=>p.image_url);
+   const videoProduct=primeHookProducts.find(p=>p.video_url);
    if(imageProduct?.image_url){
-    const img=document.createElement('img');img.src=imageProduct.image_url;img.alt='Prime Hook';img.loading='lazy';
-    img.style.cssText='display:block;width:100%;height:clamp(200px,58vw,340px);object-fit:contain;background:#030712;border-radius:12px;margin-bottom:14px';
-    img.onerror=()=>{img.style.display='none';};card.appendChild(img);
+    if(videoProduct?.video_url){
+     const thumb=document.createElement('button');thumb.type='button';thumb.className='product-video-thumb';thumb.setAttribute('aria-label','Play PRIME HOOK FF NONROOT ANDROID video');thumb.onclick=()=>openProductVideo(videoProduct.video_url,'PRIME HOOK FF NONROOT ANDROID',thumb);
+     const img=document.createElement('img');img.src=imageProduct.image_url;img.alt='PRIME HOOK FF NONROOT ANDROID video preview';img.loading='lazy';img.onerror=()=>{img.style.display='none';};
+     const play=document.createElement('span');play.className='product-video-play';play.textContent='▶';
+     const hint=document.createElement('span');hint.className='product-video-hint';hint.textContent='TAP TO PLAY VIDEO';
+     thumb.append(img,play,hint);card.appendChild(thumb);
+    }else{
+     const img=document.createElement('img');img.src=imageProduct.image_url;img.alt='PRIME HOOK FF NONROOT ANDROID';img.loading='lazy';
+     img.style.cssText='display:block;width:100%;height:clamp(200px,58vw,340px);object-fit:contain;background:#030712;border-radius:12px;margin-bottom:14px';
+     img.onerror=()=>{img.style.display='none';};card.appendChild(img);
+    }
+   }else if(videoProduct?.video_url){
+    const video=document.createElement('video');video.src=videoProduct.video_url;video.controls=true;video.preload='metadata';video.playsInline=true;
+    video.style.cssText='display:block;width:100%;height:clamp(220px,62vw,360px);object-fit:contain;background:#030712;border-radius:12px;margin-bottom:14px';card.appendChild(video);
    }
-   const title=document.createElement('h4');title.textContent='Prime Hook';title.style.cssText='font-size:21px;color:#f8fafc;margin:4px 0 7px';
+   const title=document.createElement('h4');title.textContent='PRIME HOOK FF NONROOT ANDROID';title.style.cssText='font-size:21px;color:#f8fafc;margin:4px 0 7px';
    const desc=document.createElement('p');desc.textContent='Apna duration select karein.';desc.style.cssText='font-size:12px;color:#94a3b8;line-height:1.6;margin-bottom:12px';
    const purchase=document.createElement('button');purchase.type='button';purchase.textContent=isResellerCustomer?'BUY RESELLER KEY':'PURCHASE KEY';purchase.setAttribute('aria-expanded','false');
    purchase.style.cssText='display:block;width:100%;padding:14px;background:linear-gradient(90deg,#a855f7,#7c3aed);color:#fff;font-size:14px;border-radius:10px';
    const plans=document.createElement('div');plans.hidden=true;plans.style.cssText='margin-top:12px;display:none';
    purchase.onclick=()=>{const open=plans.style.display==='none';plans.style.display=open?'block':'none';plans.hidden=!open;purchase.setAttribute('aria-expanded',String(open));};
-   const primeHookDuration=product=>String(product.name||'').replace(/^PRIME\s*HOOK\s*/i,'').replace(/^[-–:]\s*/,'').trim()||'Duration';
+   const primeHookDuration=product=>String(product.name||'').replace(/^PRIME\s*HOOK\s+FF\s+NONROOT\s+ANDROID\s*/i,'').replace(/^PRIME\s*HOOK\s*/i,'').replace(/^[-–:]\s*/,'').trim()||'Duration';
    primeHookProducts.sort((a,b)=>shopDurationRank(primeHookDuration(a))-shopDurationRank(primeHookDuration(b)));
    primeHookProducts.forEach(product=>{
     const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 0;border-bottom:1px solid #263247';
