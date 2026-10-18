@@ -218,7 +218,7 @@ footer{display:none}
 body.jk-keys-only > :not(#jkKeysPage):not(#bottomNav){display:none!important}
 body.jk-keys-only{padding-bottom:80px}
 .jk-keys-count{font-size:10px;letter-spacing:1.5px;color:#67e8f9;font-weight:900;margin:4px 0 12px;padding:10px 12px;background:#0b2035;border:1px solid #1d4968;border-radius:10px}
-.jk-key-card{display:flex;align-items:center;gap:12px;margin:9px 0;padding:14px;border:1px solid #254968;border-radius:14px;background:linear-gradient(135deg,#102238,#111a30 70%,#171a3a);box-shadow:0 7px 18px #02061755}
+.jk-key-card{display:grid;grid-template-columns:44px minmax(0,1fr);align-items:start;gap:12px;margin:10px 0;padding:14px;border:1px solid #2b5275;border-radius:16px;background:linear-gradient(145deg,#12243a,#101a30 65%,#171a38);box-shadow:0 8px 22px #02061766;min-width:0}.jk-key-info{grid-column:2;grid-row:1;display:flex;flex-direction:column;gap:7px;min-width:0}.jk-key-info b{font-size:14px;line-height:1.4;color:#f1f5f9;overflow-wrap:anywhere;word-break:normal}.jk-key-card>div:nth-child(3){grid-column:1/-1}.jk-key-card code{white-space:normal;overflow-wrap:anywhere;word-break:break-word}.jk-key-card .jk-key-copy-row{display:flex;align-items:center;gap:8px;width:100%;margin-top:4px;min-width:0}.jk-key-card .jk-key-copy-value{flex:1;min-width:0;overflow-wrap:anywhere;word-break:break-word}.jk-key-card .jk-key-copy-btn{flex:0 0 auto;padding:10px 12px;background:linear-gradient(110deg,#06b6d4,#2563eb);color:#fff;border:1px solid #7dd3fc;border-radius:10px;font-size:11px;font-weight:900}.jk-purchase-toast{position:fixed;left:50%;bottom:calc(82px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:9999;padding:10px 16px;border:1px solid #34d399;border-radius:12px;background:#063d35;color:#a7f3d0;font-size:13px;font-weight:900;box-shadow:0 8px 24px #0007;white-space:nowrap;pointer-events:none}
 .jk-key-icon{display:flex;align-items:center;justify-content:center;flex:0 0 44px;width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#164e63,#312e81);font-size:21px}
 .jk-key-info{display:flex;flex-direction:column;gap:6px;min-width:0;flex:1}
 .jk-key-info b{font-size:13px;color:#f1f5f9;overflow-wrap:anywhere}
@@ -768,10 +768,10 @@ function openKeysPanel(){
       info.append(name,date,status);
       card.append(icon,info);
       if(k.key_value){
-        const keyRow=document.createElement('div');keyRow.style.cssText='display:flex;align-items:center;gap:8px;width:100%;margin-top:10px;flex-wrap:wrap';
-        const keyText=document.createElement('code');keyText.textContent=String(k.key_value);keyText.style.cssText='display:block;flex:1 1 180px;min-width:0;overflow-wrap:anywhere;padding:10px;background:#070d1a;border:1px solid #334155;border-radius:8px;color:#a5f3fc;font-size:12px;user-select:text';
-        const copyBtn=document.createElement('button');copyBtn.type='button';copyBtn.textContent='📋 COPY KEY';copyBtn.style.cssText='flex:0 0 auto;padding:10px 12px;background:linear-gradient(110deg,#06b6d4,#2563eb);color:#fff;border:1px solid #7dd3fc;border-radius:9px;font-size:11px;font-weight:900';
-        copyBtn.onclick=async()=>{try{await navigator.clipboard.writeText(String(k.key_value));copyBtn.textContent='✓ COPIED';}catch(e){const range=document.createRange();range.selectNodeContents(keyText);const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range);copyBtn.textContent='KEY SELECTED';}};
+        const keyRow=document.createElement('div');keyRow.className='jk-key-copy-row';
+        const keyText=document.createElement('code');keyText.className='jk-key-copy-value';keyText.textContent=String(k.key_value);keyText.style.cssText='display:block;padding:11px;background:#070d1a;border:1px solid #334155;border-radius:10px;color:#a5f3fc;font-size:13px;user-select:text';
+        const copyBtn=document.createElement('button');copyBtn.type='button';copyBtn.className='jk-key-copy-btn';copyBtn.textContent='⧉ COPY';
+        copyBtn.onclick=async()=>{try{await navigator.clipboard.writeText(String(k.key_value));copyBtn.textContent='✓ COPIED';setTimeout(()=>{copyBtn.textContent='⧉ COPY';},1800);}catch(e){const range=document.createRange();range.selectNodeContents(keyText);const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range);copyBtn.textContent='KEY SELECTED';setTimeout(()=>{copyBtn.textContent='⧉ COPY';},1800);}};
         keyRow.append(keyText,copyBtn);card.appendChild(keyRow);
       }
       root.appendChild(card);
@@ -1684,42 +1684,53 @@ async function loadShopProducts(){
  }
 }
 
+function showPurchaseToast(message){
+  let toast=document.getElementById('jkPurchaseToast');
+  if(!toast){toast=document.createElement('div');toast.id='jkPurchaseToast';toast.className='jk-purchase-toast';document.body.appendChild(toast);}
+  toast.textContent=message;toast.style.display='block';
+  clearTimeout(window.jkPurchaseToastTimer);
+  window.jkPurchaseToastTimer=setTimeout(()=>{toast.style.display='none';},1900);
+}
+async function copyPurchasedKey(order){
+  let key=String(order?.key_value||order?.key||'').trim();
+  if(!key){
+    try{
+      const account=await customerApi('/api/my-account');
+      const keys=Array.isArray(account.keys)?account.keys:[];
+      const match=keys.find(k=>(order?.id&&String(k.order_id||k.orderId||'')===String(order.id)) ||
+        (order?.product_name&&String(k.product_name||'').trim()===String(order.product_name).trim()));
+      key=String(match?.key_value||match?.key||'').trim();
+    }catch(_){}
+  }
+  if(key){
+    try{await navigator.clipboard.writeText(key);}catch(_){
+      const helper=document.createElement('textarea');helper.value=key;helper.style.position='fixed';helper.style.opacity='0';document.body.appendChild(helper);helper.select();
+      try{document.execCommand('copy');}catch(__){}
+      helper.remove();
+    }
+    showPurchaseToast('✓ Key copied');
+  }else{
+    showPurchaseToast('✓ Purchase successful — My Keys mein dekhein');
+  }
+}
 async function buyProduct(product){
-  if(!product || !product.id){
-    showPopup('Order failed','Product details nahi mile. Page refresh karke dobara try karein.');
-    return;
-  }
-  if(!localStorage.getItem('jk_customer_access_token')){
-    openAuth('login');
-    return;
-  }
+  if(!product || !product.id){showPopup('Order failed','Product details nahi mile. Page refresh karke dobara try karein.');return;}
+  if(!localStorage.getItem('jk_customer_access_token')){openAuth('login');return;}
   const buttons=document.querySelectorAll('#shopProducts button.buy');
   buttons.forEach(button=>button.disabled=true);
   try{
-    const result=await customerApi('/api/orders',{
-      method:'POST',
-      body:JSON.stringify({product_id:product.id})
-    });
+    const result=await customerApi('/api/orders',{method:'POST',body:JSON.stringify({product_id:product.id})});
     if(result.order?.supplier_status==='completed'){
-      showPopup('Purchase successful',
-        'Wallet se ₹'+Number(result.order.amount).toFixed(2)+' deduct hue.\\nProduct: '+result.order.product_name+
-        '\\nOrder ID: '+result.order.id+
-        '\\nKey automatic My Account → Keys mein deliver ho gayi.\\nWallet balance: ₹'+Number(result.order.wallet_balance||0).toFixed(2));
-      if(typeof loadMyAccountSummary==='function') loadMyAccountSummary().catch(()=>{});
+      if(typeof loadMyAccountSummary==='function')loadMyAccountSummary().catch(()=>{});
+      await copyPurchasedKey(result.order);
     }else{
-      showPopup('Order submitted',
-        'Order request submit ho gayi!\\nOrder ID: '+result.order.id+
-        '\\nProduct: '+result.order.product_name+
-        '\\nAmount: ₹'+Number(result.order.amount).toFixed(2)+
+      showPopup('Order submitted','Order request submit ho gayi!\\nOrder ID: '+result.order.id+
+        '\\nProduct: '+result.order.product_name+'\\nAmount: ₹'+Number(result.order.amount).toFixed(2)+
         '\\nStatus: Pending admin review. Payment verified hone tak order complete nahi hoga.');
     }
-  }catch(error){
-    showPopup('Order failed',error.message||'Order submit nahi ho saka. Dobara try karein.');
-  }finally{
-    buttons.forEach(button=>button.disabled=false);
-  }
+  }catch(error){showPopup('Order failed',error.message||'Order submit nahi ho saka. Dobara try karein.');}
+  finally{buttons.forEach(button=>button.disabled=false);}
 }
-
 
 function restoreCustomerSession(){
   const token=localStorage.getItem('jk_customer_access_token');
