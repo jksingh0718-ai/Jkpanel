@@ -1349,7 +1349,7 @@ function aimHackDuration(productName) {
 }
 
 function primeHookDuration(productName) {
-  const name = String(productName || "").trim().replace(/\\s+/g, " ");
+  const name = String(productName || "").trim().replace(/\s+/g, " ");
   if (!/prime\s*hook/i.test(name)) return null;
   const match = name.match(/(1|3|7|10)\s*days?\s*nonroot/i);
   if (!match) return null;
