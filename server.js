@@ -529,7 +529,7 @@ small{color:#a6b2c0}
 <section id="login">
 <h2>Admin Login</h2>
 <form id="loginForm" autocomplete="off">
-<input id="adminLoginPassword" name="jkpanel-secret-entry" type="password" placeholder="Admin password" required autocomplete="new-password" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true">
+<input id="adminLoginPassword" name="jkpanel-secret-entry" type="text" style="-webkit-text-security:disc;text-security:disc" placeholder="Admin password" required autocomplete="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true">
 <br><button>Login</button>
 </form>
 </section>
@@ -621,7 +621,7 @@ document.getElementById("loginForm").onsubmit=async e=>{
  loginButton.disabled=true;
  loginButton.textContent="Logging in...";
  try{
-  await api("/api/admin/login",{method:"POST",body:JSON.stringify({password:passwordInput.value})});
+  await api("/api/admin/login",{method:"POST",body:JSON.stringify({password:attemptedPassword})});
   document.getElementById("login").hidden=true;
   document.getElementById("dashboard").hidden=false;
   message.textContent="Login successful. Admin panel loading...";
