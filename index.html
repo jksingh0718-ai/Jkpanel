@@ -271,6 +271,26 @@ body.jk-keys-only{padding-bottom:96px!important}
 #popup.history-screen.account-screen .popup-card{height:100%!important;max-height:100%!important;background:linear-gradient(145deg,#101e35 0%,#0b1426 55%,#171633 100%)!important}
 #popup.history-screen.account-screen #popupMessage{padding-bottom:18px!important}
 
+
+/* Profile pages use a polished blue-violet background and keep the full bottom navigation visible. */
+#bottomNav{z-index:500!important;display:grid!important;visibility:visible!important;opacity:1!important;}
+#popup.profile-sky-screen{inset:0 0 calc(70px + env(safe-area-inset-bottom)) 0!important;z-index:250!important;background:linear-gradient(145deg,#102341 0%,#10182c 48%,#201747 100%)!important;}
+#popup.profile-sky-screen .popup-card{height:100%!important;max-height:100%!important;min-height:0!important;overflow-y:auto!important;background:linear-gradient(145deg,#102341 0%,#10182c 48%,#201747 100%)!important;}
+#popup.profile-sky-screen #popupMessage>div{min-height:100%!important;background:radial-gradient(ellipse at 50% 0%,#2563eb55 0%,transparent 44%),linear-gradient(145deg,#102341 0%,#10182c 48%,#201747 100%)!important;padding-bottom:24px!important;}
+#popup.profile-sky-screen .jk-profile-sky{background-image:radial-gradient(circle at 75% 24%,#c4b5fd88 0 2px,transparent 3px),radial-gradient(circle at 22% 30%,#bae6fd88 0 1px,transparent 2px),linear-gradient(130deg,#172554,#1d4ed8 48%,#6d28d9)!important;background-position:center!important;border-radius:0 0 24px 24px!important;}
+#popup.profile-sky-screen #popupMessage button:not([style*="position:fixed"]){background:linear-gradient(115deg,#142943,#24224b)!important;border-color:#45618c!important;box-shadow:0 7px 18px #02061766!important;}
+#popup.profile-sky-screen #popupMessage button[style*="position:fixed"]{bottom:calc(76px + env(safe-area-inset-bottom))!important;}
+#popup.history-screen.account-screen{inset:0 0 calc(70px + env(safe-area-inset-bottom)) 0!important;z-index:250!important;background:linear-gradient(145deg,#102341 0%,#10182c 48%,#201747 100%)!important;}
+#popup.history-screen.account-screen .popup-card{height:100%!important;max-height:100%!important;background:linear-gradient(145deg,#102341 0%,#10182c 48%,#201747 100%)!important;}
+#popup.history-screen.account-screen #popupMessage{padding-bottom:24px!important;background:transparent!important;}
+#popup.history-screen.account-screen #popupMessage>div{background:radial-gradient(ellipse at 50% 0%,#2563eb33 0%,transparent 45%),linear-gradient(145deg,#102341 0%,#10182c 48%,#201747 100%)!important;color:#f8fafc!important;}
+#popup.history-screen.account-screen #popupMessage h3,#popup.history-screen.account-screen #popupMessage h4{color:#93c5fd!important;}
+#popup.history-screen.account-screen #popupMessage>div>div{border-color:#34496b!important;}
+.jk-keys-page{inset:0 0 calc(70px + env(safe-area-inset-bottom)) 0!important;z-index:250!important;padding-bottom:18px!important;}
+body.jk-keys-only{padding-bottom:calc(80px + env(safe-area-inset-bottom))!important;}
+body.jk-keys-only #bottomNav,body.jk-referral-only #bottomNav{display:grid!important;visibility:visible!important;opacity:1!important;}
+@media(max-width:420px){#bottomNav{gap:2px;padding-left:5px;padding-right:5px;}#bottomNav button{font-size:10px;}}
+
 </style>
 </head>
 <body>
@@ -932,7 +952,7 @@ function showPopup(title,message){
 function closePopup(){
   const popup=document.getElementById('popup');
   if(!popup)return;
-  popup.classList.remove('history-screen','auth-screen','account-screen');
+  popup.classList.remove('history-screen','auth-screen','account-screen','profile-sky-screen');
   const player=document.querySelector('#popupMessage video');
   if(player){player.pause();player.removeAttribute('src');player.load();}
   popup.style.cssText='';
@@ -1287,6 +1307,15 @@ async function openReferral(){
       }
     };
     root.appendChild(copy);
+    const referredTitle=document.createElement('h4');referredTitle.textContent='Referred Users';referredTitle.style.cssText='margin-top:18px;margin-bottom:8px;color:#e2e8f0';root.appendChild(referredTitle);
+    const referredUsers=Array.isArray(referral.referredUsersList)?referral.referredUsersList:[];
+    if(!referredUsers.length){const emptyReferred=document.createElement('p');emptyReferred.textContent='Abhi tak kisi user ne aapke referral link se account nahi banaya.';emptyReferred.style.cssText='font-size:12px;color:#94a3b8;line-height:1.5';root.appendChild(emptyReferred);}
+    else referredUsers.forEach(user=>{
+      const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:nowrap;white-space:nowrap;overflow-x:auto;padding:11px 10px;margin-top:7px;background:linear-gradient(110deg,#102238,#151a36);border:1px solid #315477;border-radius:10px;font-size:11px';
+      const name=document.createElement('b');name.textContent=user.name||user.email||'User';name.style.cssText='flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;color:#e0f2fe';
+      const date=document.createElement('span');date.textContent=user.created_at?new Date(user.created_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'Date unavailable';date.style.cssText='flex:0 0 auto;color:#c4b5fd;font-size:10px';
+      row.append(name,date);root.appendChild(row);
+    });
     const historyTitle=document.createElement('h4');historyTitle.textContent='Commission History';historyTitle.style.cssText='margin-top:18px;margin-bottom:8px;color:#e2e8f0';root.appendChild(historyTitle);
     const commissions=Array.isArray(referral.commissions)?referral.commissions:[];
     if(!commissions.length){
