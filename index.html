@@ -1599,8 +1599,8 @@ async function loadShopProducts(){
      const row=document.createElement('div');
      row.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 0;border-bottom:1px solid #263247';
      const details=document.createElement('div');details.style.cssText='min-width:0;flex:1';
-     const durationLabel=document.createElement('p');durationLabel.textContent=duration.toUpperCase();durationLabel.style.cssText='font-size:14px;font-weight:bold;color:#f8fafc';
-     const price=document.createElement('p');price.textContent='₹'+Number(product.price||0).toLocaleString('en-IN',{maximumFractionDigits:0});price.style.cssText='font-size:13px;color:#c4b5fd;margin-top:5px';
+     const durationLabel=document.createElement('p');durationLabel.textContent=duration.replace(/\b(\d+)\s*hours?\b/ig,'$1 Hours').replace(/\b(\d+)\s*hrs?\b/ig,'$1 Hours').replace(/\b(\d+)\s*h\b/ig,'$1 Hours').replace(/\b(\d+)\s*days?\b/ig,'$1 Days').replace(/\b(\d+)\s*minutes?\b/ig,'$1 Minutes').replace(/\b(\d+)\s*mins?\b/ig,'$1 Minutes').replace(/\b(\d+)\s*hours\b/ig,'$1 Hours');durationLabel.style.cssText='font-size:14px;font-weight:bold;color:#f8fafc';
+     const price=document.createElement('p');price.textContent='₹'+Number(isResellerCustomer&&product.reseller_price!==null&&product.reseller_price!==undefined?product.reseller_price:product.price||0).toLocaleString('en-IN',{maximumFractionDigits:0});price.style.cssText='font-size:13px;color:#c4b5fd;margin-top:5px';
      details.append(durationLabel,price);
      const buy=document.createElement('button');buy.type='button';buy.className='buy';buy.textContent='BUY';buy.style.cssText='padding:11px 14px;flex-shrink:0;background:#10b981;color:#052e16;font-size:12px';
      buy.onclick=()=>buyProduct(product);
