@@ -856,7 +856,7 @@ function adminProductNameInfo(name){
  const raw=String(name||"").trim();
  if(/^prime\s*hook(?:\b|$)/i.test(raw)){
   const prefix=/^prime\s*hook\s+ff\s+nonroot\s+android\b/i.test(raw)?/^prime\s*hook\s+ff\s+nonroot\s+android/i:/^prime\s*hook/i;
-  const duration=raw.replace(prefix,"").replace(/^\s*[-–:|]\s*/,"").replace(/^\s*[\[(]\s*/,"").replace(/\s*[\])]\s*$/,"").trim();
+  const duration=raw.replace(prefix,"").replace(/^\s*[-–:|]\s*/,"").trim().replace(/^[[(]/,"").replace(/[)\]]+$/,"").trim();
   return {base:"PRIME HOOK FF NONROOT ANDROID",duration:duration||"Standard"};
  }
  const match=raw.match(/^(.*?)\s*-\s*(.+)$/);
@@ -957,7 +957,7 @@ document.getElementById("productForm").onsubmit=async e=>{
    const name=String(p.name||"").trim();
    return isPrimeHook?/^prime\s*hook(?:\b|$)/i.test(name):(name.toLowerCase()===base.toLowerCase()||name.toLowerCase().startsWith((base+" - ").toLowerCase()));
   });
-  const durationKey=value=>String(value||"").toLowerCase().replace(/[\s()[\]_-]+/g,"").replace(/[–:|]/g,"");
+  const durationKey=value=>String(value||"").toLowerCase().replace(/[^a-z0-9]/g,"");
   const wanted=new Set(rows.map(p=>durationKey(p.duration)));
   const matchedIds=new Set();
   for(const plan of rows){
