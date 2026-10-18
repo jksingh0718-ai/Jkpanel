@@ -134,12 +134,13 @@ footer{position:fixed;bottom:0;left:0;right:0;text-align:center;background:#1118
 #popup:not(.auth-screen) .popup-card button{flex-shrink:0}
 
 /* Fixed bottom navigation: Home, Product, My Keys, Profile */
-body{padding-bottom:96px}
-#bottomNav{position:fixed;left:0;right:0;bottom:0;z-index:80;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:9px 10px calc(9px + env(safe-area-inset-bottom));background:#0b1220;border-top:1px solid #263247;box-shadow:0 -8px 24px #0005}
-#bottomNav button{min-width:0;background:transparent;color:#94a3b8;border:1px solid transparent;border-radius:12px;padding:8px 2px 7px;font-size:11px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
-#bottomNav button .nav-icon{font-size:20px;line-height:1.1}
-#bottomNav button.active{color:#38bdf8;background:#102235;border-color:#164e63}
-#bottomNav button:active{transform:scale(.98)}
+body{padding-bottom:104px}
+#bottomNav{position:fixed;left:0;right:0;bottom:0;z-index:80;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;padding:8px 7px calc(8px + env(safe-area-inset-bottom));background:linear-gradient(180deg,#101a2d,#080f1d);border-top:1px solid #334155;box-shadow:0 -8px 24px #0006}
+#bottomNav button{min-width:0;background:transparent;color:#a8b7cc;border:1px solid transparent;border-radius:12px;padding:7px 1px 6px;font-size:11px;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;transition:background .16s ease,color .16s ease,border-color .16s ease}
+#bottomNav button .nav-icon{display:flex;align-items:center;justify-content:center;width:28px;height:27px;font-size:24px;line-height:1}
+#bottomNav button .nav-icon svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#bottomNav button.active{color:#38bdf8;background:linear-gradient(145deg,#123047,#102235);border-color:#28739a;box-shadow:inset 0 0 0 1px #38bdf81a}
+#bottomNav button:active{transform:scale(.97);background:#173047}
 footer{display:none}
 #popup:not(.auth-screen){padding-bottom:calc(16px + env(safe-area-inset-bottom))}
 
@@ -407,11 +408,11 @@ footer{background:linear-gradient(90deg,#101b35,#241544);border-top:1px solid #4
 
 
 <nav id="bottomNav" aria-label="Main navigation">
-  <button type="button" class="active" data-nav="home" onclick="navigateBottom('home')"><span class="nav-icon">⌂</span><span>Home</span></button>
-  <button type="button" data-nav="store" onclick="navigateBottom('store')"><span class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9h18l-1.5-5h-15z"/><path d="M5 9v11h14V9M9 20v-6h6v6"/><path d="M3 9c0 2 3 2 3 0 0 2 3 2 3 0 0 2 3 2 3 0 0 2 3 2 3 0 0 2 3 2 3 0"/></svg></span><span>Product</span></button>
-  <button type="button" data-nav="keys" onclick="navigateBottom('keys')"><span class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="5"/><path d="m11.5 11.5 9-9M16 7l3 3M18 5l3 3"/></svg></span><span>Keys</span></button>
-  <button type="button" data-nav="deposit" onclick="navigateBottom('deposit')"><span class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg></span><span>Deposit</span></button>
-  <button type="button" data-nav="profile" onclick="navigateBottom('profile')"><span class="nav-icon">♙</span><span>Profile</span></button>
+  <button type="button" class="active" data-nav="home" onclick="navigateBottom('home')"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg></span><span>Home</span></button>
+  <button type="button" data-nav="store" onclick="navigateBottom('store')"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h18l-1.5-5h-15z"/><path d="M5 9v11h14V9M9 20v-6h6v6"/><path d="M3 9c0 2 3 2 3 0 0 2 3 2 3 0 0 2 3 2 3 0 0 2 3 2 3 0 0 2 3 2 3 0"/></svg></span><span>Product</span></button>
+  <button type="button" data-nav="keys" onclick="navigateBottom('keys')"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="15" r="5"/><path d="m11.5 11.5 9-9M16 7l3 3M18 5l3 3"/></svg></span><span>Keys</span></button>
+  <button type="button" data-nav="deposit" onclick="navigateBottom('deposit')"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg></span><span>Deposit</span></button>
+  <button type="button" data-nav="profile" onclick="navigateBottom('profile')"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span><span>Profile</span></button>
 </nav>
 
 <footer>© 2026 JK PANEL SHOP</footer>
