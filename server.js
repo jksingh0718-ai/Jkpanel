@@ -776,6 +776,15 @@ document.getElementById("loginForm").onsubmit=async e=>{
 };
 
 
+function adminProductNameInfo(name){
+ const raw=String(name||"").trim();
+ if(/^prime\s*hook(?:\b|$)/i.test(raw)){
+  const duration=raw.replace(/^prime\s*hook/i,"").replace(/^\s*[-–:|]\s*/,"").replace(/^\s*[\[(]\s*/,"").replace(/\s*[\])]\s*$/,"").trim();
+  return {base:"Prime Hook",duration:duration||"Standard"};
+ }
+ const match=raw.match(/^(.*?)\s*-\s*(.+)$/);
+ return {base:match?match[1].trim():raw,duration:match?match[2].trim():"Standard"};
+}
 async function loadProducts(){
  try{
   const data=await api("/api/admin/products");
@@ -785,15 +794,7 @@ async function loadProducts(){
   const products=Array.isArray(data.products)?data.products:[];
   if(!products.length){root.textContent="Abhi koi product nahi hai. Upar se product add karein.";return;}
   const groups=new Map();
-  const productNameInfo=name=>{
-   const raw=String(name||"").trim();
-   if(/^prime\s*hook(?:\b|$)/i.test(raw)){
-    const duration=raw.replace(/^prime\s*hook/i,"").replace(/^\s*[-–:|]\s*/,"").replace(/^\s*[\[(]\s*/,"").replace(/\s*[\])]\s*$/,"").trim();
-    return {base:"Prime Hook",duration:duration||"Standard"};
-   }
-   const match=raw.match(/^(.*?)\s*-\s*(.+)$/);
-   return {base:match?match[1].trim():raw,duration:match?match[2].trim():"Standard"};
-  };
+  const productNameInfo=adminProductNameInfo;
   products.forEach(p=>{const info=productNameInfo(p.name);if(!groups.has(info.base))groups.set(info.base,[]);groups.get(info.base).push(p);});
   groups.forEach((items,base)=>{
    const card=document.createElement("article");card.className="card";
@@ -885,7 +886,7 @@ document.getElementById("productForm").onsubmit=async e=>{
   for(const plan of rows){
    const name=base+" - "+plan.duration;
    const planKey=durationKey(plan.duration);
-   const old=existing.find(p=>!matchedIds.has(p.id)&&durationKey(productNameInfo(p.name).duration)===planKey);
+   const old=existing.find(p=>!matchedIds.has(p.id)&&durationKey(adminProductNameInfo(p.name).duration)===planKey);
    const payload={name,price:plan.price,image_url:imageUrl||null,video_url:videoUrl||null,published:document.getElementById("productPublished").checked,description:document.getElementById("productDescription").value.trim()};
    if(old){matchedIds.add(old.id);await api("/api/admin/products/"+encodeURIComponent(old.id),{method:"PATCH",body:JSON.stringify(payload)});}else{await api("/api/admin/products",{method:"POST",body:JSON.stringify(payload)});}
   }
