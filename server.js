@@ -646,6 +646,39 @@ window.jkAdminLogin=async function(event){
 };
 </script>
 <script>
+/* Reliable admin tab navigation, independent of the rest of the dashboard script. */
+document.addEventListener("click",function(event){
+ const button=event.target.closest("button[data-tab]");
+ if(!button)return;
+ event.preventDefault();
+ event.stopImmediatePropagation();
+ const tab=button.getAttribute("data-tab");
+ document.querySelectorAll("button[data-tab]").forEach(function(item){
+  item.classList.toggle("active",item.getAttribute("data-tab")===tab);
+ });
+ document.querySelectorAll(".admin-section").forEach(function(section){
+  section.classList.toggle("active",section.id==="tab-"+tab);
+ });
+ const jobs={
+  users:["loadCustomers"],
+  products:["loadProducts"],
+  keys:["loadKeyGroups","loadOrders"],
+  resellers:["loadResellers"],
+  profile:[]
+ };
+ (jobs[tab]||[]).forEach(function(name){
+  if(typeof window[name]==="function")window[name]().catch(function(error){
+   const message=document.getElementById("message");
+   if(message)message.textContent=error.message||"Section load nahi hua. Refresh karein.";
+  });
+ });
+ const menu=document.getElementById("adminMenu");
+ const toggle=document.getElementById("adminMenuToggle");
+ if(menu)menu.classList.remove("open");
+ if(toggle)toggle.setAttribute("aria-expanded","false");
+},true);
+</script>
+<script>
 const loginForm=document.getElementById("loginForm");
 const message=document.getElementById("message");
 loginForm.addEventListener("submit",async e=>{
