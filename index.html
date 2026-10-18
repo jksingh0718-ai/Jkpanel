@@ -218,7 +218,7 @@ footer{display:none}
 body.jk-keys-only > :not(#jkKeysPage):not(#bottomNav){display:none!important}
 body.jk-keys-only{padding-bottom:80px}
 .jk-keys-count{font-size:10px;letter-spacing:1.5px;color:#67e8f9;font-weight:900;margin:4px 0 12px;padding:10px 12px;background:#0b2035;border:1px solid #1d4968;border-radius:10px}
-.jk-key-card{display:grid;grid-template-columns:44px minmax(0,1fr);align-items:start;gap:12px;margin:10px 0;padding:14px;border:1px solid #2b5275;border-radius:16px;background:linear-gradient(145deg,#12243a,#101a30 65%,#171a38);box-shadow:0 8px 22px #02061766;min-width:0}.jk-key-info{grid-column:2;grid-row:1;display:flex;flex-direction:column;gap:7px;min-width:0}.jk-key-info b{font-size:14px;line-height:1.4;color:#f1f5f9;overflow-wrap:anywhere;word-break:normal}.jk-key-card>div:nth-child(3){grid-column:1/-1}.jk-key-card code{white-space:normal;overflow-wrap:anywhere;word-break:break-word}.jk-key-card .jk-key-copy-row{display:flex;align-items:center;gap:8px;width:100%;margin-top:4px;min-width:0}.jk-key-card .jk-key-copy-value{flex:1;min-width:0;overflow-wrap:anywhere;word-break:break-word}.jk-key-card .jk-key-copy-btn{flex:0 0 auto;padding:10px 12px;background:linear-gradient(110deg,#06b6d4,#2563eb);color:#fff;border:1px solid #7dd3fc;border-radius:10px;font-size:11px;font-weight:900}.jk-purchase-toast{position:fixed;left:50%;bottom:calc(82px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:9999;padding:10px 16px;border:1px solid #34d399;border-radius:12px;background:#063d35;color:#a7f3d0;font-size:13px;font-weight:900;box-shadow:0 8px 24px #0007;white-space:nowrap;pointer-events:none}
+.jk-key-card{display:grid;grid-template-columns:44px minmax(0,1fr);align-items:start;gap:12px;margin:10px 0;padding:14px;border:1px solid #2b5275;border-radius:16px;background:linear-gradient(145deg,#12243a,#101a30 65%,#171a38);box-shadow:0 8px 22px #02061766;min-width:0}.jk-key-info{grid-column:2;grid-row:1;display:flex;flex-direction:column;gap:7px;min-width:0}.jk-key-info b{font-size:14px;line-height:1.4;color:#f1f5f9;overflow-wrap:anywhere;word-break:normal}.jk-key-card>div:nth-child(3){grid-column:1/-1}.jk-key-card code{white-space:normal;overflow-wrap:anywhere;word-break:break-word}.jk-key-card .jk-key-copy-row{display:flex;align-items:center;gap:8px;width:100%;margin-top:4px;min-width:0}.jk-key-card .jk-key-copy-value{flex:1;min-width:0;overflow-wrap:anywhere;word-break:break-word}.jk-key-card .jk-key-copy-btn{flex:0 0 auto;padding:10px 12px;background:linear-gradient(110deg,#06b6d4,#2563eb);color:#fff;border:1px solid #7dd3fc;border-radius:10px;font-size:11px;font-weight:900}.jk-purchase-toast{position:fixed;left:50%;bottom:calc(82px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:9999;max-width:calc(100vw - 28px);padding:12px 16px;border:1px solid #34d399;border-radius:12px;background:#063d35;color:#a7f3d0;font-size:13px;font-weight:800;line-height:1.45;box-shadow:0 8px 24px #0007;white-space:normal;text-align:center;pointer-events:none}.jk-purchase-toast.error{border-color:#f87171;background:#451a1a;color:#fecaca}
 .jk-key-icon{display:flex;align-items:center;justify-content:center;flex:0 0 44px;width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#164e63,#312e81);font-size:21px}
 .jk-key-info{display:flex;flex-direction:column;gap:6px;min-width:0;flex:1}
 .jk-key-info b{font-size:13px;color:#f1f5f9;overflow-wrap:anywhere}
@@ -1684,12 +1684,13 @@ async function loadShopProducts(){
  }
 }
 
-function showPurchaseToast(message){
+function showPurchaseToast(message,isError=false,duration=2600){
   let toast=document.getElementById('jkPurchaseToast');
-  if(!toast){toast=document.createElement('div');toast.id='jkPurchaseToast';toast.className='jk-purchase-toast';document.body.appendChild(toast);}
+  if(!toast){toast=document.createElement('div');toast.id='jkPurchaseToast';document.body.appendChild(toast);}
+  toast.className='jk-purchase-toast'+(isError?' error':'');
   toast.textContent=message;toast.style.display='block';
   clearTimeout(window.jkPurchaseToastTimer);
-  window.jkPurchaseToastTimer=setTimeout(()=>{toast.style.display='none';},1900);
+  window.jkPurchaseToastTimer=setTimeout(()=>{toast.style.display='none';},duration);
 }
 async function copyPurchasedKey(order){
   let key=String(order?.key_value||order?.key||'').trim();
@@ -1728,7 +1729,7 @@ async function buyProduct(product){
         '\\nProduct: '+result.order.product_name+'\\nAmount: ₹'+Number(result.order.amount).toFixed(2)+
         '\\nStatus: Pending admin review. Payment verified hone tak order complete nahi hoga.');
     }
-  }catch(error){showPopup('Order failed',error.message||'Order submit nahi ho saka. Dobara try karein.');}
+  }catch(error){showPurchaseToast(error.message||'Order submit nahi ho saka. Dobara try karein.',true,4200);}
   finally{buttons.forEach(button=>button.disabled=false);}
 }
 
