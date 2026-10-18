@@ -1041,6 +1041,8 @@ function openProductVideo(url,title,thumb){
   video.src=url;video.controls=true;video.autoplay=true;video.playsInline=true;video.preload='metadata';
   video.style.cssText='display:block;width:100%;height:auto;max-height:70vh;min-height:220px;background:#000;border-radius:12px;object-fit:contain;margin:0 0 14px';
   video.onerror=()=>{video.insertAdjacentHTML('afterend','<p style="color:#fca5a5;font-size:13px">Video play nahi hua. Admin panel se video dobara upload karein.</p>');};
+  // Restore the same thumbnail when playback ends so the product card never loses its video.
+  video.addEventListener('ended',()=>{if(video.parentNode&&thumb){video.replaceWith(thumb);}});
   if(thumb&&thumb.parentNode)thumb.replaceWith(video);
   else {const candidate=[...document.querySelectorAll('.product-video-thumb')].find(el=>el.getAttribute('aria-label')==='Play '+title+' video');if(candidate)candidate.replaceWith(video);else{showPopup('Video not available','Video player ko product card mein nahi dhoondh paaye.');return;}}
   video.scrollIntoView({behavior:'smooth',block:'center'});
