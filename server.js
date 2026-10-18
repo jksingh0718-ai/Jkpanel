@@ -551,9 +551,10 @@ small{color:#a6b2c0}
   <input id="productId" type="hidden">
   <label for="productName">Product name</label><br>
   <input id="productName" required maxlength="120" placeholder="Product name" style="width:100%"><br>
-  <h4 style="margin:14px 0 6px">Duration aur price options</h4>
+  <h4 style="margin:14px 0 6px">All durations & prices for this product</h4>
+  <div style="padding:10px 12px;margin:8px 0 10px;background:#172554;border:1px solid #3b82f6;border-radius:10px;color:#dbeafe;font-size:13px;line-height:1.6">Product ka naam sirf ek baar likhein. Neeche <b>+ Add duration</b> se 6 Hours, 12 Hours, 1 Day, 7 Days jaise sabhi plans aur unki prices add karein. Shop mein ye sab ek hi product card ke andar dikhenge. Alag-alag product banane ki zarurat nahi.</div>
   <div id="productPlanRows"></div>
-  <button type="button" id="addProductPlan" style="background:#334155;color:white">+ Add duration</button><br><small>Ek hi product ke sabhi duration aur price yahin add karein.</small><br>
+  <button type="button" id="addProductPlan" style="background:#334155;color:white">+ Add duration</button><br><small>Existing product ko edit karne par uske sabhi durations ek saath load honge. Yahan se plans update kar sakte hain.</small><br>
   <label for="productDescription">Product description</label><br>
   <textarea id="productDescription" maxlength="2000" placeholder="Product ke baare mein likhein" style="width:100%;min-height:80px"></textarea><br>
   <label for="productImageFile">Product photo (phone Gallery se)</label><br>
