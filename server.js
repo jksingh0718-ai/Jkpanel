@@ -877,7 +877,7 @@ async function loadProducts(){
    const card=document.createElement("article");card.className="card";
    const title=document.createElement("h3");title.textContent=base;
    const info=document.createElement("p");info.textContent=items.filter(p=>p.published).length+" active option(s) · "+items.length+" saved option(s)";
-   const options=document.createElement("p");options.style.cssText="white-space:pre-line;line-height:1.8";options.textContent=items.map(p=>productNameInfo(p.name).duration+" — ₹"+Number(p.price).toFixed(2)+(p.published?"":" (hidden)")).join("\n");
+   const options=document.createElement("p");options.style.cssText="white-space:pre-line;line-height:1.8";options.textContent=items.map(p=>productNameInfo(p.name).duration+" — ₹"+Number(p.price).toFixed(2)+(p.published?"":" (hidden)")).join("\\n");
    const description=document.createElement("p");description.textContent=items.find(p=>p.description)?.description||"No description";
    const media=document.createElement("p");media.textContent=(items.find(p=>p.image_url)?.image_url||"No image")+(items.find(p=>p.video_url)?" · Video uploaded":"");
    const edit=document.createElement("button");edit.textContent="Edit product and durations";
