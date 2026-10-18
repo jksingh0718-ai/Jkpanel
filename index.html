@@ -309,6 +309,20 @@ body.jk-keys-only #bottomNav,body.jk-referral-only #bottomNav{display:grid!impor
 #popup.profile-sky-screen .jk-profile-sky .sky-cloud{display:block!important;position:absolute!important;width:150px!important;height:32px!important;bottom:10px!important;left:-18px!important;background:#64748b66!important;border-radius:50%!important;filter:blur(10px)!important;}
 #popup.profile-sky-screen .jk-profile-sky .sky-cloud.back{left:auto!important;right:-24px!important;bottom:0!important;background:#a78bfa55!important;}
 
+
+/* JK dashboard: brighter gaming-style background and cards */
+body{background:radial-gradient(ellipse at 8% 0%,#1d4ed833 0%,transparent 38%),radial-gradient(ellipse at 100% 32%,#7c3aed2b 0%,transparent 36%),linear-gradient(155deg,#080f25 0%,#111a35 48%,#170f2b 100%);background-attachment:fixed;color:#f8fafc}
+header{border-bottom:1px solid #3b4d78;background:linear-gradient(100deg,#111c38cc,#241544aa);border-radius:14px;padding:10px;margin:-2px 0 12px;box-shadow:0 8px 24px #02061766}
+.brand{color:#7dd3fc;text-shadow:0 0 18px #38bdf855}
+.box{background:linear-gradient(135deg,#172554eF 0%,#1e1b4bE8 55%,#172033F2 100%);border-color:#465b91;box-shadow:0 8px 24px #02061755}
+.stats .stat{background:linear-gradient(135deg,#172554,#312e81);border-color:#5865a7;box-shadow:0 7px 18px #02061755}
+.stats .stat:nth-child(2){background:linear-gradient(135deg,#064e3b,#164e63);border-color:#0f766e}
+.stats .stat:nth-child(3){background:linear-gradient(135deg,#4c1d95,#312e81);border-color:#7c3aed}
+.stats .stat:nth-child(4){background:linear-gradient(135deg,#7c2d12,#7f1d1d);border-color:#c2410c}
+.product{background:linear-gradient(120deg,#172554,#1e1b4b);border-color:#465b91;box-shadow:0 6px 16px #02061744}
+footer{background:linear-gradient(90deg,#101b35,#241544);border-top:1px solid #465b91}
+@media(max-width:360px){.deposit-btn{padding:8px;font-size:10px}}
+
 </style>
 </head>
 <body>
@@ -338,9 +352,8 @@ body.jk-keys-only #bottomNav,body.jk-referral-only #bottomNav{display:grid!impor
 <header>
   <div class="header-left">
     <button class="menu-btn" onclick="openMenu()" aria-label="Open menu">☰</button>
-    <a class="contact-btn" href="https://wa.me/917645957071?text=Hello%20JK%20PANEL%20SHOP" target="_blank" rel="noopener">CONTACT</a>
   </div>
-  <button class="deposit-btn" onclick="deposit()">▶ HOW TO DEPOSIT?</button>
+  <a class="deposit-btn" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;background:linear-gradient(120deg,#16a34a,#059669);color:#fff;border:1px solid #4ade80;border-radius:10px;padding:11px 13px;box-shadow:0 4px 16px #10b98144" href="https://wa.me/917645957071?text=Hello%20JK%20PANEL%20SHOP" target="_blank" rel="noopener">☏ CONTACT SUPPORT</a>
 </header>
 
 <div class="brand" style="display:flex;align-items:center;gap:10px"><span class="jk-brand-mark jk-home-icon" aria-hidden="true"><svg width="29" height="29" viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M14 15h20c4 0 7 3 8 7l3 11c1 4-3 7-6 4l-7-6H16l-7 6c-3 3-7 0-6-4l3-11c1-4 4-7 8-7Z" fill="url(#jkDashGameGrad)" stroke="#dbeafe" stroke-width="1.6"/><path d="M14 22v10m-5-5h10" stroke="#fff" stroke-width="2.8" stroke-linecap="round"/><circle cx="32" cy="25" r="2" fill="#fff"/><circle cx="36" cy="30" r="2" fill="#7dd3fc"/><path d="m18 15 3-5h6l3 5" stroke="#bfdbfe" stroke-width="1.6" stroke-linecap="round"/><defs><linearGradient id="jkDashGameGrad" x1="4" y1="10" x2="42" y2="39" gradientUnits="userSpaceOnUse"><stop stop-color="#38bdf8"/><stop offset=".55" stop-color="#2563eb"/><stop offset="1" stop-color="#7c3aed"/></linearGradient></defs></svg></span><span class="jk-brand-name">JK PANEL SHOP</span></div>
@@ -867,7 +880,7 @@ function openProfilePanel(){
       '<button type="button" onclick="closePopup();showPopup(\'Support Center\',\'Support ke liye WhatsApp par contact karein.\')" style="display:flex;align-items:center;justify-content:space-between;text-align:left;width:100%;margin-top:9px;padding:16px;background:#111a2c;color:#f8fafc;border:1px solid #202b40;border-radius:14px"><span><b style="color:#a78bfa;margin-right:10px">◉</b>Support Center</span><span style="color:#64748b">›</span></button>'+
       '<button type="button" onclick="closePopup();openOrderHistoryPanel()" style="display:flex;align-items:center;justify-content:space-between;text-align:left;width:100%;margin-top:9px;padding:16px;background:#111a2c;color:#f8fafc;border:1px solid #202b40;border-radius:14px"><span>Order History</span><span style="color:#64748b">›</span></button>'+
       '<button type="button" onclick="closePopup();openDepositHistoryPanel()" style="display:flex;align-items:center;justify-content:space-between;text-align:left;width:100%;margin-top:9px;padding:16px;background:#111a2c;color:#f8fafc;border:1px solid #202b40;border-radius:14px"><span>Deposit History</span><span style="color:#64748b">›</span></button>'+
-      '<button type="button" onclick="closePopup()" style="display:block;width:100%;margin:12px 0 18px;padding:15px;background:#e3262e;color:#fff;border:0;border-radius:13px;font-size:16px;font-weight:900;box-shadow:0 8px 24px #0005;cursor:pointer">CLOSE</button>'+
+      '<button type="button" onclick="closePopup()" style="display:block;width:100%;margin:12px 0 18px;padding:15px;background:linear-gradient(120deg,#f97316,#ea580c);color:#fff;border:2px solid #fdba74;border-radius:13px;font-size:16px;font-weight:900;letter-spacing:1px;box-shadow:0 0 0 3px #f9731626,0 8px 24px #0005;cursor:pointer">✕ CLOSE PROFILE</button>'+
     '</div></div>';
   popup.style.display='flex';
   customerApi('/api/my-account').then(data=>{
