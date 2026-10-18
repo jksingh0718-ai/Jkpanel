@@ -345,6 +345,7 @@ app.get("/api/my-account", async (req, res) => {
   const deposits = depositsResult.data || [];
   const transactions = transactionsResult.data || [];
   const commissions = commissionsResult.data || [];
+  const includeReferralDetails = req.query.includeReferral === "true";
   const { data: resellerAccount, error: resellerStatusError } = await supabase.from("reseller_accounts")
     .select("user_id, is_active, activation_price").eq("user_id", user.id).maybeSingle();
   if (resellerStatusError) console.error("Customer reseller status lookup failed:", resellerStatusError.message);
@@ -370,12 +371,14 @@ app.get("/api/my-account", async (req, res) => {
       code: referralProfile.referral_code,
       link: "https://jkpanel.shop/?ref=" + encodeURIComponent(referralProfile.referral_code),
       referredUsers: (referralsResult.data || []).length,
-      referredUsersList: await Promise.all((referralsResult.data || []).map(async (profile) => {
+      // Fetch each referred user's auth record only on the referral page.
+      // Profile, keys and history screens don't need this extra series of network calls.
+      referredUsersList: includeReferralDetails ? await Promise.all((referralsResult.data || []).map(async (profile) => {
         const { data: referredAuth, error: referredAuthError } = await supabase.auth.admin.getUserById(profile.user_id);
         if (referredAuthError || !referredAuth?.user) return { name: "User", email: "", created_at: null };
         const email = referredAuth.user.email || "";
         return { name: email ? email.split("@")[0] : "User", email, created_at: referredAuth.user.created_at || null };
-      })),
+      })) : [],
       totalEarned: commissions.reduce((sum, item) => sum + Number(item.commission_amount || 0), 0),
       commissions
     }
