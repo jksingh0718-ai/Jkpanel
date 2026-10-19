@@ -1573,8 +1573,8 @@ function setupShopProductSearch(){
 function createProductHelpButtons(products=[]){
  const wrap=document.createElement('div');wrap.style.cssText='display:flex;gap:8px;flex-wrap:wrap;margin:0 0 13px';
  const profile=document.createElement('button');profile.type='button';profile.setAttribute('aria-label','Check Update File download');
- profile.style.cssText='box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:12px;width:100%;min-height:66px;padding:10px 12px;border-radius:13px;border:2px solid #22d3ee;background:#080b12;color:#fff;box-shadow:0 0 5px #22d3ee,inset 0 0 10px #22d3ee12;font-size:clamp(15px,4.5vw,20px);font-weight:900;letter-spacing:.5px;line-height:1.12;text-align:center';
- const icon=document.createElementNS('http://www.w3.org/2000/svg','svg');icon.setAttribute('viewBox','0 0 24 24');icon.setAttribute('width','23');icon.setAttribute('height','23');icon.setAttribute('aria-hidden','true');icon.style.cssText='width:23px;height:23px;flex:0 0 23px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round';
+ profile.style.cssText='box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:7px;width:100%;min-height:38px;padding:6px 9px;border-radius:8px;border:1px solid #22d3ee;background:#080b12;color:#fff;box-shadow:0 0 3px #22d3ee;font-size:11px;font-weight:600;letter-spacing:.2px;line-height:1.1;text-align:center';
+ const icon=document.createElementNS('http://www.w3.org/2000/svg','svg');icon.setAttribute('viewBox','0 0 24 24');icon.setAttribute('width','15');icon.setAttribute('height','15');icon.setAttribute('aria-hidden','true');icon.style.cssText='width:15px;height:15px;flex:0 0 15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round';
  const shaft=document.createElementNS('http://www.w3.org/2000/svg','path');shaft.setAttribute('d','M12 3v12m-5-5 5 5 5-5M5 17v3h14v-3');icon.appendChild(shaft);
  const label=document.createElement('span');label.textContent='CHECK UPDATE FILE';label.style.cssText='display:block;overflow-wrap:anywhere';profile.append(icon,label);
  profile.onclick=()=>{
