@@ -953,7 +953,7 @@ async function loadProducts(){
    const linksTitle=document.createElement("strong");linksTitle.textContent="Per-product Check Update File links";linksTitle.style.cssText="display:block;margin-bottom:8px;color:#67e8f9";linksBox.appendChild(linksTitle);
    const line=document.createElement("div");line.style.cssText="display:grid;grid-template-columns:minmax(0,1fr);gap:6px;padding:8px 0;border-top:1px solid #263247";
    const label=document.createElement("label");label.textContent=base;label.style.cssText="font-size:12px;font-weight:bold;overflow-wrap:anywhere";
-   const savedLink=items.find(p=>String(p.download_url||"").trim())?.download_url||"";
+   const savedItem=items.find(p=>String(p.download_url||"").trim());const savedLink=savedItem?savedItem.download_url:"";
    const input=document.createElement("input");input.type="url";input.value=savedLink;input.placeholder="https:// download link";input.style.cssText="width:100%;box-sizing:border-box";
    const saveLink=document.createElement("button");saveLink.type="button";saveLink.textContent="Save product link";saveLink.style.cssText="background:#0891b2;color:#fff";
    saveLink.onclick=async()=>{saveLink.disabled=true;try{const value=input.value.trim();if(value&&!/^https:\/\//i.test(value))throw new Error("Link https:// se shuru hona chahiye.");for(const p of items){await api("/api/admin/products/"+encodeURIComponent(p.id),{method:"PATCH",body:JSON.stringify({download_url:value})});p.download_url=value||null;}saveLink.textContent="Saved ✓";}catch(e){document.getElementById("productMessage").textContent=e.message;saveLink.textContent="Retry save";}finally{saveLink.disabled=false;}};
