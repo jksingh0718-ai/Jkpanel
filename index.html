@@ -1698,7 +1698,7 @@ async function loadShopProducts(){
      const price=document.createElement('p');price.textContent='₹'+Number(isResellerCustomer&&product.reseller_price!==null&&product.reseller_price!==undefined?product.reseller_price:product.price||0).toLocaleString('en-IN',{maximumFractionDigits:0});price.style.cssText='font-size:13px;color:#c4b5fd;margin-top:5px';
      details.append(durationLabel,price);
      const buy=document.createElement('button');buy.type='button';buy.className='buy';buy.textContent='BUY';buy.style.cssText='padding:11px 14px;flex-shrink:0;background:#10b981;color:#052e16;font-size:12px';
-     buy.onclick=()=>buyProduct(product);
+     buy.onclick=()=>confirmProductPurchase(product);
      row.append(details,buy);plans.appendChild(row);
     });
     card.append(title,purchase,plans);
@@ -1744,7 +1744,7 @@ async function loadShopProducts(){
     const price=document.createElement('p');price.textContent='₹'+Number(product.price||0).toLocaleString('en-IN',{maximumFractionDigits:2});price.style.cssText='font-size:13px;color:#6ee7b7;margin-top:5px';
     details.append(durationLabel,price);
     const buy=document.createElement('button');buy.type='button';buy.className='buy';buy.textContent='BUY';buy.style.cssText='padding:11px 14px;flex-shrink:0;background:#10b981;color:#052e16;font-size:12px';
-    buy.onclick=()=>buyProduct(product);
+    buy.onclick=()=>confirmProductPurchase(product);
     row.append(details,buy);plans.appendChild(row);
    });
    card.append(title,purchase,plans);
@@ -1790,7 +1790,7 @@ async function loadShopProducts(){
     const price=document.createElement('p');price.textContent='₹'+Number(product.price||0).toLocaleString('en-IN',{maximumFractionDigits:2});price.style.cssText='font-size:13px;color:#6ee7b7;margin-top:5px';
     details.append(durationLabel,price);
     const buy=document.createElement('button');buy.type='button';buy.className='buy';buy.textContent='BUY';buy.style.cssText='padding:11px 14px;flex-shrink:0;background:#10b981;color:#052e16;font-size:12px';
-    buy.onclick=()=>buyProduct(product);
+    buy.onclick=()=>confirmProductPurchase(product);
     row.append(details,buy);plans.appendChild(row);
    });
    card.append(title,desc,purchase,plans);
@@ -1853,7 +1853,7 @@ async function loadShopProducts(){
     const price=document.createElement('p');price.textContent='₹'+Number(product.price||0).toLocaleString('en-IN',{maximumFractionDigits:2});price.style.cssText='font-size:13px;color:#6ee7b7;margin-top:5px';
     details.append(durationLabel,price);
     const buy=document.createElement('button');buy.type='button';buy.className='buy';buy.textContent='BUY';buy.style.cssText='padding:11px 14px;flex-shrink:0;background:#10b981;color:#052e16;font-size:12px';
-    buy.onclick=()=>buyProduct(product);
+    buy.onclick=()=>confirmProductPurchase(product);
     row.append(details,buy);plans.appendChild(row);
    });
    card.append(title,desc,purchase,plans);
