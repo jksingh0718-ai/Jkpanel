@@ -1647,7 +1647,7 @@ async function loadShopProducts(){
     const price=document.createElement('p');price.textContent='₹'+Number(product.price||0).toFixed(0);price.style.cssText='font-size:13px;color:#6ee7b7;margin-top:5px';
     details.append(durationLabel,price);
     const buy=document.createElement('button');buy.type='button';buy.className='buy';buy.textContent='BUY';buy.style.cssText='padding:11px 14px;flex-shrink:0;background:#10b981;color:#052e16;font-size:12px';
-    buy.onclick=()=>buyProduct(product);
+    buy.onclick=()=>confirmProductPurchase(product);
     row.append(details,buy);plans.appendChild(row);
    });
    if(!dripProducts.length){plans.style.display='none';}
@@ -1923,6 +1923,30 @@ function showInlineProductKey(product,order,key){
   const anchor=card.querySelector('.purchase-plans-toggle')||card.querySelector('button.buy');
   if(anchor&&line.parentElement!==card)card.insertBefore(line,anchor);
   else if(anchor&&line.nextElementSibling!==anchor)card.insertBefore(line,anchor);
+}
+function confirmProductPurchase(product){
+  if(!product || !product.id){showPopup('Purchase confirmation','Product details nahi mile. Page refresh karke dobara try karein.');return;}
+  const existing=document.getElementById('jkPurchaseConfirmOverlay');
+  if(existing)existing.remove();
+  const amount=Number(product.price||0);
+  const overlay=document.createElement('div');overlay.id='jkPurchaseConfirmOverlay';
+  overlay.style.cssText='position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(2,6,23,.82);backdrop-filter:blur(5px)';
+  const panel=document.createElement('div');panel.style.cssText='width:min(100%,390px);padding:22px;border:1px solid #475569;border-radius:18px;background:#0f172a;color:#f8fafc;box-shadow:0 24px 70px rgba(0,0,0,.55);font-family:inherit';
+  const heading=document.createElement('h3');heading.textContent='CONFIRM PURCHASE?';heading.style.cssText='margin:0 0 18px;font-size:20px;font-weight:900;letter-spacing:.2px';
+  const details=document.createElement('div');details.style.cssText='padding:15px;border-radius:12px;background:#111c31;border:1px solid #334155;margin-bottom:20px;line-height:1.9;font-size:14px';
+  const productLine=document.createElement('div');productLine.textContent='Product: '+String(product.name||'Product');
+  const durationLine=document.createElement('div');durationLine.textContent='Duration: '+String(product.duration||product.validity||product.plan_duration||'As listed');
+  const quantityLine=document.createElement('div');quantityLine.textContent='Quantity: 1';
+  const totalLine=document.createElement('div');totalLine.textContent='Total: ₹'+amount.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});totalLine.style.cssText='margin-top:6px;color:#6ee7b7;font-weight:900;font-size:16px';
+  details.append(productLine,durationLine,quantityLine,totalLine);
+  const actions=document.createElement('div');actions.style.cssText='display:flex;flex-direction:column;gap:10px';
+  const yes=document.createElement('button');yes.type='button';yes.textContent='YES, CONFIRM';yes.style.cssText='width:100%;padding:14px;border:0;border-radius:10px;background:#10b981;color:#052e16;font-weight:900;font-size:14px;cursor:pointer';
+  const cancel=document.createElement('button');cancel.type='button';cancel.textContent='CANCEL';cancel.style.cssText='width:100%;padding:13px;border:1px solid #64748b;border-radius:10px;background:#1e293b;color:#f8fafc;font-weight:800;font-size:13px;cursor:pointer';
+  cancel.onclick=()=>overlay.remove();
+  yes.onclick=()=>{overlay.remove();buyProduct(product);};
+  actions.append(yes,cancel);panel.append(heading,details,actions);overlay.appendChild(panel);
+  overlay.addEventListener('click',event=>{if(event.target===overlay)overlay.remove();});
+  document.body.appendChild(overlay);
 }
 async function buyProduct(product){
   if(!product || !product.id){showPopup('Order failed','Product details nahi mile. Page refresh karke dobara try karein.');return;}
