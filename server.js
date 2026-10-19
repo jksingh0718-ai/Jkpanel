@@ -949,10 +949,20 @@ async function loadProducts(){
     document.getElementById("productForm").scrollIntoView({behavior:"smooth",block:"center"});
    };
    const visibility=document.createElement("button");visibility.style.cssText="background:linear-gradient(135deg,#fb923c,#f43f5e);color:#fff;border:0;border-radius:9px;margin:4px 0 0";visibility.textContent=items.some(p=>p.published)?"Hide from Shop":"Show in Shop";
+   const linksBox=document.createElement("div");linksBox.style.cssText="margin-top:12px;padding:10px;border:1px solid #155e75;border-radius:10px;background:#071923";
+   const linksTitle=document.createElement("strong");linksTitle.textContent="Per-product Check Update File links";linksTitle.style.cssText="display:block;margin-bottom:8px;color:#67e8f9";linksBox.appendChild(linksTitle);
+   items.forEach(p=>{
+    const line=document.createElement("div");line.style.cssText="display:grid;grid-template-columns:minmax(0,1fr);gap:6px;padding:8px 0;border-top:1px solid #263247";
+    const label=document.createElement("label");label.textContent=p.name;label.style.cssText="font-size:12px;font-weight:bold;overflow-wrap:anywhere";
+    const input=document.createElement("input");input.type="url";input.value=p.download_url||"";input.placeholder="https:// direct download link";input.style.cssText="width:100%;box-sizing:border-box";
+    const saveLink=document.createElement("button");saveLink.type="button";saveLink.textContent="Save this product link";saveLink.style.cssText="background:#0891b2;color:#fff";
+    saveLink.onclick=async()=>{saveLink.disabled=true;try{await api("/api/admin/products/"+encodeURIComponent(p.id),{method:"PATCH",body:JSON.stringify({download_url:input.value.trim()})});p.download_url=input.value.trim();saveLink.textContent="Saved ✓";}catch(e){document.getElementById("productMessage").textContent=e.message;saveLink.textContent="Retry save";}finally{saveLink.disabled=false;}};
+    line.append(label,input,saveLink);linksBox.appendChild(line);
+   });
    const activity=document.createElement("button");activity.type="button";activity.textContent="See Activity";activity.style.cssText="background:linear-gradient(135deg,#c084fc,#7c3aed);color:#fff;border:0;border-radius:9px;margin:4px 0 0";
    activity.onclick=()=>{options.hidden=!options.hidden;description.hidden=options.hidden;media.hidden=options.hidden;activity.textContent=options.hidden?"See Activity":"Hide Activity";};
    visibility.onclick=async()=>{visibility.disabled=true;try{const publish=!items.some(p=>p.published);for(const p of items)await api("/api/admin/products/"+encodeURIComponent(p.id),{method:"PATCH",body:JSON.stringify({published:publish})});await loadProducts();}catch(e){document.getElementById("productMessage").textContent=e.message;}finally{visibility.disabled=false;}};
-   titleRow.append(title);card.append(titleRow,edit,visibility,activity,options,description,media);root.appendChild(card);
+   titleRow.append(title);card.append(titleRow,edit,visibility,activity,options,description,media,linksBox);root.appendChild(card);
   });
  }catch(e){document.getElementById("productMessage").textContent=e.message;}
 }
