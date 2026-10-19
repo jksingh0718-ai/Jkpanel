@@ -1930,8 +1930,9 @@ function confirmProductPurchase(product){
   if(existing)existing.remove();
   const amount=Number(product.price||0);
   const fullProductName=String(product.name||'');
-  const nameParts=fullProductName.match(/^.+?\\s+-\\s+(.+)$/);
-  const duration=String(product.duration||product.validity||product.plan_duration||(nameParts&&/\\d+(?:\\.\\d+)?\\s*(?:m|min|mins|minute|minutes|h|hr|hrs|hour|hours|d|day|days|w|week|weeks|month|months)\\b/i.test(nameParts[1])?nameParts[1].trim():'Standard')).replace(/\\s+/g,'');
+  const nameParts=fullProductName.match(/^.+?\s+-\s+(.+)$/);
+  const durationMatch=fullProductName.match(/\b\d+(?:\.\d+)?\s*(?:m|min|mins|minute|minutes|h|hr|hrs|hour|hours|d|day|days|w|week|weeks|month|months)\b/i);
+  const duration=String(product.duration||product.validity||product.plan_duration||(nameParts&&/\d+(?:\.\d+)?\s*(?:m|min|mins|minute|minutes|h|hr|hrs|hour|hours|d|day|days|w|week|weeks|month|months)\b/i.test(nameParts[1])?nameParts[1].trim():(durationMatch?durationMatch[0]:'')).replace(/\s+/g,'');
   const overlay=document.createElement('div');
   overlay.id='jkPurchaseConfirmOverlay';
   overlay.style.cssText='position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.58);backdrop-filter:blur(2px)';
