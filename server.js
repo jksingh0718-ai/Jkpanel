@@ -1355,6 +1355,18 @@ function primeHookDuration(productName) {
   if (!match) return null;
   return ({ "1": "1 Days Nonroot", "3": "3 Days Nonroot", "7": "7 Days Nonroot", "10": "10 Days Nonroot" })[match[1]] || null;
 }
+function xragDuration(productName) {
+  if (!/xrag\s*ff\s*all/i.test(String(productName || ""))) return null;
+  const match = String(productName).match(/(1|3|6|12|24)\s*hours?|([37]|30)\s*days?/i);
+  if (!match) return null;
+  const n = match[1] || match[2];
+  return match[1] ? (n + " Hours") : (n + " Days");
+}
+function phantomTrollDuration(productName) {
+  if (!/phantom\s*x\s*troll\s*ff\s*all/i.test(String(productName || ""))) return null;
+  const match = String(productName).match(/(1|3|6|12|24)\s*hours?/i);
+  return match ? (match[1] + " Hours") : null;
+}
 
 async function purchaseDripWireKey({ orderId, userId, productName, duration, supplierProductId = "150" }) {
   // Support both the original Banti configuration and the newer variable names.
@@ -1469,9 +1481,11 @@ app.patch("/api/admin/orders/:id/payment", isAdmin, async (req, res) => {
   const isDripWire = /^DRIP Wire - /i.test(productName);
   const isAimHack = /^AIM HACK FF(?: - |$)/i.test(productName);
   const isPrimeHook = /prime\s*hook/i.test(productName);
-  const duration = isPrimeHook ? primeHookDuration(productName) : (isDripWire ? dripWireDuration(productName) : (isAimHack ? aimHackDuration(productName) : null));
-  const usesSupplier = isDripWire || isAimHack || isPrimeHook;
-  const supplierProductId = isPrimeHook ? "48" : (isAimHack ? "133" : "150");
+  const isXrag = /xrag\s*ff\s*all/i.test(productName);
+  const isPhantomTroll = /phantom\s*x\s*troll\s*ff\s*all/i.test(productName);
+  const duration = isPrimeHook ? primeHookDuration(productName) : (isXrag ? xragDuration(productName) : (isPhantomTroll ? phantomTrollDuration(productName) : (isDripWire ? dripWireDuration(productName) : (isAimHack ? aimHackDuration(productName) : null))));
+  const usesSupplier = isDripWire || isAimHack || isPrimeHook || isXrag || isPhantomTroll;
+  const supplierProductId = isPrimeHook ? "48" : (isXrag ? "149" : (isPhantomTroll ? "133" : (isAimHack ? "133" : "150")));
   const nextSupplierStatus = usesSupplier ? (duration ? "processing" : "failed") : "not_applicable";
 
   const { data, error } = await supabase.from("orders")
@@ -2035,9 +2049,11 @@ app.post("/api/orders", async (req, res) => {
   const isDripWire = /^DRIP Wire - /i.test(product.name || "");
   const isAimHack = /^AIM HACK FF(?: - |$)/i.test(product.name || "");
   const isPrimeHook = /prime\s*hook/i.test(product.name || "");
-  if (isDripWire || isAimHack || isPrimeHook) {
-    const duration = isPrimeHook ? primeHookDuration(product.name) : (isDripWire ? dripWireDuration(product.name) : aimHackDuration(product.name));
-    const supplierProductId = isPrimeHook ? "48" : (isAimHack ? "133" : "150");
+  const isXrag = /xrag\s*ff\s*all/i.test(product.name || "");
+  const isPhantomTroll = /phantom\s*x\s*troll\s*ff\s*all/i.test(product.name || "");
+  if (isDripWire || isAimHack || isPrimeHook || isXrag || isPhantomTroll) {
+    const duration = isPrimeHook ? primeHookDuration(product.name) : (isXrag ? xragDuration(product.name) : (isPhantomTroll ? phantomTrollDuration(product.name) : (isDripWire ? dripWireDuration(product.name) : aimHackDuration(product.name))));
+    const supplierProductId = isPrimeHook ? "48" : (isXrag ? "149" : (isPhantomTroll ? "133" : (isAimHack ? "133" : "150")));
     if (!duration) return res.status(400).json({ error: "Product duration configured nahi hai." });
 
     const { data: purchase, error: walletError } = await supabase.rpc("create_wallet_product_order", {
