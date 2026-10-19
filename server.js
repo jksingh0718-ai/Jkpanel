@@ -648,7 +648,7 @@ small{color:#a6b2c0}
 </section>
 <section id="tab-resellers" class="admin-section">
  <h2>Reseller Management</h2>
- <div class="card"><h3>Reseller banne ka price</h3><label for="resellerActivationPrice">Activation price (₹)</label><br><input id="resellerActivationPrice" type="number" min="0" max="1000000" step="0.01" value="0" style="width:100%"><button type="button" id="saveResellerSettings">Save activation price</button><p id="resellerSettingsMessage" role="status"></p><small>Yeh price save hoga; customer ko reseller banane se pehle payment manually verify karein.</small></div>
+ <div class="card"><h3>Reseller banne ka price</h3><label for="resellerActivationPrice">Activation price (₹)</label><br><input id="resellerActivationPrice" type="number" min="0" max="1000000" step="0.01" value="0" style="width:100%"><label for="setupWhatsappLink">Setup Video / WhatsApp Group Link</label><br><input id="setupWhatsappLink" type="url" placeholder="https://chat.whatsapp.com/..." style="width:100%"><button type="button" id="saveResellerSettings">Save settings</button><p id="resellerSettingsMessage" role="status"></p><small>Shop ke Setup Video button par ye WhatsApp group link khulega. Sirf trusted link daalein.</small></div>
  <div class="card"><h3>Customer ko reseller banayein</h3><label for="resellerCustomer">Customer</label><br><select id="resellerCustomer" style="width:100%"><option value="">Loading customers...</option></select><br><button type="button" id="assignReseller">Make Reseller</button><p id="assignResellerMessage" role="status"></p></div>
  <div class="card"><h3>Product reseller prices</h3><p style="margin:6px 0 10px">Sabhi products yahan chhote list mein hain. Duration aur reseller price badalne ke liye us product ke <b>Edit price details</b> par click karein.</p><input id="resellerProductsSearch" class="search-box" type="search" placeholder="Search product or duration..."><div id="dripResellerPriceRows"><p>Product prices loading...</p></div><button type="button" id="saveDripResellerPrices">Save all reseller prices</button><p id="dripResellerPriceMessage" role="status"></p></div>
  <h3>Current resellers</h3><div id="resellerList"></div>
@@ -1197,7 +1197,7 @@ async function loadCustomers(){
 async function loadResellers(){
  try{
   const data=await api("/api/admin/resellers");
-  document.getElementById("resellerActivationPrice").value=Number(data.settings?.activation_price||0);
+  document.getElementById("resellerActivationPrice").value=Number(data.settings?.activation_price||0);document.getElementById("setupWhatsappLink").value=String(data.settings?.whatsapp_group_url||"");
   const customerSelect=document.getElementById("resellerCustomer");
   if(!customerSelect)throw new Error("Reseller customer selector missing. Admin page refresh karein.");
   const prev=customerSelect.value;customerSelect.replaceChildren();
@@ -1232,7 +1232,7 @@ async function loadResellers(){
   const d=document.getElementById("dripResellerPriceRows");if(d)d.textContent="Load error: "+msg;
  }
 }
-document.getElementById("saveResellerSettings").onclick=async()=>{const b=document.getElementById("saveResellerSettings"),m=document.getElementById("resellerSettingsMessage"),price=Number(document.getElementById("resellerActivationPrice").value);if(!Number.isFinite(price)||price<0||price>1000000){m.textContent="Valid activation price enter karein.";return;}b.disabled=true;try{await api("/api/admin/resellers/settings",{method:"POST",body:JSON.stringify({activation_price:price})});m.textContent="Reseller activation price Supabase mein save ho gaya.";}catch(e){m.textContent=e.message;}finally{b.disabled=false;}};
+document.getElementById("saveResellerSettings").onclick=async()=>{const b=document.getElementById("saveResellerSettings"),m=document.getElementById("resellerSettingsMessage"),price=Number(document.getElementById("resellerActivationPrice").value);if(!Number.isFinite(price)||price<0||price>1000000){m.textContent="Valid activation price enter karein.";return;}b.disabled=true;try{const whatsapp_group_url=document.getElementById("setupWhatsappLink").value.trim();await api("/api/admin/resellers/settings",{method:"POST",body:JSON.stringify({activation_price:price,whatsapp_group_url})});m.textContent="Settings save ho gayi.";}catch(e){m.textContent=e.message;}finally{b.disabled=false;}};
 document.getElementById("assignReseller").onclick=async()=>{const userId=document.getElementById("resellerCustomer").value,m=document.getElementById("assignResellerMessage"),b=document.getElementById("assignReseller");if(!userId){m.textContent="Pehle customer select karein.";return;}b.disabled=true;try{await api("/api/admin/resellers/assign",{method:"POST",body:JSON.stringify({user_id:userId,active:true})});m.textContent="Customer reseller ban gaya; status save ho gaya.";await loadResellers();}catch(e){m.textContent=e.message;}finally{b.disabled=false;}};
 document.getElementById("saveDripResellerPrices").onclick=async()=>{
  const button=document.getElementById("saveDripResellerPrices"),status=document.getElementById("dripResellerPriceMessage");
