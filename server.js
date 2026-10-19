@@ -2071,9 +2071,13 @@ app.post("/api/orders", async (req, res) => {
         duration,
         supplierProductId
       });
-      const { data: finalOrder } = await supabase.from("orders")
-        .select('id, created_at, "Product_name", "Amount", "Payment_status", "Order status", supplier_status')
-        .eq("id", orderId).maybeSingle();
+      const [{ data: finalOrder }, { data: deliveredKeys }] = await Promise.all([
+        supabase.from("orders")
+          .select('id, created_at, "Product_name", "Amount", "Payment_status", "Order status", supplier_status')
+          .eq("id", orderId).maybeSingle(),
+        supabase.from("customer_keys").select("key_value")
+          .eq("order_id", orderId).eq("user_id", user.id).order("created_at", { ascending: true }).limit(10)
+      ]);
       return res.status(201).json({
         success: true,
         order: {
@@ -2083,6 +2087,7 @@ app.post("/api/orders", async (req, res) => {
           payment_status: "paid",
           order_status: finalOrder?.["Order status"] || "completed",
           supplier_status: "completed",
+          key_value: deliveredKeys?.[0]?.key_value || null,
           key_count: delivered.keyCount,
           wallet_balance: Number(purchase.wallet_balance),
           created_at: finalOrder?.created_at || new Date().toISOString()
