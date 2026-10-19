@@ -1815,7 +1815,7 @@ async function loadShopProducts(){
     buy.onclick=()=>confirmProductPurchase(product);
     row.append(details,buy);plans.appendChild(row);
    });
-   card.append(title,createProductHelpButtons(),purchase,plans);
+   card.append(title,createProductHelpButtons(primeHookProducts),purchase,plans);
    root.appendChild(card);
   }
 
