@@ -1879,7 +1879,7 @@ async function loadShopProducts(){
     buy.onclick=()=>confirmProductPurchase(product);
     row.append(details,buy);plans.appendChild(row);
    });
-   card.append(title,createProductHelpButtons(),desc,purchase,plans);
+   card.append(title,setupActions,desc,purchase,plans);
    root.appendChild(card);
   });
    Array.from(root.children).filter(card=>!card.hasAttribute('data-search-empty')).sort((a,b)=>Number(b.dataset.createdAt||0)-Number(a.dataset.createdAt||0)).forEach(card=>root.appendChild(card));
