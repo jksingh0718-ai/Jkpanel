@@ -1577,7 +1577,7 @@ async function loadShopProducts(){
  // Never display cached product markup: it can contain another account's reseller prices.
  try{localStorage.removeItem('jk_shop_products_html_v1');}catch(_){}
  root.replaceChildren();
- const loading=document.createElement('p');loading.textContent='Loading latest prices…';loading.style.cssText='color:#94a3b8;text-align:center;padding:18px';root.appendChild(loading);
+ const loading=document.createElement('p');loading.textContent='Product loading';loading.style.cssText='color:#94a3b8;text-align:center;padding:18px';root.appendChild(loading);
  try{
   const token=localStorage.getItem('jk_customer_access_token');
   const response=await fetch('https://jkpanel-backend.onrender.com/api/products',{cache:'no-store',headers:token?{Authorization:'Bearer '+token}:{}});
