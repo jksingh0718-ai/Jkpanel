@@ -2320,6 +2320,14 @@ app.patch("/api/admin/products/:id", isAdmin, async (req, res) => {
 });
 
 
+app.get("/api/setup-link", async (req, res) => {
+  if (!supabase) return res.status(503).json({ error: "Database is not configured" });
+  const { data, error } = await supabase.from("reseller_settings").select("whatsapp_group_url").eq("id", 1).maybeSingle();
+  if (error) return res.status(500).json({ error: "Setup link load nahi hua." });
+  res.set("Cache-Control", "no-store");
+  res.json({ whatsapp_group_url: data?.whatsapp_group_url || "" });
+});
+
 app.get("/api/admin/resellers", isAdmin, async (req, res) => {
   if (!supabase) return res.status(503).json({ error: "Database is not configured" });
   try {
@@ -2346,7 +2354,9 @@ app.post("/api/admin/resellers/settings", isAdmin, async (req,res) => {
   if(!supabase)return res.status(503).json({error:"Database is not configured"});
   const activationPrice=Number(req.body?.activation_price);
   if(!Number.isFinite(activationPrice)||activationPrice<0||activationPrice>1000000)return res.status(400).json({error:"Valid activation price enter karein."});
-  const {data,error}=await supabase.from("reseller_settings").upsert({id:1,activation_price:activationPrice,updated_at:new Date().toISOString()},{onConflict:"id"}).select("activation_price").single();
+  const whatsappGroupUrl=typeof req.body?.whatsapp_group_url==="string"?req.body.whatsapp_group_url.trim():"";
+  if(whatsappGroupUrl && (!/^https:\/\/(chat\.whatsapp\.com|wa\.me)\//i.test(whatsappGroupUrl))) return res.status(400).json({error:"Valid WhatsApp group link enter karein (https://chat.whatsapp.com/...)."});
+   const {data,error}=await supabase.from("reseller_settings").upsert({id:1,activation_price:activationPrice,whatsapp_group_url:whatsappGroupUrl,updated_at:new Date().toISOString()},{onConflict:"id"}).select("activation_price,whatsapp_group_url").single();
   if(error){console.error("Reseller settings save failed:",error.message);return res.status(500).json({error:"Activation price save nahi hua."});}
   res.json({success:true,settings:data});
 });
