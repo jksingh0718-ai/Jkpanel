@@ -1361,7 +1361,8 @@ function xragDuration(productName) {
   if (!match) return null;
   if (match[1]) {
     const n = match[1];
-    return n + (n === "1" ? " Hour" : " Hours");
+    // Bantibhaiya supplier catalog spells the hour duration as "1 Hours".
+    return n + " Hours";
   }
   const n = match[2];
   return n + (n === "1" ? " Day" : " Days");
