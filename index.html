@@ -1797,22 +1797,66 @@ async function loadShopProducts(){
    root.appendChild(card);
   }
 
-  // Render every product not belonging to the grouped product families.
+  // Group custom products by base name so each product has one card with all durations.
+  const customProductGroups=new Map();
   otherProducts.forEach(product=>{
+   const fullName=String(product.name||'Product').trim();
+   const match=fullName.match(/^(.+?)\\s+-\\s+(.+)$/);
+   const durationCandidate=match?match[2].trim():'';
+   const hasDuration=!!(match && /\\d+(?:\\.\\d+)?\\s*(?:m|min|mins|minute|minutes|h|hr|hrs|hour|hours|d|day|days|w|week|weeks|month|months)\\b/i.test(durationCandidate));
+   const baseName=hasDuration?match[1].trim():fullName;
+   const duration=hasDuration?durationCandidate:'Standard';
+   const key=baseName.toLowerCase();
+   if(!customProductGroups.has(key))customProductGroups.set(key,{name:baseName,plans:[],createdAt:0});
+   const group=customProductGroups.get(key);
+   group.plans.push({product,duration});
+   group.createdAt=Math.max(group.createdAt,Date.parse(product.created_at||'')||0);
+  });
+  customProductGroups.forEach(group=>{
    const card=document.createElement('article');
    card.className='shop-product-card';
-   card.dataset.createdAt=String(Date.parse(product.created_at||'')||0);
+   card.dataset.createdAt=String(group.createdAt);
    card.style.cssText='display:block;margin-top:12px;padding:14px;background:linear-gradient(160deg,#111827,#0b1220);border:1px solid #334155;border-radius:16px;overflow:hidden;box-shadow:0 8px 26px #0003';
-   if(product.image_url){
-    const img=document.createElement('img');img.src=product.image_url;img.alt=String(product.name||'Product');img.loading='lazy';
+   const imageProduct=group.plans.find(x=>x.product.image_url)?.product;
+   const videoProduct=group.plans.find(x=>x.product.video_url)?.product;
+   if(videoProduct?.video_url){
+    const thumb=document.createElement('button');thumb.type='button';thumb.className='product-video-thumb';thumb.setAttribute('aria-label','Play '+group.name+' video');
+    thumb.dataset.videoUrl=videoProduct.video_url;thumb.dataset.productTitle=group.name;
+    thumb.style.cssText='position:relative;display:block;width:100%;padding:0;border:0;background:#030712;border-radius:12px;overflow:hidden;cursor:pointer;margin-bottom:14px;min-height:180px';
+    if(imageProduct?.image_url){
+     const img=document.createElement('img');img.src=imageProduct.image_url;img.alt=group.name+' video preview';img.loading='lazy';
+     img.style.cssText='display:block;width:100%;height:clamp(200px,58vw,340px);object-fit:contain;background:#030712';
+     img.onerror=()=>{img.style.display='none';};thumb.appendChild(img);
+    }else{
+     const poster=document.createElement('span');poster.textContent='▶  PLAY PRODUCT VIDEO';poster.style.cssText='display:flex;align-items:center;justify-content:center;min-height:200px;color:#e2e8f0;font-weight:800;background:linear-gradient(135deg,#0f172a,#1e3a8a,#312e81)';thumb.appendChild(poster);
+    }
+    const play=document.createElement('span');play.className='product-video-play';play.textContent='▶';thumb.appendChild(play);
+    const hint=document.createElement('span');hint.className='product-video-hint';hint.textContent='TAP TO PLAY VIDEO';thumb.appendChild(hint);
+    thumb.onclick=()=>openProductVideo(videoProduct.video_url,group.name,thumb);
+    card.appendChild(thumb);
+   }else if(imageProduct?.image_url){
+    const img=document.createElement('img');img.src=imageProduct.image_url;img.alt=group.name;img.loading='lazy';
     img.style.cssText='display:block;width:100%;height:clamp(200px,58vw,340px);object-fit:contain;background:#030712;border-radius:12px;margin-bottom:14px';
     img.onerror=()=>{img.style.display='none';};card.appendChild(img);
    }
-   const title=document.createElement('h4');title.textContent=String(product.name||'Product');title.style.cssText='font-size:20px;color:#f8fafc;margin:4px 0 8px;overflow-wrap:anywhere';
-   const price=document.createElement('p');price.textContent='₹'+Number(product.price||0).toLocaleString('en-IN',{maximumFractionDigits:2});price.style.cssText='font-size:14px;color:#6ee7b7;margin:0 0 12px';
-   const buy=document.createElement('button');buy.type='button';buy.className='buy';buy.textContent='BUY';buy.style.cssText='display:block;width:100%;padding:13px;background:#10b981;color:#052e16;font-size:13px';
-   buy.onclick=()=>buyProduct(product);
-   card.append(title,price,buy);
+   const title=document.createElement('h4');title.textContent=group.name;title.style.cssText='font-size:20px;color:#f8fafc;margin:4px 0 8px;overflow-wrap:anywhere';
+   const desc=document.createElement('p');desc.textContent='Apni duration select karein.';desc.style.cssText='font-size:12px;color:#94a3b8;line-height:1.6;margin-bottom:12px';
+   const purchase=document.createElement('button');purchase.type='button';purchase.className='purchase-plans-toggle';purchase.textContent=isResellerCustomer?'BUY RESELLER KEY':'PURCHASE KEY';purchase.setAttribute('aria-expanded','false');
+   purchase.style.cssText='display:block;width:100%;padding:14px;background:linear-gradient(90deg,#06b6d4,#22d3ee);color:#082f49;font-size:14px;border-radius:10px';
+   const plans=document.createElement('div');plans.hidden=true;plans.style.cssText='margin-top:12px;display:none';
+   purchase.onclick=()=>{const open=plans.style.display==='none';plans.style.display=open?'block':'none';plans.hidden=!open;purchase.setAttribute('aria-expanded',String(open));};
+   group.plans.sort((a,b)=>shopDurationRank(a.duration)-shopDurationRank(b.duration));
+   group.plans.forEach(({product,duration})=>{
+    const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 0;border-bottom:1px solid #263247';
+    const details=document.createElement('div');details.style.cssText='min-width:0;flex:1';
+    const durationLabel=document.createElement('p');durationLabel.textContent=duration;durationLabel.style.cssText='font-size:14px;font-weight:bold;color:#f8fafc';
+    const price=document.createElement('p');price.textContent='₹'+Number(product.price||0).toLocaleString('en-IN',{maximumFractionDigits:2});price.style.cssText='font-size:13px;color:#6ee7b7;margin-top:5px';
+    details.append(durationLabel,price);
+    const buy=document.createElement('button');buy.type='button';buy.className='buy';buy.textContent='BUY';buy.style.cssText='padding:11px 14px;flex-shrink:0;background:#10b981;color:#052e16;font-size:12px';
+    buy.onclick=()=>buyProduct(product);
+    row.append(details,buy);plans.appendChild(row);
+   });
+   card.append(title,desc,purchase,plans);
    root.appendChild(card);
   });
    Array.from(root.children).filter(card=>!card.hasAttribute('data-search-empty')).sort((a,b)=>Number(b.dataset.createdAt||0)-Number(a.dataset.createdAt||0)).forEach(card=>root.appendChild(card));
