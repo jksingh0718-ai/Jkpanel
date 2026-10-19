@@ -1998,7 +1998,7 @@ app.patch("/api/admin/deposit-requests/:id", isAdmin, async (req, res) => {
 app.get("/api/products", async (req, res) => {
   if (!supabase) return res.status(503).json({ error: "Database is not configured" });
   const { data, error } = await supabase.from("products")
-    .select("id, name, price, image_url, video_url, description, created_at").eq("published", true).order("created_at", { ascending: false });
+    .select("id, name, price, image_url, video_url, download_url, description, created_at").eq("published", true).order("created_at", { ascending: false });
   if (error) { console.error("Public products load failed:", error.message); return res.status(500).json({ error: "Products load nahi ho sake." }); }
   const user = await getAuthenticatedUser(req);
   let products = data || [];
@@ -2164,7 +2164,7 @@ app.post("/api/orders", async (req, res) => {
 app.get("/api/admin/products", isAdmin, async (req, res) => {
   if (!supabase) return res.status(503).json({ error: "Database is not configured" });
   const { data, error } = await supabase.from("products")
-    .select("id, name, price, image_url, video_url, published, description, created_at, updated_at")
+    .select("id, name, price, image_url, video_url, download_url, published, description, created_at, updated_at")
     .order("created_at", { ascending: false });
   if (error) {
     console.error("Admin products load failed:", error.message);
@@ -2297,6 +2297,12 @@ app.patch("/api/admin/products/:id", isAdmin, async (req, res) => {
     if (imageUrl && (imageUrl.length > 1000 || !/^https:\/\//i.test(imageUrl)))
       return res.status(400).json({ error: "Image URL https:// se shuru hona chahiye." });
     updates.image_url = imageUrl || null;
+  }
+  if (Object.prototype.hasOwnProperty.call(req.body || {}, "download_url")) {
+    const downloadUrl = typeof req.body.download_url === "string" ? req.body.download_url.trim() : "";
+    if (downloadUrl && (downloadUrl.length > 2000 || !/^https:\/\//i.test(downloadUrl)))
+      return res.status(400).json({ error: "Download link https:// se shuru hona chahiye." });
+    updates.download_url = downloadUrl || null;
   }
   if (Object.prototype.hasOwnProperty.call(req.body || {}, "video_url")) {
     const videoUrl = typeof req.body.video_url === "string" ? req.body.video_url.trim() : "";
