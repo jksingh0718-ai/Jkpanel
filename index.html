@@ -1667,7 +1667,7 @@ async function loadShopProducts(){
     row.append(details,buy);plans.appendChild(row);
    });
    if(!dripProducts.length){plans.style.display='none';}
-   card.append(title,createProductHelpButtons(group.plans.map(x=>x.product)),desc,purchase,plans);
+   card.append(title,createProductHelpButtons(dripProducts),desc,purchase,plans);
    root.appendChild(card);
   }
 
