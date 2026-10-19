@@ -1570,6 +1570,15 @@ function setupShopProductSearch(){
  });
 }
 
+function createProductHelpButtons(){
+ const wrap=document.createElement('div');wrap.style.cssText='display:flex;gap:8px;flex-wrap:wrap;margin:0 0 13px';
+ const profile=document.createElement('button');profile.type='button';profile.textContent='🛡️ Check Update Profile';profile.style.cssText='flex:1;min-width:135px;padding:9px 10px;border-radius:9px;border:1px solid #a78bfa;background:linear-gradient(135deg,#312e81,#4c1d95);color:#f5f3ff;font-size:11px;font-weight:800';
+ profile.onclick=()=>{const nav=[...document.querySelectorAll('button,a,[role="button"]')].find(el=>/profile|my account/i.test((el.textContent||'').trim())&&el.offsetParent!==null);if(nav)nav.click();else if(typeof showPopup==='function')showPopup('Check Update Profile','Neeche Profile par tap karke apne account details check karein.');};
+ const setup=document.createElement('button');setup.type='button';setup.textContent='✅ Setup Video';setup.style.cssText='flex:1;min-width:115px;padding:9px 10px;border-radius:9px;border:1px solid #34d399;background:linear-gradient(135deg,#065f46,#047857);color:#ecfdf5;font-size:11px;font-weight:800';
+ setup.onclick=async()=>{setup.disabled=true;try{const response=await fetch('https://jkpanel-backend.onrender.com/api/setup-link',{cache:'no-store'});const data=await response.json();const url=String(data.whatsapp_group_url||'').trim();if(!response.ok)throw new Error(data.error||'Link load nahi hua.');if(!url){if(typeof showPopup==='function')showPopup('Setup Video','Admin Panel ke Resellers section mein WhatsApp group link save karein.');return;}if(!/^https:\/\/(chat\.whatsapp\.com|wa\.me)\//i.test(url)){if(typeof showPopup==='function')showPopup('Setup Video','Admin panel mein valid WhatsApp link set karein.');return;}window.open(url,'_blank','noopener,noreferrer');}catch(e){if(typeof showPopup==='function')showPopup('Setup Video',e.message||'Setup link open nahi hua.');}finally{setup.disabled=false;}};
+ wrap.append(profile,setup);return wrap;
+}
+
 async function loadShopProducts(){
  const root=document.getElementById('shopProducts');
  if(!root)return;
@@ -1651,7 +1660,7 @@ async function loadShopProducts(){
     row.append(details,buy);plans.appendChild(row);
    });
    if(!dripProducts.length){plans.style.display='none';}
-   card.append(title,desc,purchase,plans);
+   card.append(title,createProductHelpButtons(),desc,purchase,plans);
    root.appendChild(card);
   }
 
@@ -1701,7 +1710,7 @@ async function loadShopProducts(){
      buy.onclick=()=>confirmProductPurchase(product);
      row.append(details,buy);plans.appendChild(row);
     });
-    card.append(title,purchase,plans);
+    card.append(title,createProductHelpButtons(),purchase,plans);
     root.appendChild(card);
    }
   // BALA MODS ~FF NONROOT: one card, with duration/price options inside the purchase toggle.
@@ -1747,7 +1756,7 @@ async function loadShopProducts(){
     buy.onclick=()=>confirmProductPurchase(product);
     row.append(details,buy);plans.appendChild(row);
    });
-   card.append(title,purchase,plans);
+   card.append(title,createProductHelpButtons(),purchase,plans);
    root.appendChild(card);
   }
 
@@ -1793,7 +1802,7 @@ async function loadShopProducts(){
     buy.onclick=()=>confirmProductPurchase(product);
     row.append(details,buy);plans.appendChild(row);
    });
-   card.append(title,purchase,plans);
+   card.append(title,createProductHelpButtons(),purchase,plans);
    root.appendChild(card);
   }
 
@@ -1841,12 +1850,12 @@ async function loadShopProducts(){
    }
    const title=document.createElement('h4');title.textContent=group.name;title.style.cssText='font-size:20px;color:#f8fafc;margin:4px 0 8px;overflow-wrap:anywhere';
    const desc=document.createElement('p');desc.textContent='Apni duration select karein.';desc.style.cssText='font-size:12px;color:#94a3b8;line-height:1.6;margin-bottom:12px';
-   const setupActions=document.createElement('div');setupActions.style.cssText='display:flex;gap:8px;flex-wrap:wrap;margin:0 0 13px';
-   const updateProfile=document.createElement('button');updateProfile.type='button';updateProfile.textContent='🛡️ Check Update Profile';updateProfile.style.cssText='flex:1;min-width:135px;padding:9px 10px;border-radius:9px;border:1px solid #a78bfa;background:linear-gradient(135deg,#312e81,#4c1d95);color:#f5f3ff;font-size:11px;font-weight:800';
-   updateProfile.onclick=()=>{const profileNav=document.querySelector('#bottomNav button[data-page="profile"],#bottomNav button[data-tab="profile"]');if(profileNav)profileNav.click();else showPopup('Check Update Profile','Profile section kholkar apne account details check karein.');};
-   const setupVideo=document.createElement('button');setupVideo.type='button';setupVideo.textContent='✅ Setup Video';setupVideo.style.cssText='flex:1;min-width:115px;padding:9px 10px;border-radius:9px;border:1px solid #34d399;background:linear-gradient(135deg,#065f46,#047857);color:#ecfdf5;font-size:11px;font-weight:800';
-   setupVideo.onclick=async()=>{setupVideo.disabled=true;try{const response=await fetch('/api/setup-link',{cache:'no-store'});const data=await response.json();const url=String(data.whatsapp_group_url||'').trim();if(!response.ok)throw new Error(data.error||'Link load nahi hua.');if(!url){showPopup('Setup Video','Admin panel mein WhatsApp group link abhi set nahi hai.');return;}if(!/^https:\/\/(chat\.whatsapp\.com|wa\.me)\//i.test(url)){showPopup('Setup Video','Admin panel mein valid WhatsApp link set karein.');return;}window.open(url,'_blank','noopener,noreferrer');}catch(error){showPopup('Setup Video',error.message||'Setup link open nahi hua.');}finally{setupVideo.disabled=false;}};
-   setupActions.append(updateProfile,setupVideo);
+   const setupActions=createProductHelpButtons();
+   
+   
+   
+   
+   
    const purchase=document.createElement('button');purchase.type='button';purchase.className='purchase-plans-toggle';purchase.textContent=isResellerCustomer?'BUY RESELLER KEY':'PURCHASE KEY';purchase.setAttribute('aria-expanded','false');
    purchase.style.cssText='display:block;width:100%;padding:14px;background:linear-gradient(90deg,#06b6d4,#22d3ee);color:#082f49;font-size:14px;border-radius:10px';
    const plans=document.createElement('div');plans.hidden=true;plans.style.cssText='margin-top:12px;display:none';
@@ -1862,7 +1871,7 @@ async function loadShopProducts(){
     buy.onclick=()=>confirmProductPurchase(product);
     row.append(details,buy);plans.appendChild(row);
    });
-   card.append(title,desc,purchase,plans);
+   card.append(title,createProductHelpButtons(),desc,purchase,plans);
    root.appendChild(card);
   });
    Array.from(root.children).filter(card=>!card.hasAttribute('data-search-empty')).sort((a,b)=>Number(b.dataset.createdAt||0)-Number(a.dataset.createdAt||0)).forEach(card=>root.appendChild(card));
