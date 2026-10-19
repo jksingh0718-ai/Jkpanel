@@ -1929,7 +1929,7 @@ function confirmProductPurchase(product){
   const existing=document.getElementById('jkPurchaseConfirmOverlay');
   if(existing)existing.remove();
   const amount=Number(product.price||0);
-  const duration=String(product.duration||product.validity||product.plan_duration||'As listed');
+  const duration=String(product.duration||product.validity||product.plan_duration||(String(product.name||'').match(/\\b\\d+\\s*(?:hours?|hrs?|days?|hrs?|minutes?|mins?)\\b/i)||[])[0]||'6Hours').replace(/\\s+/g,'');
   const overlay=document.createElement('div');
   overlay.id='jkPurchaseConfirmOverlay';
   overlay.style.cssText='position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.58);backdrop-filter:blur(2px)';
