@@ -1651,7 +1651,7 @@ async function loadShopProducts(){
     row.append(details,buy);plans.appendChild(row);
    });
    if(!dripProducts.length){plans.style.display='none';}
-   card.append(title,setupActions,desc,purchase,plans);
+   card.append(title,desc,purchase,plans);
    root.appendChild(card);
   }
 
@@ -1793,7 +1793,7 @@ async function loadShopProducts(){
     buy.onclick=()=>confirmProductPurchase(product);
     row.append(details,buy);plans.appendChild(row);
    });
-   card.append(title,setupActions,purchase,plans);
+   card.append(title,purchase,plans);
    root.appendChild(card);
   }
 
