@@ -1913,9 +1913,9 @@ function showInlineProductKey(product,order,key){
   let line=card.querySelector('.jk-inline-purchased-key');
   if(!line){
     line=document.createElement('div');line.className='jk-inline-purchased-key';
-    line.style.cssText='display:flex;align-items:center;gap:7px;margin:10px 0 12px;padding:8px 9px;border:1px solid #10b981;border-radius:9px;background:#052e2b;min-width:0';
-    const value=document.createElement('code');value.className='jk-inline-key-value';value.style.cssText='flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#a7f3d0;font-size:12px;font-weight:800';
-    const copy=document.createElement('button');copy.type='button';copy.textContent='COPY';copy.style.cssText='flex:0 0 auto;padding:8px 10px;border-radius:7px;background:#10b981;color:#052e16;font-weight:900;font-size:11px';
+    line.style.cssText='display:flex;align-items:center;gap:7px;margin:10px 0 12px;padding:8px 9px;border:1px solid #a78bfa;border-radius:9px;background:linear-gradient(135deg,#24123f,#31204f);box-shadow:0 0 14px #8b5cf633;min-width:0';
+    const value=document.createElement('code');value.className='jk-inline-key-value';value.style.cssText='flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#e9d5ff;font-size:12px;font-weight:800';
+    const copy=document.createElement('button');copy.type='button';copy.textContent='COPY';copy.style.cssText='flex:0 0 auto;padding:8px 10px;border-radius:7px;background:linear-gradient(135deg,#a855f7,#7c3aed);color:#fff;font-weight:900;font-size:11px';
     copy.onclick=()=>copyInlineProductKey(value.dataset.key||'',copy);
     line.append(value,copy);
   }
