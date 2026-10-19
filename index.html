@@ -1579,8 +1579,9 @@ function createProductHelpButtons(products=[]){
  const label=document.createElement('span');label.textContent='CHECK UPDATE FILE';label.style.cssText='display:block;overflow-wrap:anywhere';profile.append(icon,label);
  profile.onclick=()=>{
   const available=(Array.isArray(products)?products:[]).filter(p=>String(p.download_url||'').trim()&&/^https:\/\//i.test(String(p.download_url).trim()));
-  if(available.length===1){window.open(available[0].download_url,'_blank','noopener,noreferrer');return;}
-  if(available.length>1){const choices=available.map((p,i)=>(i+1)+'. '+p.name).join('\n');const answer=prompt('Kaunsa product download karna hai? Number enter karein:\n'+choices);const chosen=available[Number(answer)-1];if(chosen)window.open(chosen.download_url,'_blank','noopener,noreferrer');return;}
+  const uniqueLinks=[...new Set(available.map(p=>String(p.download_url).trim()))];
+  if(uniqueLinks.length===1&&uniqueLinks[0]){window.open(uniqueLinks[0],'_blank','noopener,noreferrer');return;}
+  if(uniqueLinks.length>1){const choices=available.map((p,i)=>(i+1)+'. '+p.name+' — '+p.download_url).join('\n');const answer=prompt('Kaunsa product file kholna hai? Number enter karein:\n'+choices);const chosen=available[Number(answer)-1];if(chosen)window.open(chosen.download_url,'_blank','noopener,noreferrer');return;}
   if(typeof showPopup==='function')showPopup('Check Update File','Is product ka download link admin panel mein abhi add nahi hai. Admin → Products mein link save karein.');
  };
  wrap.append(profile);return wrap;
