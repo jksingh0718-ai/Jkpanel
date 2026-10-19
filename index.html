@@ -1801,9 +1801,9 @@ async function loadShopProducts(){
   const customProductGroups=new Map();
   otherProducts.forEach(product=>{
    const fullName=String(product.name||'Product').trim();
-   const match=fullName.match(/^(.+?)\\s+-\\s+(.+)$/);
+   const match=fullName.match(/^(.+?)\s+-\s+(.+)$/);
    const durationCandidate=match?match[2].trim():'';
-   const hasDuration=!!(match && /\\d+(?:\\.\\d+)?\\s*(?:m|min|mins|minute|minutes|h|hr|hrs|hour|hours|d|day|days|w|week|weeks|month|months)\\b/i.test(durationCandidate));
+   const hasDuration=!!(match && /\d+(?:\.\d+)?\s*(?:m|min|mins|minute|minutes|h|hr|hrs|hour|hours|d|day|days|w|week|weeks|month|months)\b/i.test(durationCandidate));
    const baseName=hasDuration?match[1].trim():fullName;
    const duration=hasDuration?durationCandidate:'Standard';
    const key=baseName.toLowerCase();
