@@ -1359,8 +1359,12 @@ function xragDuration(productName) {
   if (!/xrag\s*ff\s*all/i.test(String(productName || ""))) return null;
   const match = String(productName).match(/(1|3|6|12|24)\s*hours?|([37]|30)\s*days?/i);
   if (!match) return null;
-  const n = match[1] || match[2];
-  return match[1] ? (n + " Hours") : (n + " Days");
+  if (match[1]) {
+    const n = match[1];
+    return n + (n === "1" ? " Hour" : " Hours");
+  }
+  const n = match[2];
+  return n + (n === "1" ? " Day" : " Days");
 }
 function phantomTrollDuration(productName) {
   if (!/phantom\s*x\s*troll\s*ff\s*all/i.test(String(productName || ""))) return null;
