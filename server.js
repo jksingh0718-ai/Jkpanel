@@ -980,7 +980,7 @@ function clearProductForm(){
  document.getElementById("productMessage").textContent="";
  document.getElementById("productEditor").hidden=true;
 }
-document.getElementById("showProductForm").onclick=()=>{const editor=document.getElementById("productEditor");if(editor.hidden){clearProductForm();editor.hidden=false;document.getElementById("productName").focus();}else{editor.hidden=true;}};
+document.getElementById("showProductForm").addEventListener("click",()=>{const editor=document.getElementById("productEditor");if(editor.hidden){clearProductForm();editor.hidden=false;}else{editor.hidden=false;}const rows=document.getElementById("productPlanRows");if(rows&&!rows.querySelector(".product-plan-row"))addProductPlanRow();document.getElementById("productName").focus({preventScroll:true});editor.scrollIntoView({behavior:"smooth",block:"start"});});
 document.getElementById("showKeyForm").onclick=()=>{const editor=document.getElementById("keyEditor");if(editor.hidden){clearKeyGroupForm();editor.hidden=false;document.getElementById("keyGroupName").focus();}else{editor.hidden=true;}};
 document.getElementById("addProductPlan").onclick=()=>addProductPlanRow();
 productPlanSeed.forEach(p=>addProductPlanRow(p.duration,p.price));
