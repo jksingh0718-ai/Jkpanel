@@ -1877,7 +1877,7 @@ function showPurchaseToast(message,isError=false,duration=2600){
   clearTimeout(window.jkPurchaseToastTimer);
   window.jkPurchaseToastTimer=setTimeout(()=>{toast.style.display='none';},duration);
 }
-async function copyPurchasedKey(order){
+async function getPurchasedKey(order){
   let key=String(order?.key_value||order?.key||'').trim();
   if(!key){
     try{
@@ -1888,34 +1888,71 @@ async function copyPurchasedKey(order){
       key=String(match?.key_value||match?.key||'').trim();
     }catch(_){}
   }
-  if(key){
-    try{await navigator.clipboard.writeText(key);}catch(_){
-      const helper=document.createElement('textarea');helper.value=key;helper.style.position='fixed';helper.style.opacity='0';document.body.appendChild(helper);helper.select();
-      try{document.execCommand('copy');}catch(__){}
-      helper.remove();
-    }
-    showPurchaseToast('✓ Key copied');
-  }else{
-    showPurchaseToast('✓ Purchase successful — My Keys mein dekhein');
+  return key;
+}
+async function copyInlineProductKey(key,button){
+  try{await navigator.clipboard.writeText(key);}catch(_){
+    const helper=document.createElement('textarea');helper.value=key;helper.style.position='fixed';helper.style.opacity='0';document.body.appendChild(helper);helper.select();
+    try{document.execCommand('copy');}catch(__){}
+    helper.remove();
   }
+  if(button){const previous=button.textContent;button.textContent='COPIED ✓';setTimeout(()=>button.textContent=previous,1600);}
+  showPurchaseToast('✓ Key copied');
+}
+async function copyPurchasedKey(order){
+  const key=await getPurchasedKey(order);
+  if(key){await copyInlineProductKey(key,null);}
+  else showPurchaseToast('✓ Purchase successful — My Keys mein dekhein');
+}
+function showInlineProductKey(product,order,key){
+  if(!key)return;
+  const card=Array.from(document.querySelectorAll('#shopProducts .shop-product-card')).find(el=>{
+    return el.contains(el.querySelector('button.buy')) && (el.textContent||'').toLowerCase().includes(String(product.name||'').split(' - ')[0].toLowerCase());
+  });
+  if(!card)return;
+  let line=card.querySelector('.jk-inline-purchased-key');
+  if(!line){
+    line=document.createElement('div');line.className='jk-inline-purchased-key';
+    line.style.cssText='display:flex;align-items:center;gap:7px;margin:10px 0 12px;padding:8px 9px;border:1px solid #10b981;border-radius:9px;background:#052e2b;min-width:0';
+    const value=document.createElement('code');value.className='jk-inline-key-value';value.style.cssText='flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#a7f3d0;font-size:12px;font-weight:800';
+    const copy=document.createElement('button');copy.type='button';copy.textContent='COPY';copy.style.cssText='flex:0 0 auto;padding:8px 10px;border-radius:7px;background:#10b981;color:#052e16;font-weight:900;font-size:11px';
+    copy.onclick=()=>copyInlineProductKey(value.dataset.key||'',copy);
+    line.append(value,copy);
+  }
+  const value=line.querySelector('.jk-inline-key-value');value.textContent=key;value.dataset.key=key;value.title=key;
+  const anchor=card.querySelector('.purchase-plans-toggle')||card.querySelector('button.buy');
+  if(anchor&&line.parentElement!==card)card.insertBefore(line,anchor);
+  else if(anchor&&line.nextElementSibling!==anchor)card.insertBefore(line,anchor);
 }
 async function buyProduct(product){
   if(!product || !product.id){showPopup('Order failed','Product details nahi mile. Page refresh karke dobara try karein.');return;}
   if(!localStorage.getItem('jk_customer_access_token')){openAuth('login');return;}
   const buttons=document.querySelectorAll('#shopProducts button.buy');
-  buttons.forEach(button=>button.disabled=true);
+  const previousLabels=new Map();
+  buttons.forEach(button=>{previousLabels.set(button,button.textContent);button.disabled=true;button.textContent='WAIT…';});
+  const clickedCard=document.activeElement?.closest?.('.shop-product-card');
+  const purchaseButton=clickedCard?.querySelector('.purchase-plans-toggle');
+  const previousPurchaseLabel=purchaseButton?.textContent;
+  if(purchaseButton){purchaseButton.disabled=true;purchaseButton.textContent='KEY PROCESSING…';}
+  showPurchaseToast('Purchase processing — supplier se key aa rahi hai',false,6000);
   try{
     const result=await customerApi('/api/orders',{method:'POST',body:JSON.stringify({product_id:product.id})});
     if(result.order?.supplier_status==='completed'){
+      const key=await getPurchasedKey(result.order);
+      if(key)showInlineProductKey(product,result.order,key);
       if(typeof loadMyAccountSummary==='function')loadMyAccountSummary().catch(()=>{});
-      await copyPurchasedKey(result.order);
+      if(key)showPurchaseToast('✓ Key ready hai — upar COPY dabayein');
+      else showPurchaseToast('✓ Purchase successful — My Keys mein dekhein');
     }else{
       showPopup('Order submitted','Order request submit ho gayi!\\nOrder ID: '+result.order.id+
         '\\nProduct: '+result.order.product_name+'\\nAmount: ₹'+Number(result.order.amount).toFixed(2)+
         '\\nStatus: Pending admin review. Payment verified hone tak order complete nahi hoga.');
     }
   }catch(error){showPurchaseToast(error.message||'Order submit nahi ho saka. Dobara try karein.',true,4200);}
-  finally{buttons.forEach(button=>button.disabled=false);}
+  finally{
+    buttons.forEach(button=>{button.disabled=false;button.textContent=previousLabels.get(button)||'BUY';});
+    if(purchaseButton){purchaseButton.disabled=false;purchaseButton.textContent=previousPurchaseLabel||'PURCHASE KEY';}
+  }
 }
 
 function restoreCustomerSession(){
