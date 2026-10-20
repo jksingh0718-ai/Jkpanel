@@ -1127,6 +1127,10 @@ document.getElementById("keyGroupForm").onsubmit=async e=>{
  }catch(err){status.textContent=err.message||"Key save nahi ho saki.";}finally{save.disabled=false;}
 };
 
+function formatIndiaDate(value){
+ try{if(!value)return "—";return new Date(value).toLocaleString("en-IN",{timeZone:"Asia/Kolkata",day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:true});}
+ catch{return value||"—";}
+}
 async function loadCustomers(){
  try{
   const data=await api("/api/admin/customers");
@@ -1153,7 +1157,7 @@ async function loadCustomers(){
    toggle.onclick=()=>{details.hidden=!details.hidden;toggle.textContent=details.hidden?"See Details":"Hide Details";};
    titleRow.append(title,balance,toggle);card.append(titleRow,details);
    const line=(label,value)=>{
-    const row=document.createElement("p");row.style.margin="8px 0";row.style.paddingBottom="7px";row.style.borderBottom="1px solid #263247";
+    const row=document.createElement("p");row.style.cssText="font-size:12px;line-height:1.35;margin:4px 0;padding:4px 0 5px;border-bottom:1px solid #263247;overflow-wrap:anywhere";
     const strong=document.createElement("strong");strong.textContent=label+": ";
     const span=document.createElement("span");span.textContent=String(value??"—");
     row.append(strong,span);details.appendChild(row);
@@ -1204,7 +1208,7 @@ async function loadCustomers(){
     line("Payment status",o.payment_status||"—");
     line("Order status",o.order_status||"—");
     if(o.supplier_status)line("Supplier delivery",o.supplier_status);
-    line("Order date",o.created_at||"—");
+    line("Bought (India time)",formatIndiaDate(o.created_at));
    });
    const keysTitle=document.createElement("h4");keysTitle.textContent="Delivered keys ("+customer.keys.length+")";keysTitle.style.marginTop="10px";details.appendChild(keysTitle);
    if(!customer.keys.length)line("Keys","No keys assigned");
@@ -1212,7 +1216,7 @@ async function loadCustomers(){
     line("Product",k.product_name||"—");
     line("Key",k.key_value||"—");
     line("Key status",k.status||"—");
-    line("Key date",k.created_at||"—");
+    line("Key date (India time)",formatIndiaDate(k.created_at));
    });
    root.appendChild(card);
   });
