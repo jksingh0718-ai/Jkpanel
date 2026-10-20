@@ -1143,12 +1143,15 @@ async function loadCustomers(){
    title.textContent=customer.name||"Customer";
    title.style.cssText="margin:0;min-width:0;overflow-wrap:anywhere";
    const titleRow=document.createElement("div");titleRow.style.cssText="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap";
+   const balance=document.createElement("strong");
+   balance.textContent="₹"+Number(customer.walletBalance||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});
+   balance.style.cssText="color:#6ee7b7;white-space:nowrap;font-size:13px";
    const toggle=document.createElement("button");
-   toggle.type="button";toggle.textContent="See Activity";toggle.style.cssText="width:auto;white-space:nowrap;background:linear-gradient(135deg,#c084fc,#7c3aed);color:#fff;border:0;border-radius:9px";
+   toggle.type="button";toggle.textContent="See Details";toggle.style.cssText="width:auto;white-space:nowrap;background:linear-gradient(135deg,#c084fc,#7c3aed);color:#fff;border:0;border-radius:9px";
    const details=document.createElement("div");
    details.hidden=true;details.style.marginTop="14px";details.style.borderTop="1px solid #334155";details.style.paddingTop="10px";
-   toggle.onclick=()=>{details.hidden=!details.hidden;toggle.textContent=details.hidden?"See Activity":"Hide Activity";};
-   titleRow.append(title,toggle);card.append(titleRow,details);
+   toggle.onclick=()=>{details.hidden=!details.hidden;toggle.textContent=details.hidden?"See Details":"Hide Details";};
+   titleRow.append(title,balance,toggle);card.append(titleRow,details);
    const line=(label,value)=>{
     const row=document.createElement("p");row.style.margin="8px 0";row.style.paddingBottom="7px";row.style.borderBottom="1px solid #263247";
     const strong=document.createElement("strong");strong.textContent=label+": ";
@@ -1190,7 +1193,20 @@ async function loadCustomers(){
     line("Transaction ID",d.transaction_id||"—");
     line("Deposit date",d.created_at||"—");
    });
-   const keysTitle=document.createElement("h4");keysTitle.textContent="Customer keys ("+customer.keys.length+")";keysTitle.style.marginTop="10px";details.appendChild(keysTitle);
+   line("Current wallet balance","₹"+Number(customer.walletBalance||0).toFixed(2));
+   const orders=Array.isArray(customer.orders)?customer.orders:[];
+   const ordersTitle=document.createElement("h4");ordersTitle.textContent="Purchased products / orders ("+orders.length+")";ordersTitle.style.marginTop="12px";details.appendChild(ordersTitle);
+   if(!orders.length)line("Purchases","No order history yet");
+   orders.forEach(o=>{
+    line("Purchased product",o.product_name||"—");
+    if(o.supplier_duration)line("Key duration",o.supplier_duration);
+    line("Order amount","₹"+Number(o.amount||0).toFixed(2));
+    line("Payment status",o.payment_status||"—");
+    line("Order status",o.order_status||"—");
+    if(o.supplier_status)line("Supplier delivery",o.supplier_status);
+    line("Order date",o.created_at||"—");
+   });
+   const keysTitle=document.createElement("h4");keysTitle.textContent="Delivered keys ("+customer.keys.length+")";keysTitle.style.marginTop="10px";details.appendChild(keysTitle);
    if(!customer.keys.length)line("Keys","No keys assigned");
    customer.keys.forEach(k=>{
     line("Product",k.product_name||"—");
@@ -1610,22 +1626,42 @@ app.patch("/api/admin/orders/:id", isAdmin, async (req, res) => {
 app.get("/api/admin/customers", isAdmin, async (req, res) => {
   if (!supabase) return res.status(503).json({ error: "Database is not configured" });
   try {
-    const [usersResult, depositsResult, keysResult] = await Promise.all([
+    const [usersResult, depositsResult, keysResult, walletsResult, ordersResult] = await Promise.all([
       supabase.auth.admin.listUsers({ page: 1, perPage: 1000 }),
       supabase.from("deposit_requests")
         .select("id, user_id, customer_email, amount, transaction_id, status, created_at")
         .order("created_at", { ascending: false }).limit(1000),
       supabase.from("customer_keys")
         .select("id, user_id, product_name, key_value, status, created_at")
-        .order("created_at", { ascending: false }).limit(1000)
+        .order("created_at", { ascending: false }).limit(1000),
+      supabase.from("wallets").select("user_id, balance"),
+      supabase.from("orders")
+        .select('id, user_id, created_at, "Product_name", "Amount", "Payment_status", "Order status", supplier_status, supplier_duration')
+        .order("created_at", { ascending: false }).limit(2000)
     ]);
-    if (usersResult.error || depositsResult.error || keysResult.error) {
-      console.error("Admin customer data failed:", usersResult.error?.message || depositsResult.error?.message || keysResult.error?.message);
-      return res.status(500).json({ error: "Customer/deposit/key data load nahi ho saka." });
+    if (usersResult.error || depositsResult.error || keysResult.error || walletsResult.error || ordersResult.error) {
+      console.error("Admin customer data failed:", usersResult.error?.message || depositsResult.error?.message || keysResult.error?.message || walletsResult.error?.message || ordersResult.error?.message);
+      return res.status(500).json({ error: "Customer, wallet, order, deposit ya key data load nahi ho saka." });
     }
     const users = usersResult.data?.users || [];
     const deposits = depositsResult.data || [];
     const keys = keysResult.data || [];
+    const walletMap = new Map((walletsResult.data || []).map(w => [w.user_id, Number(w.balance || 0)]));
+    const ordersByUser = new Map();
+    for (const order of (ordersResult.data || [])) {
+      if (!order.user_id) continue;
+      if (!ordersByUser.has(order.user_id)) ordersByUser.set(order.user_id, []);
+      ordersByUser.get(order.user_id).push({
+        id: order.id,
+        product_name: order["Product_name"] || "Product",
+        amount: Number(order["Amount"] || 0),
+        payment_status: order["Payment_status"] || "—",
+        order_status: order["Order status"] || "—",
+        supplier_status: order.supplier_status || "",
+        supplier_duration: order.supplier_duration || "",
+        created_at: order.created_at
+      });
+    }
     const customers = users.map(user => {
       const userDeposits = deposits.filter(d => d.user_id === user.id);
       const userKeys = keys.filter(k => k.user_id === user.id);
@@ -1635,10 +1671,12 @@ app.get("/api/admin/customers", isAdmin, async (req, res) => {
         name: String(user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0] || "Customer").slice(0,100),
         created_at: user.created_at,
         confirmed: Boolean(user.email_confirmed_at),
+        walletBalance: walletMap.get(user.id) || 0,
         totalDeposited: userDeposits.filter(d => d.status === "approved").reduce((sum,d) => sum + Number(d.amount || 0), 0),
         pendingDeposits: userDeposits.filter(d => d.status === "pending").reduce((sum,d) => sum + Number(d.amount || 0), 0),
         deposits: userDeposits,
-        keys: userKeys
+        keys: userKeys,
+        orders: ordersByUser.get(user.id) || []
       };
     });
     const unlinkedDeposits = deposits.filter(d => !d.user_id).map(d => ({
