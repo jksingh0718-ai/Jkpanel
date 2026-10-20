@@ -348,6 +348,12 @@ footer{background:linear-gradient(90deg,#101b35,#241544);border-top:1px solid #4
 @keyframes jkNavActive{0%,100%{transform:translateY(0) scale(1.01);box-shadow:inset 0 0 0 1px #ffffff18,0 0 8px #cbd5e111}50%{transform:translateY(-1px) scale(1.03);box-shadow:inset 0 0 0 1px #ffffff28,0 0 16px #cbd5e122}}
 @media(prefers-reduced-motion:reduce){#bottomNav button .nav-icon,#bottomNav button.active .nav-icon{animation:none!important;transition:none!important}}
 @media(max-width:360px){#bottomNav{gap:1px!important;padding-left:3px!important;padding-right:3px!important}#bottomNav button{padding-left:0!important;padding-right:0!important}#bottomNav button .nav-icon{width:21px!important;height:21px!important}#bottomNav button .nav-icon svg{width:18px!important;height:18px!important}#bottomNav button>span:last-child{font-size:9px!important}}
+
+/* Refined dashboard stats: restrained slate palette, no cartoon gradients */
+.stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
+.stat{min-width:0;background:#151c2b;border:1px solid #344155;border-radius:12px;padding:16px;box-shadow:0 4px 12px #0002}
+.stat b{font-size:clamp(21px,6vw,28px);font-weight:700;color:#8bb9d8;margin-bottom:8px;overflow-wrap:anywhere}
+.stat span{font-size:12px;color:#aab6c7}
 </style>
 </head>
 <body>
@@ -398,9 +404,7 @@ footer{background:linear-gradient(90deg,#101b35,#241544);border-top:1px solid #4
 </div>
 <div class="stats">
   <div class="stat"><b id="walletBalanceStat">₹0.00</b><span>Wallet Balance</span></div>
-  <div class="stat"><b id="totalOrdersStat">0</b><span>Total Orders</span></div>
   <div class="stat"><b id="availableKeysStat">0</b><span>Available Keys</span></div>
-  <div class="stat"><b id="referralStatCount">0</b><span>Refer and Earn 🎁</span></div>
 </div>
 
 <h3 class="section-title">Quick Services</h3>
