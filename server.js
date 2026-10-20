@@ -1369,7 +1369,7 @@ function aimHackDuration(productName) {
 
 function silentXFFDuration(productName) {
   const name = String(productName || "").trim().toLowerCase().replace(/\s+/g, " ");
-  if (!/^silent\s*x\s*ff(?:\s*-|$)/i.test(name)) return null;
+  if (!/^silent\s*x\s*ff(?:\s+all)?(?:\s*-|$)/i.test(name)) return null;
   const hours = name.match(/(?:^|\s-\s)(1|3|6|12)\s*hours?/i);
   if (hours) return hours[1] + " Hours";
   const days = name.match(/(?:^|\s-\s)(1|7|30)\s*days?/i);
