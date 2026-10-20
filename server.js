@@ -1198,25 +1198,15 @@ async function loadCustomers(){
     line("Deposit date",d.created_at||"—");
    });
    line("Current wallet balance","₹"+Number(customer.walletBalance||0).toFixed(2));
-   const orders=Array.isArray(customer.orders)?customer.orders:[];
-   const ordersTitle=document.createElement("h4");ordersTitle.textContent="Purchased products / orders ("+orders.length+")";ordersTitle.style.marginTop="12px";details.appendChild(ordersTitle);
-   if(!orders.length)line("Purchases","No order history yet");
-   orders.forEach(o=>{
-    line("Purchased product",o.product_name||"—");
-    if(o.supplier_duration)line("Key duration",o.supplier_duration);
-    line("Order amount","₹"+Number(o.amount||0).toFixed(2));
-    line("Payment status",o.payment_status||"—");
-    line("Order status",o.order_status||"—");
-    if(o.supplier_status)line("Supplier delivery",o.supplier_status);
-    line("Bought (India time)",formatIndiaDate(o.created_at));
-   });
-   const keysTitle=document.createElement("h4");keysTitle.textContent="Delivered keys ("+customer.keys.length+")";keysTitle.style.marginTop="10px";details.appendChild(keysTitle);
-   if(!customer.keys.length)line("Keys","No keys assigned");
+   const keysTitle=document.createElement("h4");keysTitle.textContent="🌈 Purchase History ("+customer.keys.length+")";keysTitle.style.cssText="margin:8px 0;color:#c4b5fd;font-size:13px";details.appendChild(keysTitle);
+   if(!customer.keys.length)line("Purchases","No keys purchased yet");
    customer.keys.forEach(k=>{
-    line("Product",k.product_name||"—");
-    line("Key",k.key_value||"—");
-    line("Key status",k.status||"—");
-    line("Key date (India time)",formatIndiaDate(k.created_at));
+    const item=document.createElement("div");item.style.cssText="display:flex;flex-wrap:wrap;align-items:center;gap:3px 7px;padding:7px 9px;margin:5px 0;border-radius:9px;background:linear-gradient(110deg,rgba(99,102,241,.18),rgba(6,182,212,.10));border-left:3px solid #a78bfa;font-size:11px;line-height:1.35;overflow-wrap:anywhere";
+    const key=document.createElement("span");key.textContent="🔑 "+(k.key_value||"Key pending");key.style.cssText="font-family:monospace;font-weight:700;color:#f0abfc;flex:1 1 145px";
+    const status=document.createElement("span");status.textContent=String(k.status||"").toLowerCase()==="active"?"Active":(k.status||"Pending");status.style.cssText="color:#34d399;font-size:10px;font-weight:700;background:rgba(16,185,129,.12);padding:2px 6px;border-radius:10px";
+    const product=document.createElement("span");product.textContent=k.product_name||"Product";product.style.cssText="color:#bae6fd;flex:1 1 100%";
+    const when=document.createElement("span");when.textContent="🇮🇳 "+formatIndiaDate(k.created_at);when.style.cssText="color:#94a3b8;font-size:10px;flex:1 1 100%";
+    item.append(key,status,product,when);details.appendChild(item);
    });
    root.appendChild(card);
   });
