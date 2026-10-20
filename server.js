@@ -2116,7 +2116,7 @@ app.post("/api/orders", async (req, res) => {
   const isXrag = /xrag\s*ff\s*all/i.test(product.name || "");
   const isPhantomTroll = /phantom\s*x\s*troll\s*ff\s*all/i.test(product.name || "");
   if (isDripWire || isAimHack || isPrimeHook || isSilentXFF || isXrag || isPhantomTroll) {
-    const duration = isSilentXFF ? silentXFFDuration(product.name) : (isPrimeHook ? primeHookDuration(product.name) : (isXrag ? xragDuration(product.name) : (isPhantomTroll ? phantomTrollDuration(product.name) : (isDripWire ? dripWireDuration(product.name) : aimHackDuration(product.name))));
+    const duration = isSilentXFF ? silentXFFDuration(product.name) : isPrimeHook ? primeHookDuration(product.name) : isXrag ? xragDuration(product.name) : isPhantomTroll ? phantomTrollDuration(product.name) : isDripWire ? dripWireDuration(product.name) : aimHackDuration(product.name);
     const supplierProductId = isSilentXFF ? "171" : (isPrimeHook ? "48" : (isXrag ? "149" : (isPhantomTroll ? "133" : (isAimHack ? "133" : "150"))));
     if (!duration) return res.status(400).json({ error: "Product duration configured nahi hai." });
 
