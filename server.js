@@ -2112,11 +2112,12 @@ app.post("/api/orders", async (req, res) => {
   const isDripWire = /^DRIP Wire - /i.test(product.name || "");
   const isAimHack = /^AIM HACK FF(?: - |$)/i.test(product.name || "");
   const isPrimeHook = /prime\s*hook/i.test(product.name || "");
+  const isSilentXFF = /silent\s*x\s*ff/i.test(product.name || "");
   const isXrag = /xrag\s*ff\s*all/i.test(product.name || "");
   const isPhantomTroll = /phantom\s*x\s*troll\s*ff\s*all/i.test(product.name || "");
-  if (isDripWire || isAimHack || isPrimeHook || isXrag || isPhantomTroll) {
-    const duration = isPrimeHook ? primeHookDuration(product.name) : (isXrag ? xragDuration(product.name) : (isPhantomTroll ? phantomTrollDuration(product.name) : (isDripWire ? dripWireDuration(product.name) : aimHackDuration(product.name))));
-    const supplierProductId = isPrimeHook ? "48" : (isXrag ? "149" : (isPhantomTroll ? "133" : (isAimHack ? "133" : "150")));
+  if (isDripWire || isAimHack || isPrimeHook || isSilentXFF || isXrag || isPhantomTroll) {
+    const duration = isSilentXFF ? silentXFFDuration(product.name) : (isPrimeHook ? primeHookDuration(product.name) : (isXrag ? xragDuration(product.name) : (isPhantomTroll ? phantomTrollDuration(product.name) : (isDripWire ? dripWireDuration(product.name) : aimHackDuration(product.name))));
+    const supplierProductId = isSilentXFF ? "171" : (isPrimeHook ? "48" : (isXrag ? "149" : (isPhantomTroll ? "133" : (isAimHack ? "133" : "150"))));
     if (!duration) return res.status(400).json({ error: "Product duration configured nahi hai." });
 
     const { data: purchase, error: walletError } = await supabase.rpc("create_wallet_product_order", {
@@ -2185,9 +2186,10 @@ app.post("/api/orders", async (req, res) => {
       return res.status(502).json({
         success: false,
         refunded: refunded === true,
+        product_unavailable: refunded === true,
         error: refunded === true
-          ? "Supplier key nahi de saka. Paisa wallet mein wapas kar diya gaya."
-          : "Supplier delivery fail hui. Wallet/order status admin se verify karwayein; abhi dobara buy na karein."
+          ? "Product not available. Refund successful — ₹" + amount.toFixed(2) + " wallet mein wapas aa gaye."
+          : "Product delivery fail hui. Refund confirm nahi hua; balance dobara spend na karein aur support se contact karein."
       });
     }
   }
