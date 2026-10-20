@@ -1357,6 +1357,16 @@ function aimHackDuration(productName) {
   return null;
 }
 
+function silentXFFDuration(productName) {
+  const name = String(productName || "").trim().toLowerCase().replace(/\s+/g, " ");
+  if (!/^silent\s*x\s*ff(?:\s*-|$)/i.test(name)) return null;
+  const hours = name.match(/(?:^|\s-\s)(1|3|6|12)\s*hours?/i);
+  if (hours) return hours[1] + " Hours";
+  const days = name.match(/(?:^|\s-\s)(1|7|30)\s*days?/i);
+  if (days) return days[1] + " Days";
+  return null;
+}
+
 function primeHookDuration(productName) {
   const name = String(productName || "").trim().replace(/\s+/g, " ");
   if (!/prime\s*hook/i.test(name)) return null;
@@ -1495,11 +1505,18 @@ app.patch("/api/admin/orders/:id/payment", isAdmin, async (req, res) => {
   const isDripWire = /^DRIP Wire - /i.test(productName);
   const isAimHack = /^AIM HACK FF(?: - |$)/i.test(productName);
   const isPrimeHook = /prime\s*hook/i.test(productName);
+  const isSilentXFF = /silent\s*x\s*ff/i.test(productName);
   const isXrag = /xrag\s*ff\s*all/i.test(productName);
   const isPhantomTroll = /phantom\s*x\s*troll\s*ff\s*all/i.test(productName);
-  const duration = isPrimeHook ? primeHookDuration(productName) : (isXrag ? xragDuration(productName) : (isPhantomTroll ? phantomTrollDuration(productName) : (isDripWire ? dripWireDuration(productName) : (isAimHack ? aimHackDuration(productName) : null))));
-  const usesSupplier = isDripWire || isAimHack || isPrimeHook || isXrag || isPhantomTroll;
-  const supplierProductId = isPrimeHook ? "48" : (isXrag ? "149" : (isPhantomTroll ? "133" : (isAimHack ? "133" : "150")));
+  let duration = null;
+  if (isSilentXFF) duration = silentXFFDuration(productName);
+  else if (isPrimeHook) duration = primeHookDuration(productName);
+  else if (isXrag) duration = xragDuration(productName);
+  else if (isPhantomTroll) duration = phantomTrollDuration(productName);
+  else if (isDripWire) duration = dripWireDuration(productName);
+  else if (isAimHack) duration = aimHackDuration(productName);
+  const usesSupplier = isDripWire || isAimHack || isPrimeHook || isSilentXFF || isXrag || isPhantomTroll;
+  const supplierProductId = isSilentXFF ? "171" : (isPrimeHook ? "48" : (isXrag ? "149" : (isPhantomTroll ? "133" : (isAimHack ? "133" : "150"))));
   const nextSupplierStatus = usesSupplier ? (duration ? "processing" : "failed") : "not_applicable";
 
   const { data, error } = await supabase.from("orders")
