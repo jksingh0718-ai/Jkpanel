@@ -1489,9 +1489,13 @@ function xragDuration(productName) {
   return n + (n === "1" ? " Day" : " Days");
 }
 function phantomTrollDuration(productName) {
-  if (!/phantom\s*x\s*troll\s*ff\s*all/i.test(String(productName || ""))) return null;
-  const match = String(productName).match(/(1|3|6|12|24)\s*hours?/i);
-  return match ? (match[1] + " Hours") : null;
+  const name = String(productName || "");
+  if (!/phantom\s*x\s*troll\s*ff\s*all/i.test(name)) return null;
+  const hours = name.match(/(1|3|6|12|24)\s*hours?/i);
+  if (hours) return hours[1] + " Hours";
+  const days = name.match(/(1|3|7|30)\s*days?/i);
+  if (days) return days[1] + (days[1] === "1" ? " Day" : " Days");
+  return null;
 }
 
 async function purchaseDripWireKey({ orderId, userId, productName, duration, supplierProductId = "150" }) {
