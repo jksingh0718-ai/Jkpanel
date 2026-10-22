@@ -1423,7 +1423,7 @@ function dripWireDuration(productName) {
 function dripClientApkmodDuration(productName) {
   const name = String(productName || "").trim().replace(/\s+/g, " ");
   if (!/dripclient.*apkmod/i.test(name)) return null;
-  const match = name.match(/(?:^|\s-\s)(1|3|7|15|30)\s*days?\s+nonroot$/i);
+  const match = name.match(/(?:^|\s-\s)(1|3|7|15|30)\s*days?(?:\s*\([^)]*\))?(?:\s+nonroot)?$/i);
   return match ? match[1] + " DaYS NONROOT" : null;
 }
 function aimHackDuration(productName) {
