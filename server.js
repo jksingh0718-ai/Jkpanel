@@ -593,6 +593,9 @@ small{color:#a6b2c0}
  <h2>Products</h2>
  <input id="productSearch" class="search-box" type="search" placeholder="Search products...">
  <button id="refreshProducts">Refresh Products</button>
+ <button type="button" id="testAllProducts" style="margin:8px 0;background:#0f766e;color:white">✓ Test All Products (No Purchase)</button>
+ <p style="font-size:12px;line-height:1.5;opacity:.85">Safe check: product mapping and server credential presence only. No key purchase or wallet deduction. Supplier stock and actual key validity need supplier-side verification.</p>
+ <div id="productHealthResults" aria-live="polite"></div>
  <button type="button" id="showProductForm" style="margin:10px 0">＋ Add Product</button>
 <div id="productEditor" hidden><h3 style="margin-top:16px">Add / Edit Product</h3>
 <div class="card">
@@ -909,6 +912,29 @@ function adminProductNameInfo(name){
  const match=raw.match(/^(.*?)\s*-\s*(.+)$/);
  return {base:match?match[1].trim():raw,duration:match?match[2].trim():"Standard"};
 }
+
+document.getElementById("testAllProducts")?.addEventListener("click", async () => {
+ const button=document.getElementById("testAllProducts"), root=document.getElementById("productHealthResults");
+ if(!button||!root)return;
+ button.disabled=true; button.textContent="Checking..."; root.textContent="Checking product mappings safely; no purchases will be made.";
+ try {
+  const report=await api("/api/admin/product-health-check");
+  root.replaceChildren();
+  const summary=document.createElement("p");
+  summary.textContent="Checked "+report.total+" products · Mapping OK: "+report.summary.mapping_ok+" · Credential issue: "+report.summary.config_error+" · Duration issue: "+report.summary.duration_error+" · Manual: "+report.summary.manual;
+  root.appendChild(summary);
+  const note=document.createElement("p");note.textContent=report.note;note.style.cssText="font-size:12px;line-height:1.5";root.appendChild(note);
+  (report.products||[]).forEach(p=>{
+   const card=document.createElement("article");card.className="card";card.style.cssText="padding:10px;margin:8px 0";
+   const title=document.createElement("strong");title.textContent=p.name+" — "+(p.published?"Published":"Hidden");card.appendChild(title);
+   const detail=document.createElement("p");detail.style.cssText="font-size:12px;line-height:1.5;overflow-wrap:anywhere";
+   detail.textContent="Status: "+p.status+" · Supplier PID: "+(p.supplier_id||"not mapped")+" · Duration: "+(p.duration||"not matched")+" · "+p.detail;
+   card.appendChild(detail);root.appendChild(card);
+  });
+ } catch(e) { root.textContent="Check failed: "+(e.message||"Unknown error"); }
+ finally {button.disabled=false;button.textContent="✓ Test All Products (No Purchase)";}
+});
+
 async function loadProducts(){
  try{
   const data=await api("/api/admin/products");
@@ -2244,6 +2270,52 @@ app.get("/api/admin/products", isAdmin, async (req, res) => {
     return res.status(500).json({ error: "Products load nahi ho sake." });
   }
   res.json({ products: data || [] });
+});
+
+// Safe diagnostics only: this endpoint NEVER buys a key, charges a wallet, or
+// calls the supplier's purchase action. It verifies local configuration/mappings.
+app.get("/api/admin/product-health-check", isAdmin, async (req, res) => {
+  if (!supabase) return res.status(503).json({ error: "Database is not configured" });
+  try {
+    const { data: products, error } = await supabase.from("products")
+      .select("id, name, price, published").order("name", { ascending: true });
+    if (error) throw error;
+    const credentialsReady = Boolean(
+      String(process.env.BANTI_MASTER_KEY || process.env.RESELLER_ACCESS_TOKEN || "").trim() &&
+      String(process.env.RESELLER_API_KEY || process.env.RESELLER_ACCESS_TOKEN || "").trim()
+    );
+    const checks = (products || []).map(p => {
+      const name = String(p.name || "");
+      let supplierId = null, duration = null, automatic = false;
+      if (/silent\\s+cheat\\s+ff\\s+nonroot\\s+proxy/i.test(name)) {
+        supplierId = "148"; duration = silentCheatNonrootDuration(name); automatic = true;
+      } else if (/silent\\s*x\\s*ff/i.test(name)) {
+        supplierId = "171"; duration = silentXFFDuration(name); automatic = true;
+      } else if (/prime\\s*hook/i.test(name)) {
+        supplierId = "48"; duration = primeHookDuration(name); automatic = true;
+      } else if (/xrag\\s*ff\\s*all/i.test(name)) {
+        supplierId = "149"; duration = xragDuration(name); automatic = true;
+      } else if (/phantom\\s*x\\s*troll\\s*ff\\s*all/i.test(name)) {
+        supplierId = "133"; duration = phantomTrollDuration(name); automatic = true;
+      } else if (/^DRIP Wire - /i.test(name)) {
+        supplierId = "150"; duration = dripWireDuration(name); automatic = true;
+      } else if (/^AIM HACK FF(?: - |$)/i.test(name)) {
+        supplierId = "133"; duration = aimHackDuration(name); automatic = true;
+      }
+      let status, detail;
+      if (!automatic) { status = "manual"; detail = "No automatic supplier mapping detected; manual/download-link product or mapping needed."; }
+      else if (!credentialsReady) { status = "config_error"; detail = "Supplier credentials appear missing; no supplier call was made."; }
+      else if (!duration) { status = "duration_error"; detail = "Product name duration does not match configured supplier duration."; }
+      else { status = "mapping_ok"; detail = "Local mapping and credential presence look OK. Actual supplier stock/key delivery has NOT been tested."; }
+      return { id: p.id, name, price: Number(p.price || 0), published: Boolean(p.published), supplier_id: supplierId, duration, status, detail };
+    });
+    res.json({ success: true, mode: "safe_no_purchase", checked_at: new Date().toISOString(), total: checks.length,
+      summary: { mapping_ok: checks.filter(x=>x.status==="mapping_ok").length, config_error: checks.filter(x=>x.status==="config_error").length, duration_error: checks.filter(x=>x.status==="duration_error").length, manual: checks.filter(x=>x.status==="manual").length },
+      note: "No keys were purchased and no wallet was charged. Mapping OK does not prove supplier stock or that a key activates.", products: checks });
+  } catch (e) {
+    console.error("Product health check failed:", e.message);
+    res.status(500).json({ error: "Product diagnostic failed. Check server logs." });
+  }
 });
 
 app.post("/api/admin/product-image", isAdmin, (req, res) => {
