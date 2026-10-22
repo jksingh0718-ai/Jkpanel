@@ -593,9 +593,27 @@ small{color:#a6b2c0}
  <h2>Products</h2>
  <input id="productSearch" class="search-box" type="search" placeholder="Search products...">
  <button id="refreshProducts">Refresh Products</button>
- <button type="button" id="testAllProducts" style="margin:8px 0;background:#0f766e;color:white">✓ Test All Products (No Purchase)</button>
- <p style="font-size:12px;line-height:1.5;opacity:.85">Safe check: product mapping and server credential presence only. No key purchase or wallet deduction. Supplier stock and actual key validity need supplier-side verification.</p>
+ <button type="button" id="testAllProducts" style="margin:8px 0;background:#0f766e;color:white">✓ Test All Products</button>
+ <p style="font-size:12px;opacity:.8;margin:0 0 8px">Free setup check · No purchase or wallet deduction</p>
  <div id="productHealthResults" aria-live="polite"></div>
+ <style>
+ #productHealthResults{margin:8px 0 14px}
+ #productHealthResults .health-panel{border:1px solid #263449;border-radius:12px;padding:10px;background:#0d1421}
+ #productHealthResults .health-summary{font-size:14px;margin-bottom:8px}
+ #productHealthResults .health-stats{display:flex;gap:5px;flex-wrap:wrap}
+ #productHealthResults .health-stat{font-size:11px;padding:4px 7px;border-radius:7px;background:#1b2637;color:#dce7f5}
+ #productHealthResults .health-note{font-size:11px;line-height:1.4;opacity:.8;margin:8px 0}
+ #productHealthResults .health-list{display:grid;gap:5px}
+ #productHealthResults .health-row{padding:8px 9px;border:1px solid #243144;border-radius:9px;background:#111b2a}
+ #productHealthResults .health-row-top{display:flex;align-items:flex-start;justify-content:space-between;gap:7px}
+ #productHealthResults .health-name{font-size:12px;line-height:1.35;overflow-wrap:anywhere;flex:1}
+ #productHealthResults .health-badge{font-size:9px;font-weight:700;white-space:nowrap;border-radius:5px;padding:4px 5px}
+ #productHealthResults .health-ok{background:#123b2c;color:#80e5b2}
+ #productHealthResults .health-manual{background:#332b17;color:#f5d47a}
+ #productHealthResults .health-warn{background:#451e29;color:#ffabb8}
+ #productHealthResults .health-meta{font-size:10px;opacity:.75;margin-top:4px;overflow-wrap:anywhere}
+ #productHealthResults .health-detail{font-size:10px;line-height:1.35;margin-top:4px;color:#ffc4cb}
+ </style>
  <button type="button" id="showProductForm" style="margin:10px 0">＋ Add Product</button>
 <div id="productEditor" hidden><h3 style="margin-top:16px">Add / Edit Product</h3>
 <div class="card">
@@ -916,23 +934,39 @@ function adminProductNameInfo(name){
 document.getElementById("testAllProducts")?.addEventListener("click", async () => {
  const button=document.getElementById("testAllProducts"), root=document.getElementById("productHealthResults");
  if(!button||!root)return;
- button.disabled=true; button.textContent="Checking..."; root.textContent="Checking product mappings safely; no purchases will be made.";
+ button.disabled=true; button.textContent="Checking…";
+ root.replaceChildren();
+ const loading=document.createElement("p");loading.className="health-note";loading.textContent="Checking setup safely — no purchase or wallet deduction.";root.appendChild(loading);
  try {
   const report=await api("/api/admin/product-health-check");
   root.replaceChildren();
-  const summary=document.createElement("p");
-  summary.textContent="Checked "+report.total+" products · Mapping OK: "+report.summary.mapping_ok+" · Credential issue: "+report.summary.config_error+" · Duration issue: "+report.summary.duration_error+" · Manual: "+report.summary.manual;
-  root.appendChild(summary);
-  const note=document.createElement("p");note.textContent=report.note;note.style.cssText="font-size:12px;line-height:1.5";root.appendChild(note);
-  (report.products||[]).forEach(p=>{
-   const card=document.createElement("article");card.className="card";card.style.cssText="padding:10px;margin:8px 0";
-   const title=document.createElement("strong");title.textContent=p.name+" — "+(p.published?"Published":"Hidden");card.appendChild(title);
-   const detail=document.createElement("p");detail.style.cssText="font-size:12px;line-height:1.5;overflow-wrap:anywhere";
-   detail.textContent="Status: "+p.status+" · Supplier PID: "+(p.supplier_id||"not mapped")+" · Duration: "+(p.duration||"not matched")+" · "+p.detail;
-   card.appendChild(detail);root.appendChild(card);
+  const panel=document.createElement("div");panel.className="health-panel";
+  const heading=document.createElement("div");heading.className="health-summary";
+  const total=document.createElement("strong");total.textContent=report.total+" products checked";heading.appendChild(total);
+  const stats=document.createElement("div");stats.className="health-stats";
+  [["Ready",report.summary.mapping_ok],["Config",report.summary.config_error],["Duration",report.summary.duration_error],["Manual",report.summary.manual]].forEach(([label,count])=>{
+   const item=document.createElement("span");item.className="health-stat";item.textContent=label+" "+count;stats.appendChild(item);
   });
- } catch(e) { root.textContent="Check failed: "+(e.message||"Unknown error"); }
- finally {button.disabled=false;button.textContent="✓ Test All Products (No Purchase)";}
+  panel.append(heading,stats);
+  const note=document.createElement("p");note.className="health-note";note.textContent="Setup check only. Supplier stock and key validity are not tested.";panel.appendChild(note);
+  const list=document.createElement("div");list.className="health-list";
+  (report.products||[]).forEach(p=>{
+   const row=document.createElement("div");row.className="health-row";
+   const top=document.createElement("div");top.className="health-row-top";
+   const title=document.createElement("strong");title.className="health-name";title.textContent=p.name;
+   const badge=document.createElement("span");badge.className="health-badge "+(p.status==="mapping_ok"?"health-ok":p.status==="manual"?"health-manual":"health-warn");
+   badge.textContent=p.status==="mapping_ok"?"SETUP OK":p.status==="manual"?"MANUAL":p.status==="config_error"?"CONFIG ERROR":"DURATION ERROR";
+   top.append(title,badge);
+   const meta=document.createElement("div");meta.className="health-meta";
+   meta.textContent=(p.supplier_id?"PID "+p.supplier_id:"No supplier PID")+(p.duration?" · "+p.duration:"")+(p.published?"":" · Hidden");
+   row.append(top,meta);
+   if(p.status!=="mapping_ok"){const msg=document.createElement("div");msg.className="health-detail";msg.textContent=p.status==="manual"?"Automatic supplier mapping not detected.":p.status==="config_error"?"Supplier credentials may be missing.":"Product duration does not match configured supplier duration.";row.appendChild(msg);}
+   list.appendChild(row);
+  });
+  panel.appendChild(list);root.appendChild(panel);
+ } catch(e) {
+  root.replaceChildren();const err=document.createElement("p");err.className="health-note";err.textContent="Check failed: "+(e.message||"Unknown error");root.appendChild(err);
+ } finally {button.disabled=false;button.textContent="✓ Test All Products";}
 });
 
 async function loadProducts(){
