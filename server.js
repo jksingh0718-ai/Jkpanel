@@ -2327,15 +2327,15 @@ app.get("/api/admin/product-health-check", isAdmin, async (req, res) => {
     const checks = (products || []).map(p => {
       const name = String(p.name || "");
       let supplierId = null, duration = null, automatic = false;
-      if (/silent\\s+cheat\\s+ff\\s+nonroot\\s+proxy/i.test(name)) {
+      if (/silent\s+cheat\s+ff\s+nonroot\s+proxy/i.test(name)) {
         supplierId = "148"; duration = silentCheatNonrootDuration(name); automatic = true;
-      } else if (/silent\\s*x\\s*ff/i.test(name)) {
+      } else if (/silent\s*x\s*ff/i.test(name)) {
         supplierId = "171"; duration = silentXFFDuration(name); automatic = true;
-      } else if (/prime\\s*hook/i.test(name)) {
+      } else if (/prime\s*hook/i.test(name)) {
         supplierId = "48"; duration = primeHookDuration(name); automatic = true;
-      } else if (/xrag\\s*ff\\s*all/i.test(name)) {
+      } else if (/xrag\s*ff\s*all/i.test(name)) {
         supplierId = "149"; duration = xragDuration(name); automatic = true;
-      } else if (/phantom\\s*x\\s*troll\\s*ff\\s*all/i.test(name)) {
+      } else if (/phantom\s*x\s*troll\s*ff\s*all/i.test(name)) {
         supplierId = "133"; duration = phantomTrollDuration(name); automatic = true;
       } else if (/^DRIP Wire - /i.test(name)) {
         supplierId = "150"; duration = dripWireDuration(name); automatic = true;
