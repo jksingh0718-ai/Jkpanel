@@ -1420,6 +1420,12 @@ function dripWireDuration(productName) {
   const match = original.match(/^DRIP Wire\s*-\s*(.+)$/i);
   return match ? match[1].trim() : null;
 }
+function dripClientApkmodDuration(productName) {
+  const name = String(productName || "").trim().replace(/\s+/g, " ");
+  if (!/dripclient\s*apkmod/i.test(name)) return null;
+  const match = name.match(/(?:^|\s-\s)(1|3|7|15|30)\s*da?ys?\s+nonroot$/i);
+  return match ? match[1] + " DaYS NONROOT" : null;
+}
 function aimHackDuration(productName) {
   const name = String(productName || "").trim().toLowerCase().replace(/\s+/g, " ");
   if (name === "aim hack ff" || name === "aim hack ff - 1 hour" || name === "aim hack ff - 1 hours") return "1 Hours";
@@ -1598,7 +1604,7 @@ app.patch("/api/admin/orders/:id/payment", isAdmin, async (req, res) => {
   }
 
   const productName = existing["Product_name"] || "";
-  const isDripWire = /^DRIP Wire - /i.test(productName);
+  const isDripWire = /^DRIP Wire - /i.test(productName);\n  const isDripClient = /dripclient\\s*apkmod/i.test(productName);
   const isAimHack = /^AIM HACK FF(?: - |$)/i.test(productName);
   const isBalaMods = /bala\s*mods/i.test(productName);
   const isPrimeHook = /prime\s*hook/i.test(productName);
@@ -1612,11 +1618,11 @@ app.patch("/api/admin/orders/:id/payment", isAdmin, async (req, res) => {
   else if (isPrimeHook) duration = primeHookDuration(productName);
   else if (isXrag) duration = xragDuration(productName);
   else if (isPhantomTroll) duration = phantomTrollDuration(productName);
-  else if (isDripWire) duration = dripWireDuration(productName);
+  else if (isDripWire) duration = dripWireDuration(productName);\n  else if (isDripClient) duration = dripClientApkmodDuration(productName);
   else if (isAimHack) duration = aimHackDuration(productName);
   else if (isBalaMods) duration = balaModsDuration(productName);
-  const usesSupplier = isDripWire || isAimHack || isBalaMods || isPrimeHook || isSilentXFF || isSilentCheatNonroot || isXrag || isPhantomTroll;
-  const supplierProductId = isSilentCheatNonroot ? "148" : (isSilentXFF ? "171" : (isPrimeHook ? "48" : (isXrag ? "149" : (isPhantomTroll ? "133" : (isAimHack ? "133" : (isBalaMods ? "136" : "150"))))));
+  const usesSupplier = isDripWire || isDripClient || isAimHack || isBalaMods || isPrimeHook || isSilentXFF || isSilentCheatNonroot || isXrag || isPhantomTroll;
+  const supplierProductId = isSilentCheatNonroot ? "148" : (isSilentXFF ? "171" : (isPrimeHook ? "48" : (isXrag ? "149" : (isPhantomTroll ? "133" : (isAimHack ? "133" : (isBalaMods ? "136" : (isDripClient ? "62" : "150")))))));
   const nextSupplierStatus = usesSupplier ? (duration ? "processing" : "failed") : "not_applicable";
 
   const { data, error } = await supabase.from("orders")
@@ -2199,7 +2205,7 @@ app.post("/api/orders", async (req, res) => {
     return res.status(400).json({ error: "Is product ki price admin panel mein sahi set karein." });
   }
 
-  const isDripWire = /^DRIP Wire - /i.test(product.name || "");
+  const isDripWire = /^DRIP Wire - /i.test(product.name || "");\n  const isDripClient = /dripclient\\s*apkmod/i.test(product.name || "");
   const isAimHack = /^AIM HACK FF(?: - |$)/i.test(product.name || "");
    const isBalaMods = /bala\s*mods/i.test(product.name || "");
   const isPrimeHook = /prime\s*hook/i.test(product.name || "");
@@ -2207,9 +2213,9 @@ app.post("/api/orders", async (req, res) => {
   const isSilentCheatNonroot = /silent\s+cheat\s+ff\s+nonroot\s+proxy/i.test(product.name || "");
   const isXrag = /xrag\s*ff\s*all/i.test(product.name || "");
   const isPhantomTroll = /phantom\s*x\s*troll\s*ff\s*all/i.test(product.name || "");
-  if (isDripWire || isAimHack || isBalaMods || isPrimeHook || isSilentXFF || isSilentCheatNonroot || isXrag || isPhantomTroll) {
-    const duration = isSilentCheatNonroot ? silentCheatNonrootDuration(product.name) : isSilentXFF ? silentXFFDuration(product.name) : isPrimeHook ? primeHookDuration(product.name) : isXrag ? xragDuration(product.name) : isPhantomTroll ? phantomTrollDuration(product.name) : isDripWire ? dripWireDuration(product.name) : isBalaMods ? balaModsDuration(product.name) : aimHackDuration(product.name);
-    const supplierProductId = isSilentCheatNonroot ? "148" : (isSilentXFF ? "171" : (isPrimeHook ? "48" : (isXrag ? "149" : (isPhantomTroll ? "133" : (isAimHack ? "133" : "150")))));
+  if (isDripWire || isDripClient || isAimHack || isBalaMods || isPrimeHook || isSilentXFF || isSilentCheatNonroot || isXrag || isPhantomTroll) {
+    const duration = isSilentCheatNonroot ? silentCheatNonrootDuration(product.name) : isSilentXFF ? silentXFFDuration(product.name) : isPrimeHook ? primeHookDuration(product.name) : isXrag ? xragDuration(product.name) : isPhantomTroll ? phantomTrollDuration(product.name) : isDripWire ? dripWireDuration(product.name) : isBalaMods ? balaModsDuration(product.name) : isDripClient ? dripClientApkmodDuration(product.name) : aimHackDuration(product.name);
+    const supplierProductId = isSilentCheatNonroot ? "148" : (isSilentXFF ? "171" : (isPrimeHook ? "48" : (isXrag ? "149" : (isPhantomTroll ? "133" : (isAimHack ? "133" : (isBalaMods ? "136" : (isDripClient ? "62" : "150")))))));
     if (!duration) return res.status(400).json({ error: "Product duration configured nahi hai." });
 
     const { data: purchase, error: walletError } = await supabase.rpc("create_wallet_product_order", {
@@ -2357,7 +2363,7 @@ app.get("/api/admin/product-health-check", isAdmin, async (req, res) => {
       } else if (/bala\s*mods/i.test(name)) {
         supplierId = "136"; duration = balaModsDuration(name); automatic = true;
       }
-      let status, detail;
+      } else if (/dripclient\\s*apkmod/i.test(name)) {\n        supplierId = "62"; duration = dripClientApkmodDuration(name); automatic = true;\n      }\n      let status, detail;
       if (!automatic) { status = "manual"; detail = "No automatic supplier mapping detected; manual/download-link product or mapping needed."; }
       else if (!credentialsReady) { status = "config_error"; detail = "Supplier credentials appear missing; no supplier call was made."; }
       else if (!duration) { status = "duration_error"; detail = "Product name duration does not match configured supplier duration."; }
