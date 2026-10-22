@@ -2207,7 +2207,8 @@ app.post("/api/orders", async (req, res) => {
     return res.status(400).json({ error: "Is product ki price admin panel mein sahi set karein." });
   }
 
-  const isDripWire = /^DRIP Wire - /i.test(product.name || "");\n  const isDripClient = /dripclient\s*apkmod/i.test(product.name || "");
+  const isDripWire = /^DRIP Wire - /i.test(product.name || "");
+  const isDripClient = /dripclient\s*apkmod/i.test(product.name || "");
   const isAimHack = /^AIM HACK FF(?: - |$)/i.test(product.name || "");
    const isBalaMods = /bala\s*mods/i.test(product.name || "");
   const isPrimeHook = /prime\s*hook/i.test(product.name || "");
