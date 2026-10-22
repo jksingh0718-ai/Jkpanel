@@ -1941,21 +1941,28 @@ async function copyPurchasedKey(order){
 }
 function showInlineProductKey(product,order,key){
   if(!key)return;
-  const card=Array.from(document.querySelectorAll('#shopProducts .shop-product-card')).find(el=>{
-    return el.contains(el.querySelector('button.buy')) && (el.textContent||'').toLowerCase().includes(String(product.name||'').split(' - ')[0].toLowerCase());
+  const root=document.getElementById('shopProducts');
+  if(!root)return;
+  const fullName=String(product?.name||'').trim().toLowerCase();
+  const cards=Array.from(root.querySelectorAll('article, .shop-product-card'));
+  const card=cards.find(el=>{
+    if(!el.querySelector('button.buy'))return false;
+    const title=String(el.querySelector('h4')?.textContent||'').trim().toLowerCase();
+    if(!title)return false;
+    return fullName===title || fullName.startsWith(title+' -') || fullName.startsWith(title+' –') || fullName.startsWith(title+' ');
   });
   if(!card)return;
   let line=card.querySelector('.jk-inline-purchased-key');
   if(!line){
     line=document.createElement('div');line.className='jk-inline-purchased-key';
-    line.style.cssText='display:flex;align-items:center;gap:7px;margin:10px 0 12px;padding:8px 9px;border:1px solid #a78bfa;border-radius:9px;background:linear-gradient(135deg,#24123f,#31204f);box-shadow:0 0 14px #8b5cf633;min-width:0';
-    const value=document.createElement('code');value.className='jk-inline-key-value';value.style.cssText='flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#e9d5ff;font-size:12px;font-weight:800';
-    const copy=document.createElement('button');copy.type='button';copy.textContent='COPY';copy.style.cssText='flex:0 0 auto;padding:8px 10px;border-radius:7px;background:linear-gradient(135deg,#a855f7,#7c3aed);color:#fff;font-weight:900;font-size:11px';
+    line.style.cssText='display:flex;align-items:center;gap:8px;margin:10px 0 12px;padding:10px 11px;border:1px solid #a78bfa;border-radius:12px;background:linear-gradient(135deg,#24123f,#31204f);box-shadow:0 0 14px #8b5cf633;min-width:0';
+    const value=document.createElement('code');value.className='jk-inline-key-value';value.style.cssText='flex:1;min-width:0;overflow-wrap:anywhere;word-break:break-word;color:#e9d5ff;font-size:13px;font-weight:800;user-select:text';
+    const copy=document.createElement('button');copy.type='button';copy.textContent='COPY';copy.style.cssText='flex:0 0 auto;padding:10px 12px;border-radius:9px;background:linear-gradient(135deg,#a855f7,#7c3aed);color:#fff;font-weight:900;font-size:12px';
     copy.onclick=()=>copyInlineProductKey(value.dataset.key||'',copy);
     line.append(value,copy);
   }
   const value=line.querySelector('.jk-inline-key-value');value.textContent=key;value.dataset.key=key;value.title=key;
-  const anchor=card.querySelector('.purchase-plans-toggle')||card.querySelector('button.buy');
+  const anchor=Array.from(card.querySelectorAll('button')).find(btn=>/^(PURCHASE KEY|BUY RESELLER KEY)$/i.test((btn.textContent||'').trim())) || card.querySelector('.purchase-plans-toggle') || card.querySelector('button.buy');
   if(anchor&&line.parentElement!==card)card.insertBefore(line,anchor);
   else if(anchor&&line.nextElementSibling!==anchor)card.insertBefore(line,anchor);
 }
