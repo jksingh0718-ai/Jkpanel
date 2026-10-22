@@ -1604,7 +1604,8 @@ app.patch("/api/admin/orders/:id/payment", isAdmin, async (req, res) => {
   }
 
   const productName = existing["Product_name"] || "";
-  const isDripWire = /^DRIP Wire - /i.test(productName);\n  const isDripClient = /dripclient\\s*apkmod/i.test(productName);
+  const isDripWire = /^DRIP Wire - /i.test(productName);
+  const isDripClient = /dripclient\s*apkmod/i.test(productName);
   const isAimHack = /^AIM HACK FF(?: - |$)/i.test(productName);
   const isBalaMods = /bala\s*mods/i.test(productName);
   const isPrimeHook = /prime\s*hook/i.test(productName);
@@ -1618,7 +1619,8 @@ app.patch("/api/admin/orders/:id/payment", isAdmin, async (req, res) => {
   else if (isPrimeHook) duration = primeHookDuration(productName);
   else if (isXrag) duration = xragDuration(productName);
   else if (isPhantomTroll) duration = phantomTrollDuration(productName);
-  else if (isDripWire) duration = dripWireDuration(productName);\n  else if (isDripClient) duration = dripClientApkmodDuration(productName);
+  else if (isDripWire) duration = dripWireDuration(productName);
+  else if (isDripClient) duration = dripClientApkmodDuration(productName);
   else if (isAimHack) duration = aimHackDuration(productName);
   else if (isBalaMods) duration = balaModsDuration(productName);
   const usesSupplier = isDripWire || isDripClient || isAimHack || isBalaMods || isPrimeHook || isSilentXFF || isSilentCheatNonroot || isXrag || isPhantomTroll;
@@ -2205,7 +2207,7 @@ app.post("/api/orders", async (req, res) => {
     return res.status(400).json({ error: "Is product ki price admin panel mein sahi set karein." });
   }
 
-  const isDripWire = /^DRIP Wire - /i.test(product.name || "");\n  const isDripClient = /dripclient\\s*apkmod/i.test(product.name || "");
+  const isDripWire = /^DRIP Wire - /i.test(product.name || "");\n  const isDripClient = /dripclient\s*apkmod/i.test(product.name || "");
   const isAimHack = /^AIM HACK FF(?: - |$)/i.test(product.name || "");
    const isBalaMods = /bala\s*mods/i.test(product.name || "");
   const isPrimeHook = /prime\s*hook/i.test(product.name || "");
@@ -2363,7 +2365,10 @@ app.get("/api/admin/product-health-check", isAdmin, async (req, res) => {
       } else if (/bala\s*mods/i.test(name)) {
         supplierId = "136"; duration = balaModsDuration(name); automatic = true;
       }
-      } else if (/dripclient\\s*apkmod/i.test(name)) {\n        supplierId = "62"; duration = dripClientApkmodDuration(name); automatic = true;\n      }\n      let status, detail;
+      } else if (/dripclient\s*apkmod/i.test(name)) {
+        supplierId = "62"; duration = dripClientApkmodDuration(name); automatic = true;
+      }
+      let status, detail;
       if (!automatic) { status = "manual"; detail = "No automatic supplier mapping detected; manual/download-link product or mapping needed."; }
       else if (!credentialsReady) { status = "config_error"; detail = "Supplier credentials appear missing; no supplier call was made."; }
       else if (!duration) { status = "duration_error"; detail = "Product name duration does not match configured supplier duration."; }
