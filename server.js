@@ -1464,7 +1464,7 @@ function silentXFFDuration(productName) {
   if (!/^silent\s*x\s*ff(?:\s+all)?(?:\s*-|$)/i.test(name)) return null;
   const hours = name.match(/(?:^|\s-\s)(1|3|6|12)\s*hours?/i);
   if (hours) return hours[1] + " Hours";
-  const days = name.match(/(?:^|\s-\s)(1|7|30)\s*days?/i);
+  const days = name.match(/(?:^|\s-\s)(1|3|7|30)\s*days?/i);
   if (days) return days[1] + " Days";
   return null;
 }
