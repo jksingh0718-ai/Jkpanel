@@ -603,16 +603,21 @@ small{color:#a6b2c0}
  #productHealthResults .health-stats{display:flex;gap:5px;flex-wrap:wrap}
  #productHealthResults .health-stat{font-size:11px;padding:4px 7px;border-radius:7px;background:#1b2637;color:#dce7f5}
  #productHealthResults .health-note{font-size:11px;line-height:1.4;opacity:.8;margin:8px 0}
- #productHealthResults .health-list{display:grid;gap:5px}
- #productHealthResults .health-row{padding:8px 9px;border:1px solid #243144;border-radius:9px;background:#111b2a}
- #productHealthResults .health-row-top{display:flex;align-items:flex-start;justify-content:space-between;gap:7px}
- #productHealthResults .health-name{font-size:12px;line-height:1.35;overflow-wrap:anywhere;flex:1}
- #productHealthResults .health-badge{font-size:9px;font-weight:700;white-space:nowrap;border-radius:5px;padding:4px 5px}
- #productHealthResults .health-ok{background:#123b2c;color:#80e5b2}
- #productHealthResults .health-manual{background:#332b17;color:#f5d47a}
- #productHealthResults .health-warn{background:#451e29;color:#ffabb8}
- #productHealthResults .health-meta{font-size:10px;opacity:.75;margin-top:4px;overflow-wrap:anywhere}
- #productHealthResults .health-detail{font-size:10px;line-height:1.35;margin-top:4px;color:#ffc4cb}
+ #productHealthResults .health-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:9px}
+ #productHealthResults .health-row{padding:11px;border:1px solid #d7e0ea;border-radius:12px;background:#fff;color:#172334;box-shadow:0 2px 7px #1723340a}
+ #productHealthResults .health-row-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+ #productHealthResults .health-name{font-size:13px;line-height:1.35;overflow-wrap:anywhere;flex:1;color:#172334}
+ #productHealthResults .health-badge{font-size:9px;font-weight:800;white-space:nowrap;border-radius:6px;padding:5px 7px;letter-spacing:.2px}
+ #productHealthResults .health-ok{background:#d9f7e8;color:#17633f}
+ #productHealthResults .health-manual{background:#fff0c2;color:#7a5200}
+ #productHealthResults .health-warn{background:#ffe0e3;color:#9c2435}
+ #productHealthResults .health-durations{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+ #productHealthResults .health-duration{font-size:11px;line-height:1.2;padding:6px 8px;border-radius:7px;border:1px solid #dce4ed}
+ #productHealthResults .duration-ok{background:#e6f8ee;border-color:#b7e7cb;color:#17633f}
+ #productHealthResults .duration-manual{background:#fff6dc;border-color:#f0d990;color:#795300}
+ #productHealthResults .duration-warn{background:#fff0f1;border-color:#f2bec5;color:#9c2435}
+ #productHealthResults .health-meta{font-size:10px;color:#627186;margin-top:7px;overflow-wrap:anywhere}
+ #productHealthResults .health-detail{font-size:10px;line-height:1.35;margin:7px 0 0;color:#9c2435}
  </style>
  <button type="button" id="showProductForm" style="margin:10px 0">＋ Add Product</button>
 <div id="productEditor" hidden><h3 style="margin-top:16px">Add / Edit Product</h3>
@@ -934,39 +939,40 @@ function adminProductNameInfo(name){
 document.getElementById("testAllProducts")?.addEventListener("click", async () => {
  const button=document.getElementById("testAllProducts"), root=document.getElementById("productHealthResults");
  if(!button||!root)return;
- button.disabled=true; button.textContent="Checking…";
- root.replaceChildren();
- const loading=document.createElement("p");loading.className="health-note";loading.textContent="Checking setup safely — no purchase or wallet deduction.";root.appendChild(loading);
- try {
-  const report=await api("/api/admin/product-health-check");
-  root.replaceChildren();
+ button.disabled=true;button.textContent="Checking…";root.replaceChildren();
+ const loading=document.createElement("p");loading.className="health-note";loading.textContent="Checking setup — no purchase or wallet deduction.";root.appendChild(loading);
+ try{
+  const report=await api("/api/admin/product-health-check");root.replaceChildren();
   const panel=document.createElement("div");panel.className="health-panel";
-  const heading=document.createElement("div");heading.className="health-summary";
-  const total=document.createElement("strong");total.textContent=report.total+" products checked";heading.appendChild(total);
+  const head=document.createElement("div");head.className="health-summary";
+  const total=document.createElement("strong");total.textContent=report.total+" plans checked";head.appendChild(total);
   const stats=document.createElement("div");stats.className="health-stats";
-  [["Ready",report.summary.mapping_ok],["Config",report.summary.config_error],["Duration",report.summary.duration_error],["Manual",report.summary.manual]].forEach(([label,count])=>{
-   const item=document.createElement("span");item.className="health-stat";item.textContent=label+" "+count;stats.appendChild(item);
-  });
-  panel.append(heading,stats);
-  const note=document.createElement("p");note.className="health-note";note.textContent="Setup check only. Supplier stock and key validity are not tested.";panel.appendChild(note);
+  [["Setup OK",report.summary.mapping_ok],["Fix needed",report.summary.config_error+report.summary.duration_error],["Manual",report.summary.manual]].forEach(([label,n])=>{const s=document.createElement("span");s.className="health-stat";s.textContent=label+" · "+n;stats.appendChild(s)});
+  panel.append(head,stats);
+  const note=document.createElement("p");note.className="health-note";note.textContent="Grouped by product. Setup check only — key validity is not tested.";panel.appendChild(note);
+  const groups=new Map();
+  (report.products||[]).forEach(p=>{const info=adminProductNameInfo(p.name);if(!groups.has(info.base))groups.set(info.base,[]);groups.get(info.base).push({...p,duration:info.duration!=="Standard"?info.duration:(p.duration||"Standard")})});
   const list=document.createElement("div");list.className="health-list";
-  (report.products||[]).forEach(p=>{
-   const row=document.createElement("div");row.className="health-row";
+  groups.forEach((plans,name)=>{
+   const row=document.createElement("section");row.className="health-row";
    const top=document.createElement("div");top.className="health-row-top";
-   const title=document.createElement("strong");title.className="health-name";title.textContent=p.name;
-   const badge=document.createElement("span");badge.className="health-badge "+(p.status==="mapping_ok"?"health-ok":p.status==="manual"?"health-manual":"health-warn");
-   badge.textContent=p.status==="mapping_ok"?"SETUP OK":p.status==="manual"?"MANUAL":p.status==="config_error"?"CONFIG ERROR":"DURATION ERROR";
-   top.append(title,badge);
-   const meta=document.createElement("div");meta.className="health-meta";
-   meta.textContent=(p.supplier_id?"PID "+p.supplier_id:"No supplier PID")+(p.duration?" · "+p.duration:"")+(p.published?"":" · Hidden");
-   row.append(top,meta);
-   if(p.status!=="mapping_ok"){const msg=document.createElement("div");msg.className="health-detail";msg.textContent=p.status==="manual"?"Automatic supplier mapping not detected.":p.status==="config_error"?"Supplier credentials may be missing.":"Product duration does not match configured supplier duration.";row.appendChild(msg);}
+   const title=document.createElement("strong");title.className="health-name";title.textContent=name;
+   const bad=plans.filter(p=>p.status!=="mapping_ok");
+   const badge=document.createElement("span");badge.className="health-badge "+(bad.length===0?"health-ok":bad.every(p=>p.status==="manual")?"health-manual":"health-warn");
+   badge.textContent=bad.length===0?"SETUP OK":bad.every(p=>p.status==="manual")?"MANUAL":"CHECK";
+   top.append(title,badge);row.appendChild(top);
+   const chips=document.createElement("div");chips.className="health-durations";
+   plans.forEach(p=>{const chip=document.createElement("span");chip.className="health-duration "+(p.status==="mapping_ok"?"duration-ok":p.status==="manual"?"duration-manual":"duration-warn");chip.textContent=p.duration;chip.title=p.detail;chips.appendChild(chip)});
+   row.appendChild(chips);
+   const issues=plans.filter(p=>p.status!=="mapping_ok");
+   if(issues.length){const detail=document.createElement("p");detail.className="health-detail";detail.textContent=[...new Set(issues.map(p=>p.status==="manual"?"Supplier mapping not detected":p.status==="config_error"?"Supplier credentials may be missing":"Duration mapping needs fixing"))].join(" · ");row.appendChild(detail)}
+   const ids=[...new Set(plans.map(p=>p.supplier_id).filter(Boolean))];
+   if(ids.length){const meta=document.createElement("div");meta.className="health-meta";meta.textContent="Supplier PID "+ids.join(", ");row.appendChild(meta)}
    list.appendChild(row);
   });
   panel.appendChild(list);root.appendChild(panel);
- } catch(e) {
-  root.replaceChildren();const err=document.createElement("p");err.className="health-note";err.textContent="Check failed: "+(e.message||"Unknown error");root.appendChild(err);
- } finally {button.disabled=false;button.textContent="✓ Test All Products";}
+ }catch(e){root.replaceChildren();const err=document.createElement("p");err.className="health-note";err.textContent="Check failed: "+(e.message||"Unknown error");root.appendChild(err)}
+ finally{button.disabled=false;button.textContent="✓ Test All Products"}
 });
 
 async function loadProducts(){
