@@ -2365,7 +2365,6 @@ app.get("/api/admin/product-health-check", isAdmin, async (req, res) => {
         supplierId = "133"; duration = aimHackDuration(name); automatic = true;
       } else if (/bala\s*mods/i.test(name)) {
         supplierId = "136"; duration = balaModsDuration(name); automatic = true;
-      }
       } else if (/dripclient\s*apkmod/i.test(name)) {
         supplierId = "62"; duration = dripClientApkmodDuration(name); automatic = true;
       }
