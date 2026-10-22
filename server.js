@@ -1422,8 +1422,8 @@ function dripWireDuration(productName) {
 }
 function dripClientApkmodDuration(productName) {
   const name = String(productName || "").trim().replace(/\s+/g, " ");
-  if (!/dripclient\s*apkmod/i.test(name)) return null;
-  const match = name.match(/(?:^|\s-\s)(1|3|7|15|30)\s*da?ys?\s+nonroot$/i);
+  if (!/dripclient.*apkmod/i.test(name)) return null;
+  const match = name.match(/(?:^|\s-\s)(1|3|7|15|30)\s*days?\s+nonroot$/i);
   return match ? match[1] + " DaYS NONROOT" : null;
 }
 function aimHackDuration(productName) {
@@ -1605,7 +1605,7 @@ app.patch("/api/admin/orders/:id/payment", isAdmin, async (req, res) => {
 
   const productName = existing["Product_name"] || "";
   const isDripWire = /^DRIP Wire - /i.test(productName);
-  const isDripClient = /dripclient\s*apkmod/i.test(productName);
+  const isDripClient = /dripclient.*apkmod/i.test(productName);
   const isAimHack = /^AIM HACK FF(?: - |$)/i.test(productName);
   const isBalaMods = /bala\s*mods/i.test(productName);
   const isPrimeHook = /prime\s*hook/i.test(productName);
@@ -2208,7 +2208,7 @@ app.post("/api/orders", async (req, res) => {
   }
 
   const isDripWire = /^DRIP Wire - /i.test(product.name || "");
-  const isDripClient = /dripclient\s*apkmod/i.test(product.name || "");
+  const isDripClient = /dripclient.*apkmod/i.test(product.name || "");
   const isAimHack = /^AIM HACK FF(?: - |$)/i.test(product.name || "");
    const isBalaMods = /bala\s*mods/i.test(product.name || "");
   const isPrimeHook = /prime\s*hook/i.test(product.name || "");
@@ -2365,7 +2365,7 @@ app.get("/api/admin/product-health-check", isAdmin, async (req, res) => {
         supplierId = "133"; duration = aimHackDuration(name); automatic = true;
       } else if (/bala\s*mods/i.test(name)) {
         supplierId = "136"; duration = balaModsDuration(name); automatic = true;
-      } else if (/dripclient\s*apkmod/i.test(name)) {
+      } else if (/dripclient.*apkmod/i.test(name)) {
         supplierId = "62"; duration = dripClientApkmodDuration(name); automatic = true;
       }
       let status, detail;
