@@ -2225,6 +2225,24 @@ app.post("/api/orders", async (req, res) => {
     const supplierProductId = isSilentCheatNonroot ? "148" : (isSilentXFF ? "171" : (isPrimeHook ? "48" : (isXrag ? "149" : (isPhantomTroll ? "133" : (isAimHack ? "133" : (isBalaMods ? "136" : (isDripClient ? "62" : "150")))))));
     if (!duration) return res.status(400).json({ error: "Product duration configured nahi hai." });
 
+    // Give customers a clear deposit redirect before attempting the atomic purchase.
+    // The RPC below remains the final authority for charging the wallet.
+    const { data: currentWallet, error: currentWalletError } = await supabase
+      .from("wallets")
+      .select("balance")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (currentWalletError) {
+      console.error("Wallet precheck failed:", currentWalletError.message);
+      return res.status(500).json({ error: "Wallet balance check nahi ho saka. Thodi der baad dobara try karein." });
+    }
+    if (!currentWallet) {
+      return res.status(402).json({ error: "WALLET_NOT_FOUND: Wallet nahi mila. Pehle wallet mein deposit add karein." });
+    }
+    if (Number(currentWallet.balance || 0) < amount) {
+      return res.status(402).json({ error: "INSUFFICIENT_WALLET_BALANCE: Wallet balance kam hai. Pehle wallet mein deposit karein." });
+    }
+
     const { data: purchase, error: walletError } = await supabase.rpc("create_wallet_product_order", {
       p_user_id: user.id,
       p_product_id: product.id,
