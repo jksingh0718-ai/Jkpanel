@@ -2040,7 +2040,17 @@ async function buyProduct(product){
         '\\nProduct: '+result.order.product_name+'\\nAmount: ₹'+Number(result.order.amount).toFixed(2)+
         '\\nStatus: Pending admin review. Payment verified hone tak order complete nahi hoga.');
     }
-  }catch(error){showPurchaseToast(error.message||'Order submit nahi ho saka. Dobara try karein.',true,4200);}
+  }catch(error){
+    const purchaseError=String(error?.message||'');
+    if(/WALLET_NOT_FOUND|INSUFFICIENT_WALLET_BALANCE|wallet.{0,35}(not found|nahi mila|kam hai|insufficient|low)|balance.{0,30}(kam|insufficient|low)/i.test(purchaseError)){
+      showPurchaseToast('Wallet balance nahi hai. Deposit page khol rahe hain…',true,2500);
+      deposit();
+      const status=document.getElementById('depositStatus');
+      if(status)status.textContent='Product kharidne ke liye pehle wallet mein balance add karein.';
+    }else{
+      showPurchaseToast(purchaseError||'Order submit nahi ho saka. Dobara try karein.',true,4200);
+    }
+  }
   finally{
     buttons.forEach(button=>{button.disabled=false;button.textContent=previousLabels.get(button)||'BUY';});
     if(purchaseButton){purchaseButton.disabled=false;purchaseButton.textContent=previousPurchaseLabel||'PURCHASE KEY';}
