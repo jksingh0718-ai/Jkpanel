@@ -2578,7 +2578,7 @@ app.get("/api/admin/resellers", isAdmin, async (req, res) => {
     const [usersResult, accountsResult, settingsResult, productsResult, resellerPricesResult] = await Promise.all([
       supabase.auth.admin.listUsers({ page: 1, perPage: 1000 }),
       supabase.from("reseller_accounts").select("user_id, is_active, activation_price, activated_at, created_at"),
-      supabase.from("reseller_settings").select("activation_price").eq("id", 1).maybeSingle(),
+      supabase.from("reseller_settings").select("activation_price, whatsapp_group_url").eq("id", 1).maybeSingle(),
       supabase.from("products").select("id, name, price, published").order("name"),
       supabase.from("reseller_prices").select("product_id, price").is("reseller_user_id", null)
     ]);
