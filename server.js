@@ -2160,6 +2160,23 @@ app.patch("/api/admin/deposit-requests/:id", isAdmin, async (req, res) => {
 });
 
 
+app.get("/api/check-update-links", async (req, res) => {
+  if (!supabase) return res.status(503).json({ error: "Database is not configured" });
+  const { data, error } = await supabase.from("products")
+    .select("name, download_url")
+    .not("download_url", "is", null)
+    .order("name", { ascending: true });
+  if (error) {
+    console.error("Check-update links load failed:", error.message);
+    return res.status(500).json({ error: "Check Update File links load nahi ho sake." });
+  }
+  const links = (data || [])
+    .map(p => ({ name: String(p.name || "Product"), download_url: String(p.download_url || "").trim() }))
+    .filter(p => /^https:\/\//i.test(p.download_url));
+  res.set("Cache-Control", "no-store, max-age=0");
+  res.json({ links });
+});
+
 app.get("/api/products", async (req, res) => {
   if (!supabase) return res.status(503).json({ error: "Database is not configured" });
   const { data, error } = await supabase.from("products")
