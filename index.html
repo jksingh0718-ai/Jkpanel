@@ -1584,8 +1584,10 @@ function createProductHelpButtons(products=[]){
   label.textContent='LOADING LINKS…';
   profile.disabled=true;
   try{
-   const response=await fetch('/api/check-update-links',{cache:'no-store',headers:{'Accept':'application/json'}});
-   const payload=await response.json();
+   const response=await fetch('https://jkpanel-backend.onrender.com/api/check-update-links',{cache:'no-store',headers:{'Accept':'application/json'}});
+   const raw=await response.text();
+   let payload={};
+   try{payload=raw?JSON.parse(raw):{};}catch{throw new Error('Update link server response sahi nahi hai. Backend deployment complete hone ke baad dobara try karein.');}
    if(!response.ok)throw new Error(payload.error||'Links load nahi ho sake.');
    const available=Array.isArray(payload.links)?payload.links.filter(p=>p&&String(p.download_url||'').trim()&&/^https:\/\//i.test(String(p.download_url).trim())):[];
    const uniqueLinks=[...new Map(available.map(p=>[String(p.download_url).trim(),{name:p.name,download_url:String(p.download_url).trim()}])).values()];
@@ -1751,7 +1753,7 @@ async function loadShopProducts(){
     card.append(title,createProductHelpButtons(),purchase,plans);
     root.appendChild(card);
    }
-  // BALA MODS ~FF NONROOT: one card, with duration/price options inside the purchase toggle.
+  // BALA MODS ~V6 FF NONROOT: one card, with duration/price options inside the purchase toggle.
   if(balaProducts.length){
    const card=document.createElement('article');
    card.className='bala-product-card';
@@ -1761,8 +1763,8 @@ async function loadShopProducts(){
    const videoProduct=balaProducts.find(p=>p.video_url);
    if(imageProduct?.image_url){
     if(videoProduct?.video_url){
-     const thumb=document.createElement('button');thumb.type='button';thumb.className='product-video-thumb';thumb.setAttribute('aria-label','Play BALA MODS FF NONROOT video');thumb.dataset.videoUrl=videoProduct.video_url;thumb.dataset.productTitle='BALA MODS ~FF NONROOT';thumb.onclick=()=>openProductVideo(videoProduct.video_url,'BALA MODS ~FF NONROOT',thumb);
-     const img=document.createElement('img');img.src=imageProduct.image_url;img.alt='BALA MODS ~FF NONROOT video preview';img.loading='eager';img.onerror=()=>{img.style.display='none';};
+     const thumb=document.createElement('button');thumb.type='button';thumb.className='product-video-thumb';thumb.setAttribute('aria-label','Play BALA MODS FF NONROOT video');thumb.dataset.videoUrl=videoProduct.video_url;thumb.dataset.productTitle='BALA MODS ~V6 FF NONROOT';thumb.onclick=()=>openProductVideo(videoProduct.video_url,'BALA MODS ~V6 FF NONROOT',thumb);
+     const img=document.createElement('img');img.src=imageProduct.image_url;img.alt='BALA MODS ~V6 FF NONROOT video preview';img.loading='eager';img.onerror=()=>{img.style.display='none';};
      const play=document.createElement('span');play.className='product-video-play';play.textContent='▶';
      const hint=document.createElement('span');hint.className='product-video-hint';hint.textContent='TAP TO PLAY VIDEO';
      thumb.append(img,play,hint);card.appendChild(thumb);
