@@ -86,7 +86,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:8px;bor
 .popup-card button{width:100%;padding:12px;margin-top:12px;background:#10b981;color:#04130b}
 #popupDefaultClose{background:#dc2626!important;color:#fff!important}
 #createPaymentBtn{background:#10b981!important;color:#04130b!important}
-.whatsapp-float{position:fixed;right:18px;bottom:64px;width:50px;height:50px;border-radius:50%;background:#25d366;color:white;text-decoration:none;display:flex;align-items:center;justify-content:center;font-size:25px;z-index:50}
+.telegram-float{position:fixed;right:18px;bottom:64px;width:50px;height:50px;border-radius:50%;background:#229ED9;color:white;text-decoration:none;display:flex;align-items:center;justify-content:center;font-size:25px;z-index:50}
 footer{position:fixed;bottom:0;left:0;right:0;text-align:center;background:#111827;border-top:1px solid #263247;padding:12px;color:#94a3b8;font-size:11px}
 @media(max-width:360px){.contact-btn,.deposit-btn{padding:8px;font-size:10px}.brand{font-size:19px}}
 
@@ -376,7 +376,7 @@ footer{background:linear-gradient(90deg,#101b35,#241544);border-top:1px solid #4
   <a class="menu-item" href="#" onclick="openDepositHistoryPanel();return false">Deposit History</a>
   <a class="menu-item" href="#" onclick="openOrderHistoryPanel();return false">Order History</a>
   <a class="menu-item" href="https://wa.me/917645957071" target="_blank" rel="noopener">Contact Support</a>
-  <a class="menu-item" href="https://whatsapp.com/channel/0029VbE3msh47Xe5PEWcBW3b" target="_blank" rel="noopener">📢 JOIN WHATSAPP CHANNEL</a>
+  <a class="menu-item" href="https://t.me/jkpanelshop" target="_blank" rel="noopener">✈️ JOIN TELEGRAM CHANNEL</a>
   <a class="menu-item" id="menuLogout" href="#" onclick="logoutCustomer();closeMenu();return false" style="display:none">LOG OUT</a>
 
 </nav>
@@ -395,7 +395,7 @@ footer{background:linear-gradient(90deg,#101b35,#241544);border-top:1px solid #4
   <h3>Welcome to JK PANEL SHOP!</h3>
   <button id="dashboardAuthButton" type="button" onclick="openAuth('login')" style="display:none;width:100%;margin:0 0 10px;padding:13px;background:linear-gradient(120deg,#38bdf8,#6366f1,#a855f7);color:#fff;border:1px solid #93c5fd;border-radius:12px;font-weight:900;box-shadow:0 5px 16px #6366f155">🔐 LOGIN / REGISTER</button>
   <button class="action" onclick="deposit()">+ ADD WALLET BALANCE</button>
-  <a class="action purple" href="https://whatsapp.com/channel/0029VbE3msh47Xe5PEWcBW3b" target="_blank" rel="noopener">📢 JOIN CHANNEL</a>
+  <a class="action purple" href="https://t.me/jkpanelshop" target="_blank" rel="noopener">✈️ JOIN TELEGRAM CHANNEL</a>
 </div>
 
 <div id="resellerPromo" class="box" style="border:1px solid #f59e0b;background:#211807;margin:12px 0">
@@ -421,7 +421,7 @@ footer{background:linear-gradient(90deg,#101b35,#241544);border-top:1px solid #4
   <a class="action" href="https://wa.me/917645957071?text=Hello%20JK%20PANEL%20SHOP%2C%20mujhe%20help%20chahiye." target="_blank" rel="noopener">CONTACT ON WHATSAPP</a>
 </div>
 
-<a class="whatsapp-float" href="https://whatsapp.com/channel/0029VbE3msh47Xe5PEWcBW3b" target="_blank" rel="noopener" aria-label="Join WhatsApp channel"><svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M16 3.2A12.6 12.6 0 0 0 5.2 22.3L3.5 28.5l6.4-1.7A12.6 12.6 0 1 0 16 3.2Zm0 22.9a10.2 10.2 0 0 1-5.2-1.4l-.4-.2-3.8 1 1-3.7-.3-.4A10.2 10.2 0 1 1 16 26.1Zm5.6-7.6c-.3-.2-1.8-.9-2.1-1s-.5-.2-.7.2-.8 1-.9 1.1-.3.2-.6.1a8.3 8.3 0 0 1-2.5-1.5 9.2 9.2 0 0 1-1.7-2.1c-.2-.3 0-.5.1-.6l.5-.6c.2-.2.2-.3.3-.5s0-.4 0-.5-.7-1.7-1-2.3c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4s-1.1 1.1-1.1 2.6 1.1 3 1.2 3.2a11.8 11.8 0 0 0 4.5 4c.6.3 1.1.5 1.5.6.6.2 1.2.2 1.7.1.5-.1 1.8-.7 2-1.4s.3-1.3.2-1.4-.2-.2-.5-.4Z"/></svg></a>
+<a class="telegram-float" href="https://t.me/jkpanelshop" target="_blank" rel="noopener" aria-label="Join Telegram channel"><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M21.8 4.2 18.5 20c-.25 1.12-.9 1.4-1.83.88l-5.05-3.72-2.44 2.35c-.27.27-.5.5-1.02.5l.36-5.14 9.36-8.45c.41-.36-.09-.56-.64-.2L5.67 13.4.7 11.85c-1.08-.34-1.1-1.08.23-1.6L20.37 2.7c.9-.33 1.69.22 1.43 1.5Z"/></svg></a>
 
 <div id="popup" onclick="if(event.target===this)closePopup()">
   <div class="popup-card">
