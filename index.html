@@ -1590,7 +1590,10 @@ function createProductHelpButtons(products=[]){
    try{payload=raw?JSON.parse(raw):{};}catch{throw new Error('Update link server response sahi nahi hai. Backend deployment complete hone ke baad dobara try karein.');}
    if(!response.ok)throw new Error(payload.error||'Links load nahi ho sake.');
    const available=Array.isArray(payload.links)?payload.links.filter(p=>p&&String(p.download_url||'').trim()&&/^https:\/\//i.test(String(p.download_url).trim())):[];
-   const uniqueLinks=[...new Map(available.map(p=>[String(p.download_url).trim(),{name:p.name,download_url:String(p.download_url).trim()}])).values()];
+   // Each product card should open only its own update link(s), not a list of every shop product.
+   const cardNames=Array.isArray(products)?products.map(p=>String(p?.name||'').trim().toLowerCase()).filter(Boolean):[];
+   const cardLinks=cardNames.length?available.filter(link=>cardNames.includes(String(link.name||'').trim().toLowerCase())):available;
+   const uniqueLinks=[...new Map(cardLinks.map(p=>[String(p.download_url).trim(),{name:p.name,download_url:String(p.download_url).trim()}])).values()];
    if(uniqueLinks.length===1){window.open(uniqueLinks[0].download_url,'_blank','noopener,noreferrer');return;}
    if(uniqueLinks.length>1){
     const choices=uniqueLinks.map((p,i)=>(i+1)+'. '+p.name+' — '+p.download_url).join('\n');
@@ -1778,7 +1781,7 @@ async function loadShopProducts(){
     video.style.cssText='display:block;width:100%;height:clamp(220px,62vw,360px);object-fit:contain;background:#030712;border-radius:12px;margin-bottom:14px';
     card.appendChild(video);
    }
-   const title=document.createElement('h4');title.textContent='BALA MODS ~FF NONROOT';title.style.cssText='font-size:20px;color:#f8fafc;margin:4px 0 8px;overflow-wrap:anywhere';
+   const title=document.createElement('h4');title.textContent='BALA MODS ~V6 FF NONROOT';title.style.cssText='font-size:20px;color:#f8fafc;margin:4px 0 8px;overflow-wrap:anywhere';
    const purchase=document.createElement('button');purchase.type='button';purchase.textContent=isResellerCustomer?'BUY RESELLER KEY':'PURCHASE KEY';purchase.setAttribute('aria-expanded','false');
    purchase.style.cssText='display:block;width:100%;padding:13px;background:#10b981;color:#052e16;font-size:13px;border-radius:10px';
    const plans=document.createElement('div');plans.hidden=true;plans.style.cssText='margin-top:12px;display:none';
@@ -1796,7 +1799,7 @@ async function loadShopProducts(){
     buy.onclick=()=>confirmProductPurchase(product);
     row.append(details,buy);plans.appendChild(row);
    });
-   card.append(title,createProductHelpButtons(),purchase,plans);
+   card.append(title,createProductHelpButtons(balaProducts),purchase,plans);
    root.appendChild(card);
   }
 
