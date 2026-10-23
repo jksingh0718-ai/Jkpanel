@@ -1579,12 +1579,27 @@ function createProductHelpButtons(products=[]){
  const icon=document.createElementNS('http://www.w3.org/2000/svg','svg');icon.setAttribute('viewBox','0 0 24 24');icon.setAttribute('width','15');icon.setAttribute('height','15');icon.setAttribute('aria-hidden','true');icon.style.cssText='width:15px;height:15px;flex:0 0 15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round';
  const shaft=document.createElementNS('http://www.w3.org/2000/svg','path');shaft.setAttribute('d','M12 3v12m-5-5 5 5 5-5M5 17v3h14v-3');icon.appendChild(shaft);
  const label=document.createElement('span');label.textContent='CHECK UPDATE FILE';label.style.cssText='display:block;overflow-wrap:anywhere';profile.append(icon,label);
- profile.onclick=()=>{
-  const available=(Array.isArray(products)?products:[]).filter(p=>String(p.download_url||'').trim()&&/^https:\/\//i.test(String(p.download_url).trim()));
-  const uniqueLinks=[...new Set(available.map(p=>String(p.download_url).trim()))];
-  if(uniqueLinks.length===1&&uniqueLinks[0]){window.open(uniqueLinks[0],'_blank','noopener,noreferrer');return;}
-  if(uniqueLinks.length>1){const choices=available.map((p,i)=>(i+1)+'. '+p.name+' — '+p.download_url).join('\n');const answer=prompt('Kaunsa product file kholna hai? Number enter karein:\n'+choices);const chosen=available[Number(answer)-1];if(chosen)window.open(chosen.download_url,'_blank','noopener,noreferrer');return;}
-  if(typeof showPopup==='function')showPopup('Check Update File','Is product ka download link admin panel mein abhi add nahi hai. Admin → Products mein link save karein.');
+ profile.onclick=async()=>{
+  const originalLabel=label.textContent;
+  label.textContent='LOADING LINKS…';
+  profile.disabled=true;
+  try{
+   const response=await fetch('/api/check-update-links',{cache:'no-store',headers:{'Accept':'application/json'}});
+   const payload=await response.json();
+   if(!response.ok)throw new Error(payload.error||'Links load nahi ho sake.');
+   const available=Array.isArray(payload.links)?payload.links.filter(p=>p&&String(p.download_url||'').trim()&&/^https:\/\//i.test(String(p.download_url).trim())):[];
+   const uniqueLinks=[...new Map(available.map(p=>[String(p.download_url).trim(),{name:p.name,download_url:String(p.download_url).trim()}])).values()];
+   if(uniqueLinks.length===1){window.open(uniqueLinks[0].download_url,'_blank','noopener,noreferrer');return;}
+   if(uniqueLinks.length>1){
+    const choices=uniqueLinks.map((p,i)=>(i+1)+'. '+p.name+' — '+p.download_url).join('\n');
+    const answer=prompt('Kaunsa product ka update link kholna hai? Number enter karein:\n'+choices);
+    const chosen=uniqueLinks[Number(answer)-1];
+    if(chosen)window.open(chosen.download_url,'_blank','noopener,noreferrer');
+    return;
+   }
+   if(typeof showPopup==='function')showPopup('Check Update File','Admin → Products mein us product ka Check Update File link save karein. Link save hone ke baad yahan automatically load hoga.');
+  }catch(e){if(typeof showPopup==='function')showPopup('Check Update File',e.message||'Update link load nahi ho saka. Dobara try karein.');}
+  finally{label.textContent=originalLabel;profile.disabled=false;}
  };
  wrap.append(profile);
  const feedback=document.createElement('button');feedback.type='button';feedback.setAttribute('aria-label','Check Video/Feedback');
