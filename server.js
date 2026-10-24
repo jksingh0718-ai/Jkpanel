@@ -277,8 +277,8 @@ app.post("/api/auth/forgot-password", async (req, res) => {
   if (!authClient) return res.status(503).json({ error: "Authentication is not configured" });
   const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: "Valid email address enter karein." });
-  const { error } = await authClient.auth.resetPasswordForEmail(email, { redirectTo: "https://jkpanel.shop/" });
-  if (error) { console.error("Password reset request failed:", error.message); return res.status(400).json({ error: "Password reset email nahi bhej paaye. Supabase email settings check karein." }); }
+  const { error } = await authClient.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
+  if (error) { console.error("Password reset OTP request failed:", error.message); return res.status(400).json({ error: "OTP email nahi bhej paaye. Supabase email/SMTP settings check karein." }); }
   return res.json({ success: true, message: "Agar is email par account hai, password reset instructions bhej di jayengi. Inbox aur spam folder check karein." });
 });
 
@@ -287,7 +287,7 @@ app.post("/api/auth/verify-reset-otp", async (req, res) => {
   const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
   const token = typeof req.body?.token === "string" ? req.body.token.trim() : "";
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !/^\d{6}$/.test(token)) return res.status(400).json({ error: "Valid email aur 6-digit OTP enter karein." });
-  const { data, error } = await authClient.auth.verifyOtp({ email, token, type: "recovery" });
+  const { data, error } = await authClient.auth.verifyOtp({ email, token, type: "email" });
   if (error || !data?.session?.access_token) return res.status(400).json({ error: "OTP galat hai ya expire ho gaya. Naya OTP mangwayein." });
   return res.json({ success: true, access_token: data.session.access_token });
 });
