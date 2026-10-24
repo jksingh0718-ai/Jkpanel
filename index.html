@@ -534,6 +534,7 @@ function openAuth(mode='login'){
     '<div class="auth-links">'+
       ''+
       '<span class="muted">'+(isRegister?'Already a user?':'New User ?')+'</span> <a href="#" onclick="openAuth(\''+(isRegister?'login':'register')+'\');return false">'+(isRegister?'Login':'Create Account')+'</a>'+
+      (isRegister?'':'<br><a href="#" style="display:inline-block;margin-top:12px;color:#67e8f9;font-weight:700" onclick="forgotCustomerPassword();return false">Forgot Password?</a>')+
     '</div><div class="auth-footer">© 2026 JK PANEL SYSTEM</div>';
   const card=document.querySelector('#popup .popup-card');
   const oldClose=card.querySelector('.auth-close');if(oldClose)oldClose.remove();
