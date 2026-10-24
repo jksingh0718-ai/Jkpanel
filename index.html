@@ -560,13 +560,13 @@ function showForgotPasswordScreen(){
   const currentEmail=document.getElementById('authEmail')?.value.trim()||'';
   const root=document.getElementById('popupMessage');
   if(!root)return;
-  root.innerHTML='<div class="auth-shield" aria-hidden="true">🔑</div><h3><span style="color:#f8fafc">PASSWORD</span> <span style="color:#00e5f3">RESET</span></h3><div class="auth-subtitle" style="letter-spacing:2px">PASSWORD CHANGE WITH GMAIL OTP</div><input class="auth-input" id="resetRequestEmail" type="email" autocomplete="email" placeholder="ENTER USERNAME OR EMAIL" value="'+currentEmail.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'"><p id="authStatus" aria-live="polite" style="color:#cbd5e1;font-size:12px;line-height:1.5;text-align:center"></p><button class="auth-main-btn" type="button" onclick="forgotCustomerPassword()">VERIFY &amp; SEND OTP</button><div class="auth-links"><a href="#" onclick="showCurrentPasswordChange();return false">PASSWORD CHANGE WITH CURRENT PASSWORD ➜</a><br><a href="#" onclick="openAuth(\'login\');return false">BACK TO LOGIN</a></div>';
+  root.innerHTML='<div class="auth-shield" aria-hidden="true">🔑</div><h3><span style="color:#f8fafc">PASSWORD</span> <span style="color:#00e5f3">RESET</span></h3><div class="auth-subtitle" style="letter-spacing:2px">PASSWORD CHANGE WITH GMAIL OTP</div><input class="auth-input" id="resetRequestEmail" type="email" autocomplete="email" placeholder="ENTER USERNAME OR EMAIL" value="'+currentEmail.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'"><p id="authStatus" aria-live="polite" style="color:#cbd5e1;font-size:12px;line-height:1.5;text-align:center"></p><button class="auth-main-btn" type="button" onclick="forgotCustomerPassword()">VERIFY &amp; SEND OTP</button><div class="auth-links"><a href="#" onclick="openAuth(\'login\');return false">BACK TO LOGIN</a></div>';
 }
 async function forgotCustomerPassword(){
   const email=document.getElementById('resetRequestEmail')?.value.trim().toLowerCase();
   const status=document.getElementById('authStatus');
   if(!email){if(status)status.textContent='Apna registered Gmail address enter karein.';document.getElementById('resetRequestEmail')?.focus();return;}
-  if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)){if(status)status.textContent='Valid Gmail/email address enter karein.';return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){if(status)status.textContent='Valid Gmail/email address enter karein.';return;}
   if(status)status.textContent='Gmail par 6-digit OTP bheja ja raha hai...';
   try{
     const r=await fetch('https://jkpanel-backend.onrender.com/api/auth/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
