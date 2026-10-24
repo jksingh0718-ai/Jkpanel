@@ -1532,8 +1532,10 @@ async function purchaseDripWireKey({ orderId, userId, productName, duration, sup
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
       "x-master-key": masterKey,
-      "Accept": "application/json"
+      "Accept": "application/json",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     },
+    redirect: "follow",
     body,
     signal: AbortSignal.timeout(25000)
   });
