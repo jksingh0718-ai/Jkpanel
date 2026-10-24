@@ -526,7 +526,7 @@ function openAuth(mode='login'){
     '<label for="authEmail" style="display:block;color:#a1a1aa;font-size:12px;margin-bottom:6px">EMAIL ADDRESS</label>'+
     '<input class="auth-input" id="authEmail" type="email" autocomplete="email" placeholder="EMAIL ADDRESS">'+
     '<label for="authPassword" style="display:block;color:#a1a1aa;font-size:12px;margin-bottom:6px">PASSWORD</label>'+
-    '<input class="auth-input" id="authPassword" type="password" inputmode="numeric" pattern="[0-9]{6,18}" maxlength="18" autocomplete="'+(isRegister?'new-password':'current-password')+'" placeholder="PASSWORD (6–18 DIGITS)">'+
+    '<input class="auth-input" id="authPassword" type="password" inputmode="numeric" pattern="[0-9]{6,18}" maxlength="18" autocomplete="'+(isRegister?'new-password':'current-password')+'" placeholder="'+(isRegister?'PASSWORD (6–18 DIGITS)':'Enter your password')+'">'+
     (isRegister?'<label for="authConfirmPassword" style="display:block;color:#a1a1aa;font-size:12px;margin-bottom:6px">CONFIRM PASSWORD</label><input class="auth-input" id="authConfirmPassword" type="password" inputmode="numeric" pattern="[0-9]{6,18}" maxlength="18" autocomplete="new-password" placeholder="CONFIRM PASSWORD (6–18 DIGITS)">':'')+
     '<p id="authStatus" aria-live="polite"></p>'+
     '<button class="auth-main-btn" type="button" onclick="'+(isRegister?'registerCustomer()':'loginCustomer()')+'">'+(isRegister?'CREATE ACCOUNT':'LOGIN NOW')+'</button>'+
