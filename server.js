@@ -1504,17 +1504,13 @@ function phantomTrollDuration(productName) {
 }
 
 async function purchaseDripWireKey({ orderId, userId, productName, duration, supplierProductId = "150" }) {
-  // Support both the original Banti configuration and the newer variable names.
-  // The original integration used RESELLER_ACCESS_TOKEN as api_key and
-  // BANTI_MASTER_KEY as the x-master-key header.
-  const legacyMasterKey = String(process.env.BANTI_MASTER_KEY || "").trim();
+  // Use the separate master key configured in Render; retain the legacy
+  // BANTI_MASTER_KEY name for backwards compatibility.
   const apiKey = String(
-    legacyMasterKey
-      ? (process.env.RESELLER_ACCESS_TOKEN || process.env.RESELLER_API_KEY || "")
-      : (process.env.RESELLER_API_KEY || "")
+    process.env.RESELLER_API_KEY || process.env.RESELLER_ACCESS_TOKEN || ""
   ).trim();
   const masterKey = String(
-    legacyMasterKey || process.env.RESELLER_ACCESS_TOKEN || ""
+    process.env.X_MASTER_KEY || process.env.BANTI_MASTER_KEY || ""
   ).trim();
   if (!apiKey || !masterKey) {
     throw new Error("Supplier API credentials missing in backend environment.");
