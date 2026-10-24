@@ -293,7 +293,7 @@ async function findAuthUserByEmail(email) {
 app.post("/api/auth/forgot-password", async (req, res) => {
   if (!supabase || !brevoApiKey || !resetPepper) return res.status(503).json({ error: "Password reset email service abhi configure nahi hai." });
   const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
-  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) return res.status(400).json({ error: "Valid email address enter karein." });
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: "Valid email address enter karein." });
   try {
     const user = await findAuthUserByEmail(email);
     // Same response for unknown emails to avoid exposing which accounts exist.
@@ -318,7 +318,7 @@ app.post("/api/auth/forgot-password", async (req, res) => {
         sender: { name: "JK PANEL SHOP", email: "jksingh0718@gmail.com" },
         to: [{ email }],
         subject: "JK PANEL SHOP - Password Reset OTP",
-        textContent: "Aapka JK PANEL SHOP password reset OTP hai: " + otp + "\\n\\nYeh code 10 minute mein expire ho jayega. Agar aapne request nahi ki, is email ko ignore karein.",
+        textContent: "Aapka JK PANEL SHOP password reset OTP hai: " + otp + "\n\nYeh code 10 minute mein expire ho jayega. Agar aapne request nahi ki, is email ko ignore karein.",
         htmlContent: "<div style=\"font-family:Arial,sans-serif;max-width:520px;margin:auto;padding:24px;background:#0b0f19;color:#fff;border-radius:14px\"><h2 style=\"color:#38bdf8\">JK PANEL SHOP</h2><p>Password reset karne ke liye ye OTP enter karein:</p><div style=\"font-size:32px;font-weight:bold;letter-spacing:8px;padding:16px;background:#111827;border-radius:10px;text-align:center\">" + otp + "</div><p>Ye code <b>10 minute</b> mein expire ho jayega. Agar aapne request nahi ki, is email ko ignore karein.</p></div>"
       })
     });
@@ -338,7 +338,7 @@ app.post("/api/auth/verify-reset-otp", async (req, res) => {
   if (!supabase || !resetPepper) return res.status(503).json({ error: "Authentication is not configured" });
   const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
   const token = typeof req.body?.token === "string" ? req.body.token.trim() : "";
-  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || !/^\\d{6}$/.test(token)) return res.status(400).json({ error: "Valid email aur 6-digit OTP enter karein." });
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !/^\d{6}$/.test(token)) return res.status(400).json({ error: "Valid email aur 6-digit OTP enter karein." });
   try {
     const { data: row, error } = await supabase.from("password_reset_otps").select("*").eq("email", email).maybeSingle();
     if (error) throw error;
@@ -368,7 +368,7 @@ app.post("/api/auth/complete-password-reset", async (req, res) => {
   if (!supabase || !resetPepper) return res.status(503).json({ error: "Authentication is not configured" });
   const resetToken = typeof req.body?.accessToken === "string" ? req.body.accessToken : "";
   const password = typeof req.body?.password === "string" ? req.body.password : "";
-  if (!resetToken || !/^[a-f0-9]{64}$/.test(resetToken) || !/^\\d{6,18}$/.test(password)) {
+  if (!resetToken || !/^[a-f0-9]{64}$/.test(resetToken) || !/^\d{6,18}$/.test(password)) {
     return res.status(400).json({ error: "Verified OTP aur 6–18 digit naya password required hai." });
   }
   try {
