@@ -1539,8 +1539,22 @@ async function purchaseDripWireKey({ orderId, userId, productName, duration, sup
   });
   const raw = await response.text();
   let result;
-  try { result = raw ? JSON.parse(raw) : {}; }
-  catch { throw new Error("Supplier returned an invalid response."); }
+  try {
+    result = raw ? JSON.parse(raw) : {};
+  } catch {
+    // Log safe diagnostics only: never log credentials or any key material.
+    const preview = String(raw || "").replace(/(api_key|master[_ -]?key|token|authorization)\s*[:=]\s*[^\s&,<]+/ig, "$1=[redacted]").replace(/\s+/g, " ").slice(0, 180);
+    console.error("Supplier invalid-response diagnostic:", JSON.stringify({
+      productName: String(productName || "").slice(0, 100),
+      supplierProductId: String(supplierProductId),
+      duration: String(duration || "").slice(0, 40),
+      httpStatus: response.status,
+      contentType: String(response.headers.get("content-type") || "").slice(0, 100),
+      bodyLength: raw.length,
+      bodyPreview: preview
+    }));
+    throw new Error("Supplier returned an invalid response (HTTP " + response.status + ").");
+  }
 
   if (!response.ok || result.success === false || result.status === "error" || !Array.isArray(result.keys) || result.keys.length < 1) {
     // Log only response metadata, never credentials or any returned key material.
@@ -2321,7 +2335,13 @@ app.post("/api/orders", async (req, res) => {
       });
     } catch (supplierError) {
       const safeMessage = String(supplierError?.message || "Supplier delivery failed").slice(0, 250);
-      console.error("DRIP Wire wallet purchase delivery failed:", safeMessage);
+      console.error("Supplier wallet purchase delivery failed:", JSON.stringify({
+        productName: String(product.name || "").slice(0, 100),
+        productId: String(product.id || "").slice(0, 80),
+        supplierProductId: String(supplierProductId || "").slice(0, 40),
+        duration: String(duration || "").slice(0, 40),
+        error: safeMessage
+      }));
       const { data: refunded, error: refundError } = await supabase.rpc("refund_wallet_product_order", {
         p_order_id: orderId,
         p_user_id: user.id,
