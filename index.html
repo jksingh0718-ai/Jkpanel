@@ -526,8 +526,8 @@ function openAuth(mode='login'){
     '<label for="authEmail" style="display:block;color:#a1a1aa;font-size:12px;margin-bottom:6px">EMAIL ADDRESS</label>'+
     '<input class="auth-input" id="authEmail" type="email" autocomplete="email" placeholder="EMAIL ADDRESS">'+
     '<label for="authPassword" style="display:block;color:#a1a1aa;font-size:12px;margin-bottom:6px">PASSWORD</label>'+
-    '<input class="auth-input" id="authPassword" type="password" inputmode="numeric" pattern="[0-9]{6,64}" maxlength="64" autocomplete="'+(isRegister?'new-password':'current-password')+'" placeholder="PASSWORD (6–64 DIGITS)">'+
-    (isRegister?'<label for="authConfirmPassword" style="display:block;color:#a1a1aa;font-size:12px;margin-bottom:6px">CONFIRM PASSWORD</label><input class="auth-input" id="authConfirmPassword" type="password" inputmode="numeric" pattern="[0-9]{6,64}" maxlength="64" autocomplete="new-password" placeholder="CONFIRM PASSWORD (6–64 DIGITS)">':'')+
+    '<input class="auth-input" id="authPassword" type="password" inputmode="numeric" pattern="[0-9]{6,18}" maxlength="18" autocomplete="'+(isRegister?'new-password':'current-password')+'" placeholder="PASSWORD (6–18 DIGITS)">'+
+    (isRegister?'<label for="authConfirmPassword" style="display:block;color:#a1a1aa;font-size:12px;margin-bottom:6px">CONFIRM PASSWORD</label><input class="auth-input" id="authConfirmPassword" type="password" inputmode="numeric" pattern="[0-9]{6,18}" maxlength="18" autocomplete="new-password" placeholder="CONFIRM PASSWORD (6–18 DIGITS)">':'')+
     '<p id="authStatus" aria-live="polite"></p>'+
     '<button class="auth-main-btn" type="button" onclick="'+(isRegister?'registerCustomer()':'loginCustomer()')+'">'+(isRegister?'CREATE ACCOUNT':'LOGIN NOW')+'</button>'+
     ''+
@@ -546,7 +546,7 @@ async function registerCustomer(){
   const password=document.getElementById('authPassword').value;
   const confirmPassword=document.getElementById('authConfirmPassword')?.value || '';
   const status=document.getElementById('authStatus');
-  if(!email||!/^\d{6,64}$/.test(password)){status.textContent='Valid email aur 6–64 digit password enter karein.';return;}
+  if(!email||!/^\d{6,18}$/.test(password)){status.textContent='Valid email aur 6–18 digit password enter karein.';return;}
   if(password!==confirmPassword){status.textContent='Dono password match nahi karte.';return;}
   status.textContent='Account ban raha hai...';
   try{
@@ -583,7 +583,7 @@ async function verifyResetOtp(){
     const d=await r.json();
     if(!r.ok)throw new Error(d.error||'OTP galat ya expire ho gaya.');
     const root=document.getElementById('popupMessage');
-    root.innerHTML='<div class="auth-shield" aria-hidden="true">🔐</div><h3><span style="color:#f8fafc">NEW</span> <span style="color:#00e5f3">PASSWORD</span></h3><div class="auth-subtitle">CREATE NEW PASSWORD</div><input class="auth-input" id="resetNewPassword" type="password" inputmode="numeric" maxlength="64" placeholder="NEW PASSWORD (6–64 DIGITS)"><input class="auth-input" id="resetConfirmPassword" type="password" inputmode="numeric" maxlength="64" placeholder="CONFIRM NEW PASSWORD"><input id="resetAccessToken" type="hidden" value="'+String(d.access_token||'').replace(/"/g,'&quot;')+'"><p id="authStatus" aria-live="polite" style="color:#cbd5e1;font-size:12px;line-height:1.5"></p><button class="auth-main-btn" type="button" onclick="saveResetPassword()">SAVE NEW PASSWORD</button>';
+    root.innerHTML='<div class="auth-shield" aria-hidden="true">🔐</div><h3><span style="color:#f8fafc">NEW</span> <span style="color:#00e5f3">PASSWORD</span></h3><div class="auth-subtitle">CREATE NEW PASSWORD</div><input class="auth-input" id="resetNewPassword" type="password" inputmode="numeric" maxlength="18" placeholder="NEW PASSWORD (6–18 DIGITS)"><input class="auth-input" id="resetConfirmPassword" type="password" inputmode="numeric" maxlength="18" placeholder="CONFIRM NEW PASSWORD"><input id="resetAccessToken" type="hidden" value="'+String(d.access_token||'').replace(/"/g,'&quot;')+'"><p id="authStatus" aria-live="polite" style="color:#cbd5e1;font-size:12px;line-height:1.5"></p><button class="auth-main-btn" type="button" onclick="saveResetPassword()">SAVE NEW PASSWORD</button>';
   }catch(e){status.textContent=e.message||'OTP verify nahi hua.';}
 }
 async function saveResetPassword(){
@@ -591,7 +591,7 @@ async function saveResetPassword(){
   const confirm=document.getElementById('resetConfirmPassword')?.value||'';
   const accessToken=document.getElementById('resetAccessToken')?.value||'';
   const status=document.getElementById('authStatus');
-  if(!/^\d{6,64}$/.test(password)){status.textContent='Naya password 6 se 64 digits ka hona chahiye.';return;}
+  if(!/^\d{6,18}$/.test(password)){status.textContent='Naya password 6 se 64 digits ka hona chahiye.';return;}
   if(password!==confirm){status.textContent='Dono passwords match nahi karte.';return;}
   status.textContent='Password update ho raha hai...';
   try{
@@ -607,14 +607,14 @@ function openChangeCustomerEmail(){
   const root=document.getElementById('popupMessage');
   document.getElementById('popupTitle').textContent='';
   document.getElementById('popup').classList.add('auth-screen');
-  root.innerHTML='<div class="auth-shield" aria-hidden="true">✉️</div><h3><span style="color:#f8fafc">CHANGE</span> <span style="color:#00e5f3">GMAIL</span></h3><div class="auth-subtitle">VERIFY YOUR ACCOUNT</div><label style="display:block;color:#a1a1aa;font-size:12px;margin-bottom:6px" for="changeOldEmail">CURRENT EMAIL</label><input class="auth-input" id="changeOldEmail" type="email" autocomplete="email" placeholder="Current registered email"><label style="display:block;color:#a1a1aa;font-size:12px;margin-bottom:6px" for="changeEmailPassword">CURRENT PASSWORD (6–64 DIGITS)</label><input class="auth-input" id="changeEmailPassword" type="password" inputmode="numeric" maxlength="64" placeholder="Current password (6–64 digits)"><label style="display:block;color:#a1a1aa;font-size:12px;margin-bottom:6px" for="changeNewEmail">NEW EMAIL</label><input class="auth-input" id="changeNewEmail" type="email" autocomplete="email" placeholder="New email address"><p id="changeEmailStatus" aria-live="polite" style="color:#cbd5e1;font-size:12px;line-height:1.5"></p><button class="auth-main-btn" type="button" onclick="changeCustomerEmail()">SEND VERIFICATION</button><div class="auth-links"><a href="#" onclick="openAuth(\'login\');return false">Back to Login</a></div>';
+  root.innerHTML='<div class="auth-shield" aria-hidden="true">✉️</div><h3><span style="color:#f8fafc">CHANGE</span> <span style="color:#00e5f3">GMAIL</span></h3><div class="auth-subtitle">VERIFY YOUR ACCOUNT</div><label style="display:block;color:#a1a1aa;font-size:12px;margin-bottom:6px" for="changeOldEmail">CURRENT EMAIL</label><input class="auth-input" id="changeOldEmail" type="email" autocomplete="email" placeholder="Current registered email"><label style="display:block;color:#a1a1aa;font-size:12px;margin-bottom:6px" for="changeEmailPassword">CURRENT PASSWORD (6–18 DIGITS)</label><input class="auth-input" id="changeEmailPassword" type="password" inputmode="numeric" maxlength="18" placeholder="Current password (6–18 digits)"><label style="display:block;color:#a1a1aa;font-size:12px;margin-bottom:6px" for="changeNewEmail">NEW EMAIL</label><input class="auth-input" id="changeNewEmail" type="email" autocomplete="email" placeholder="New email address"><p id="changeEmailStatus" aria-live="polite" style="color:#cbd5e1;font-size:12px;line-height:1.5"></p><button class="auth-main-btn" type="button" onclick="changeCustomerEmail()">SEND VERIFICATION</button><div class="auth-links"><a href="#" onclick="openAuth(\'login\');return false">Back to Login</a></div>';
 }
 async function changeCustomerEmail(){
   const oldEmail=document.getElementById('changeOldEmail').value.trim();
   const password=document.getElementById('changeEmailPassword').value;
   const newEmail=document.getElementById('changeNewEmail').value.trim();
   const status=document.getElementById('changeEmailStatus');
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(oldEmail)||!/^\d{6,64}$/.test(password)||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)){status.textContent='Current email, 6–64 digit password aur valid new email enter karein.';return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(oldEmail)||!/^\d{6,18}$/.test(password)||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)){status.textContent='Current email, 6–18 digit password aur valid new email enter karein.';return;}
   if(oldEmail.toLowerCase()===newEmail.toLowerCase()){status.textContent='New email current email se alag hona chahiye.';return;}
   status.textContent='Verification request bhej rahe hain...';
   try{
@@ -629,7 +629,7 @@ async function loginCustomer(){
   const email=document.getElementById('authEmail').value.trim();
   const password=document.getElementById('authPassword').value;
   const status=document.getElementById('authStatus');
-  if(!email||!/^\d{6,64}$/.test(password)){status.textContent='Valid email aur 6–64 digit password enter karein.';return;}
+  if(!email||!/^\d{6,18}$/.test(password)){status.textContent='Valid email aur 6–18 digit password enter karein.';return;}
   status.textContent='Login ho raha hai...';
   try{
     const data=await customerApi('/api/auth/login',{method:'POST',body:JSON.stringify({email,password})},false);
@@ -911,7 +911,7 @@ async function submitProfilePasswordChange(event){
   const status=document.getElementById('profilePasswordStatus');
   const submit=document.getElementById('profilePasswordSubmit');
   if(!current||!next||!confirm||!status||!submit)return;
-  if(!/^\d{6,64}$/.test(current.value)||!/^\d{6,64}$/.test(next.value)){status.textContent='Passwords must be 6–64 digits.';return;}
+  if(!/^\d{6,18}$/.test(current.value)||!/^\d{6,18}$/.test(next.value)){status.textContent='Passwords must be 6–18 digits.';return;}
   if(next.value!==confirm.value){status.textContent='New password and confirm password do not match.';return;}
   if(current.value===next.value){status.textContent='New password must be different from current password.';return;}
   submit.disabled=true;submit.textContent='UPDATING…';status.textContent='Verifying current password…';
@@ -956,7 +956,7 @@ function openProfilePanel(){
       '<button type="button" onclick="closePopup();openOrderHistoryPanel()" style="display:flex;align-items:center;justify-content:space-between;text-align:left;width:100%;margin-top:9px;padding:16px;background:#111a2c;color:#f8fafc;border:1px solid #202b40;border-radius:14px"><span>Order History</span><span style="color:#64748b">›</span></button>'+
       '<button type="button" onclick="closePopup();openDepositHistoryPanel()" style="display:flex;align-items:center;justify-content:space-between;text-align:left;width:100%;margin-top:9px;padding:16px;background:#111a2c;color:#f8fafc;border:1px solid #202b40;border-radius:14px"><span>Deposit History</span><span style="color:#64748b">›</span></button>'+
       '<button type="button" onclick="toggleProfilePasswordForm()" style="display:flex;align-items:center;justify-content:space-between;text-align:left;width:100%;margin-top:9px;padding:16px;background:linear-gradient(110deg,#172554,#312e81);color:#f8fafc;border:1px solid #818cf8;border-radius:14px"><span>🔐 Change Password</span><span style="color:#c4b5fd">›</span></button>'+
-      '<form id="profilePasswordForm" onsubmit="submitProfilePasswordChange(event)" style="display:none;margin-top:10px;padding:14px;background:#0b1220;border:1px solid #334155;border-radius:14px"><label style="display:block;margin:8px 0 5px;color:#cbd5e1">Enter Current Password</label><input id="profileCurrentPassword" type="password" inputmode="numeric" maxlength="64" pattern="[0-9]{6,64}" autocomplete="current-password" required placeholder="Current password (6–64 digits)" style="width:100%;box-sizing:border-box;padding:12px;background:#020617;color:#fff;border:1px solid #475569;border-radius:9px"><label style="display:block;margin:12px 0 5px;color:#cbd5e1">Create New Password</label><input id="profileNewPassword" type="password" inputmode="numeric" maxlength="64" pattern="[0-9]{6,64}" autocomplete="new-password" required placeholder="New password (6–64 digits)" style="width:100%;box-sizing:border-box;padding:12px;background:#020617;color:#fff;border:1px solid #475569;border-radius:9px"><label style="display:block;margin:12px 0 5px;color:#cbd5e1">Confirm Password</label><input id="profileConfirmPassword" type="password" inputmode="numeric" maxlength="64" pattern="[0-9]{6,64}" autocomplete="new-password" required placeholder="Confirm new password" style="width:100%;box-sizing:border-box;padding:12px;background:#020617;color:#fff;border:1px solid #475569;border-radius:9px"><p id="profilePasswordStatus" aria-live="polite" style="font-size:12px;line-height:1.5;color:#cbd5e1"></p><button id="profilePasswordSubmit" type="submit" style="width:100%;padding:12px;background:linear-gradient(110deg,#06b6d4,#2563eb);color:#fff;border:0;border-radius:10px;font-weight:900">UPDATE PASSWORD</button></form>'+
+      '<form id="profilePasswordForm" onsubmit="submitProfilePasswordChange(event)" style="display:none;margin-top:10px;padding:14px;background:#0b1220;border:1px solid #334155;border-radius:14px"><label style="display:block;margin:8px 0 5px;color:#cbd5e1">Enter Current Password</label><input id="profileCurrentPassword" type="password" inputmode="numeric" maxlength="18" pattern="[0-9]{6,18}" autocomplete="current-password" required placeholder="Current password (6–18 digits)" style="width:100%;box-sizing:border-box;padding:12px;background:#020617;color:#fff;border:1px solid #475569;border-radius:9px"><label style="display:block;margin:12px 0 5px;color:#cbd5e1">Create New Password</label><input id="profileNewPassword" type="password" inputmode="numeric" maxlength="18" pattern="[0-9]{6,18}" autocomplete="new-password" required placeholder="New password (6–18 digits)" style="width:100%;box-sizing:border-box;padding:12px;background:#020617;color:#fff;border:1px solid #475569;border-radius:9px"><label style="display:block;margin:12px 0 5px;color:#cbd5e1">Confirm Password</label><input id="profileConfirmPassword" type="password" inputmode="numeric" maxlength="18" pattern="[0-9]{6,18}" autocomplete="new-password" required placeholder="Confirm new password" style="width:100%;box-sizing:border-box;padding:12px;background:#020617;color:#fff;border:1px solid #475569;border-radius:9px"><p id="profilePasswordStatus" aria-live="polite" style="font-size:12px;line-height:1.5;color:#cbd5e1"></p><button id="profilePasswordSubmit" type="submit" style="width:100%;padding:12px;background:linear-gradient(110deg,#06b6d4,#2563eb);color:#fff;border:0;border-radius:10px;font-weight:900">UPDATE PASSWORD</button></form>'+
       '<button type="button" onclick="closePopup()" style="display:block!important;width:100%!important;margin:12px 0 18px!important;padding:15px!important;background:linear-gradient(110deg,#ec4899 0%,#8b5cf6 48%,#2563eb 100%)!important;color:#fff!important;border:2px solid #c4b5fd!important;border-radius:13px!important;font-size:16px!important;font-weight:900!important;letter-spacing:1px!important;box-shadow:0 0 0 3px #a78bfa33,0 8px 24px #0007!important;cursor:pointer">✕ CLOSE</button>'+
       '<button type="button" onclick="logoutCustomer()" style="display:block!important;width:100%!important;margin:10px 0 28px!important;padding:15px!important;background:linear-gradient(110deg,#ef4444 0%,#dc2626 48%,#991b1b 100%)!important;color:#fff!important;border:2px solid #fca5a5!important;border-radius:13px!important;font-size:16px!important;font-weight:900!important;letter-spacing:.8px!important;box-shadow:0 5px 18px #dc262655!important;cursor:pointer">⇥ LOG OUT</button>'+
     '</div></div>';
