@@ -166,8 +166,8 @@ app.post("/api/auth/register", async (req, res) => {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return res.status(400).json({ error: "Valid email address enter karein." });
   }
-  if (!/^\d{6}$/.test(password)) {
-    return res.status(400).json({ error: "Password exactly 6 digits ka hona chahiye." });
+  if (!/^\d{6,64}$/.test(password)) {
+    return res.status(400).json({ error: "Password 6 se 64 digits ka hona chahiye." });
   }
 
   const referralCode = typeof req.body?.referralCode === "string" ? req.body.referralCode : null;
@@ -223,8 +223,8 @@ app.post("/api/auth/login", async (req, res) => {
   if (!authClient) return res.status(503).json({ error: "Authentication is not configured" });
   const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
   const password = typeof req.body?.password === "string" ? req.body.password : "";
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !/^\d{6}$/.test(password)) {
-    return res.status(400).json({ error: "Email aur 6-digit password sahi enter karein." });
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !/^\d{6,64}$/.test(password)) {
+    return res.status(400).json({ error: "Email aur 6–64 digit password sahi enter karein." });
   }
   const { data, error } = await authClient.auth.signInWithPassword({ email, password });
   if (error || !data.session) {
@@ -246,8 +246,8 @@ app.post("/api/auth/change-password", async (req, res) => {
   const accessToken = typeof req.body?.accessToken === "string" ? req.body.accessToken : "";
   const currentPassword = typeof req.body?.currentPassword === "string" ? req.body.currentPassword : "";
   const newPassword = typeof req.body?.newPassword === "string" ? req.body.newPassword : "";
-  if (!accessToken || !/^\d{6}$/.test(currentPassword) || !/^\d{6}$/.test(newPassword)) {
-    return res.status(400).json({ error: "Current aur new password dono exactly 6 digits ke hone chahiye." });
+  if (!accessToken || !/^\d{6,64}$/.test(currentPassword) || !/^\d{6,64}$/.test(newPassword)) {
+    return res.status(400).json({ error: "Current aur new password 6 se 64 digits ke hone chahiye." });
   }
   if (currentPassword === newPassword) return res.status(400).json({ error: "Naya password current password se alag hona chahiye." });
   const { data: userData, error: userError } = await authClient.auth.getUser(accessToken);
@@ -296,7 +296,7 @@ app.post("/api/auth/complete-password-reset", async (req, res) => {
   if (!authClient) return res.status(503).json({ error: "Authentication is not configured" });
   const accessToken = typeof req.body?.accessToken === "string" ? req.body.accessToken : "";
   const password = typeof req.body?.password === "string" ? req.body.password : "";
-  if (!accessToken || !/^\d{6}$/.test(password)) return res.status(400).json({ error: "Verified OTP session aur 6-digit naya password required hai." });
+  if (!accessToken || !/^\d{6,64}$/.test(password)) return res.status(400).json({ error: "Verified OTP session aur 6–64 digit naya password required hai." });
   const { data: userData, error: userError } = await authClient.auth.getUser(accessToken);
   if (userError || !userData?.user) return res.status(401).json({ error: "OTP verification session expire ho gaya. Dobara OTP verify karein." });
   const response = await fetch(supabaseUrl.replace(/\/+$/, "") + "/auth/v1/user", { method: "PUT", headers: { "Content-Type": "application/json", "apikey": supabasePublishableKey, "Authorization": "Bearer " + accessToken }, body: JSON.stringify({ password }) });
@@ -309,7 +309,7 @@ app.post("/api/auth/change-email", async (req, res) => {
   const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
   const password = typeof req.body?.password === "string" ? req.body.password : "";
   const newEmail = typeof req.body?.newEmail === "string" ? req.body.newEmail.trim().toLowerCase() : "";
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !/^\d{6}$/.test(password) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) return res.status(400).json({ error: "Current email, 6-digit password aur valid new email enter karein." });
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !/^\d{6,64}$/.test(password) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) return res.status(400).json({ error: "Current email, 6–64 digit password aur valid new email enter karein." });
   if (email === newEmail) return res.status(400).json({ error: "New email current email se alag hona chahiye." });
   const { data: signedIn, error: signInError } = await authClient.auth.signInWithPassword({ email, password });
   if (signInError || !signedIn?.session?.access_token) return res.status(401).json({ error: "Current email ya password sahi nahi hai." });
