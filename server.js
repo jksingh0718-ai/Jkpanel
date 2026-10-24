@@ -273,36 +273,125 @@ app.post("/api/auth/change-password", async (req, res) => {
   }
 });
 
-app.post("/api/auth/forgot-password", async (req, res) => {
-  if (!authClient) return res.status(503).json({ error: "Authentication is not configured" });
-  const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: "Valid email address enter karein." });
-  const { error } = await authClient.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
-  if (error) { console.error("Password reset OTP request failed:", error.message); return res.status(400).json({ error: "OTP email nahi bhej paaye. Supabase email/SMTP settings check karein." }); }
-  return res.json({ success: true, message: "Agar is email par account hai, password reset instructions bhej di jayengi. Inbox aur spam folder check karein." });
-});
 
+// Password reset uses Brevo transactional email and short-lived one-time codes.
+const brevoApiKey = process.env.BREVO_API_KEY || "";
+const resetPepper = process.env.PASSWORD_RESET_PEPPER || process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+const hashResetValue = (value) => crypto.createHmac("sha256", resetPepper).update(String(value)).digest("hex");
+async function findAuthUserByEmail(email) {
+  if (!supabase) return null;
+  for (let page = 1; page <= 10; page++) {
+    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: 1000 });
+    if (error) throw error;
+    const users = data?.users || [];
+    const found = users.find((u) => (u.email || "").toLowerCase() === email);
+    if (found) return found;
+    if (users.length < 1000) return null;
+  }
+  return null;
+}
+app.post("/api/auth/forgot-password", async (req, res) => {
+  if (!supabase || !brevoApiKey || !resetPepper) return res.status(503).json({ error: "Password reset email service abhi configure nahi hai." });
+  const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
+  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) return res.status(400).json({ error: "Valid email address enter karein." });
+  try {
+    const user = await findAuthUserByEmail(email);
+    // Same response for unknown emails to avoid exposing which accounts exist.
+    if (!user) return res.json({ success: true, message: "Agar is email par account hai, OTP bhej diya jayega. Inbox aur spam folder check karein." });
+    const { data: previous, error: previousError } = await supabase.from("password_reset_otps").select("last_sent_at").eq("email", email).maybeSingle();
+    if (previousError) throw previousError;
+    if (previous?.last_sent_at && Date.now() - new Date(previous.last_sent_at).getTime() < 60_000) {
+      return res.status(429).json({ error: "Naya OTP mangwane se pehle 60 second wait karein." });
+    }
+    const otp = String(crypto.randomInt(0, 1_000_000)).padStart(6, "0");
+    const { error: saveError } = await supabase.from("password_reset_otps").upsert({
+      email, otp_hash: hashResetValue("otp:" + email + ":" + otp),
+      expires_at: new Date(Date.now() + 10 * 60_000).toISOString(),
+      attempts: 0, verified_token_hash: null, verified_until: null,
+      last_sent_at: new Date().toISOString(), created_at: new Date().toISOString()
+    }, { onConflict: "email" });
+    if (saveError) throw saveError;
+    const mailResponse = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: { "accept": "application/json", "api-key": brevoApiKey, "content-type": "application/json" },
+      body: JSON.stringify({
+        sender: { name: "JK PANEL SHOP", email: "jksingh0718@gmail.com" },
+        to: [{ email }],
+        subject: "JK PANEL SHOP - Password Reset OTP",
+        textContent: "Aapka JK PANEL SHOP password reset OTP hai: " + otp + "\\n\\nYeh code 10 minute mein expire ho jayega. Agar aapne request nahi ki, is email ko ignore karein.",
+        htmlContent: "<div style=\"font-family:Arial,sans-serif;max-width:520px;margin:auto;padding:24px;background:#0b0f19;color:#fff;border-radius:14px\"><h2 style=\"color:#38bdf8\">JK PANEL SHOP</h2><p>Password reset karne ke liye ye OTP enter karein:</p><div style=\"font-size:32px;font-weight:bold;letter-spacing:8px;padding:16px;background:#111827;border-radius:10px;text-align:center\">" + otp + "</div><p>Ye code <b>10 minute</b> mein expire ho jayega. Agar aapne request nahi ki, is email ko ignore karein.</p></div>"
+      })
+    });
+    if (!mailResponse.ok) {
+      await supabase.from("password_reset_otps").delete().eq("email", email);
+      const details = await mailResponse.text().catch(() => "");
+      console.error("Brevo password reset email failed:", mailResponse.status, details.slice(0, 300));
+      return res.status(502).json({ error: "OTP email nahi bhej paaye. Brevo sender verification aur API key check karein." });
+    }
+    return res.json({ success: true, message: "Agar is email par account hai, OTP bhej diya jayega. Inbox aur spam folder check karein." });
+  } catch (error) {
+    console.error("Password reset request failed:", error.message);
+    return res.status(500).json({ error: "Password reset request abhi complete nahi ho saki. Thodi der baad try karein." });
+  }
+});
 app.post("/api/auth/verify-reset-otp", async (req, res) => {
-  if (!authClient) return res.status(503).json({ error: "Authentication is not configured" });
+  if (!supabase || !resetPepper) return res.status(503).json({ error: "Authentication is not configured" });
   const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
   const token = typeof req.body?.token === "string" ? req.body.token.trim() : "";
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !/^\d{6}$/.test(token)) return res.status(400).json({ error: "Valid email aur 6-digit OTP enter karein." });
-  const { data, error } = await authClient.auth.verifyOtp({ email, token, type: "email" });
-  if (error || !data?.session?.access_token) return res.status(400).json({ error: "OTP galat hai ya expire ho gaya. Naya OTP mangwayein." });
-  return res.json({ success: true, access_token: data.session.access_token });
+  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || !/^\\d{6}$/.test(token)) return res.status(400).json({ error: "Valid email aur 6-digit OTP enter karein." });
+  try {
+    const { data: row, error } = await supabase.from("password_reset_otps").select("*").eq("email", email).maybeSingle();
+    if (error) throw error;
+    if (!row || new Date(row.expires_at).getTime() < Date.now() || row.attempts >= 6 || row.verified_token_hash) {
+      return res.status(400).json({ error: "OTP galat hai ya expire ho gaya. Naya OTP mangwayein." });
+    }
+    const supplied = hashResetValue("otp:" + email + ":" + token);
+    const correct = supplied.length === row.otp_hash.length && crypto.timingSafeEqual(Buffer.from(supplied, "hex"), Buffer.from(row.otp_hash, "hex"));
+    if (!correct) {
+      await supabase.from("password_reset_otps").update({ attempts: Math.min(6, row.attempts + 1) }).eq("email", email);
+      return res.status(400).json({ error: "OTP galat hai ya expire ho gaya. Dobara check karein." });
+    }
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const { error: updateError } = await supabase.from("password_reset_otps").update({
+      verified_token_hash: hashResetValue("reset:" + resetToken),
+      verified_until: new Date(Date.now() + 10 * 60_000).toISOString(),
+      otp_hash: "consumed", expires_at: new Date(0).toISOString()
+    }).eq("email", email).eq("otp_hash", row.otp_hash);
+    if (updateError) throw updateError;
+    return res.json({ success: true, access_token: resetToken });
+  } catch (error) {
+    console.error("Password reset OTP verification failed:", error.message);
+    return res.status(500).json({ error: "OTP verify nahi ho saka. Dobara try karein." });
+  }
 });
-
 app.post("/api/auth/complete-password-reset", async (req, res) => {
-  if (!authClient) return res.status(503).json({ error: "Authentication is not configured" });
-  const accessToken = typeof req.body?.accessToken === "string" ? req.body.accessToken : "";
+  if (!supabase || !resetPepper) return res.status(503).json({ error: "Authentication is not configured" });
+  const resetToken = typeof req.body?.accessToken === "string" ? req.body.accessToken : "";
   const password = typeof req.body?.password === "string" ? req.body.password : "";
-  if (!accessToken || !/^\d{6,18}$/.test(password)) return res.status(400).json({ error: "Verified OTP session aur 6–18 digit naya password required hai." });
-  const { data: userData, error: userError } = await authClient.auth.getUser(accessToken);
-  if (userError || !userData?.user) return res.status(401).json({ error: "OTP verification session expire ho gaya. Dobara OTP verify karein." });
-  const response = await fetch(supabaseUrl.replace(/\/+$/, "") + "/auth/v1/user", { method: "PUT", headers: { "Content-Type": "application/json", "apikey": supabasePublishableKey, "Authorization": "Bearer " + accessToken }, body: JSON.stringify({ password }) });
-  const result = await response.json().catch(() => ({}));
-  if (!response.ok) { const msg = typeof result.msg === "string" ? result.msg : typeof result.message === "string" ? result.message : ""; return res.status(response.status >= 500 ? 502 : 400).json({ error: msg || "Naya password save nahi hua." }); }
-  return res.json({ success: true, message: "Password successfully reset ho gaya." });
+  if (!resetToken || !/^[a-f0-9]{64}$/.test(resetToken) || !/^\\d{6,18}$/.test(password)) {
+    return res.status(400).json({ error: "Verified OTP aur 6–18 digit naya password required hai." });
+  }
+  try {
+    const resetHash = hashResetValue("reset:" + resetToken);
+    const { data: rows, error } = await supabase.from("password_reset_otps").select("email,verified_token_hash,verified_until").eq("verified_token_hash", resetHash).limit(1);
+    if (error) throw error;
+    const row = rows?.[0];
+    if (!row || !row.verified_until || new Date(row.verified_until).getTime() < Date.now()) {
+      return res.status(401).json({ error: "OTP verification expire ho gaya. Dobara OTP verify karein." });
+    }
+    const user = await findAuthUserByEmail(row.email);
+    if (!user) return res.status(400).json({ error: "Account nahi mila. Support se contact karein." });
+    const { error: passwordError } = await supabase.auth.admin.updateUserById(user.id, { password });
+    if (passwordError) {
+      console.error("Password reset update failed:", passwordError.message);
+      return res.status(400).json({ error: "Naya password save nahi hua. Dobara try karein." });
+    }
+    await supabase.from("password_reset_otps").delete().eq("email", row.email).eq("verified_token_hash", resetHash);
+    return res.json({ success: true, message: "Password successfully reset ho gaya." });
+  } catch (error) {
+    console.error("Password reset completion failed:", error.message);
+    return res.status(500).json({ error: "Password reset abhi complete nahi ho saka." });
+  }
 });
 app.post("/api/auth/change-email", async (req, res) => {
   if (!authClient || !supabaseUrl) return res.status(503).json({ error: "Authentication is not configured" });
