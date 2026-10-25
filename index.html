@@ -1663,6 +1663,7 @@ async function loadShopProducts(){
    const card=document.createElement('article');
    card.className='drip-product-card';
    card.dataset.createdAt=String(Math.max(...dripProducts.map(p=>Date.parse(p.created_at||'')||0)));
+    card.dataset.displayOrder=String(Math.min(...dripProducts.map(p=>Number(p.display_order)||100)));
    card.style.cssText='display:block;margin-top:12px;padding:14px;background:linear-gradient(160deg,#111827,#0b1220);border:1px solid #155e75;border-radius:16px;overflow:hidden;box-shadow:0 8px 26px #0003';
    const imageProduct=dripProducts.find(p=>p.image_url)||dripProducts[0];
    const videoProduct=dripProducts.find(p=>p.video_url);
@@ -1718,6 +1719,7 @@ async function loadShopProducts(){
    const card=document.createElement('article');
    card.className='aim-product-card';
    card.dataset.createdAt=String(Math.max(...aimProducts.map(p=>Date.parse(p.created_at||'')||0)));
+    card.dataset.displayOrder=String(Math.min(...aimProducts.map(p=>Number(p.display_order)||100)));
    card.style.cssText='display:block;margin-top:12px;padding:14px;background:linear-gradient(160deg,#111827,#0b1220);border:1px solid #7c3aed;border-radius:16px;overflow:hidden;box-shadow:0 8px 26px #0003';
    const imageProduct=aimProducts.find(p=>p.image_url)||aimProducts[0];
    const videoProduct=aimProducts.find(p=>p.video_url);
@@ -1768,6 +1770,7 @@ async function loadShopProducts(){
    const card=document.createElement('article');
    card.className='bala-product-card';
    card.dataset.createdAt=String(Math.max(...balaProducts.map(p=>Date.parse(p.created_at||'')||0)));
+    card.dataset.displayOrder=String(Math.min(...balaProducts.map(p=>Number(p.display_order)||100)));
    card.style.cssText='display:block;margin-top:12px;padding:14px;background:linear-gradient(160deg,#111827,#0b1220);border:1px solid #334155;border-radius:16px;overflow:hidden;box-shadow:0 8px 26px #0003';
    const imageProduct=balaProducts.find(p=>p.image_url);
    const videoProduct=balaProducts.find(p=>p.video_url);
@@ -1815,6 +1818,7 @@ async function loadShopProducts(){
    const card=document.createElement('article');
    card.className='prime-hook-product-card';
    card.dataset.createdAt=String(Math.max(...primeHookProducts.map(p=>Date.parse(p.created_at||'')||0)));
+    card.dataset.displayOrder=String(Math.min(...primeHookProducts.map(p=>Number(p.display_order)||100)));
    card.style.cssText='display:block;margin-top:12px;padding:14px;background:linear-gradient(160deg,#111827,#0b1220);border:1px solid #a855f7;border-radius:16px;overflow:hidden;box-shadow:0 8px 26px #0003';
    const imageProduct=primeHookProducts.find(p=>p.image_url);
    const videoProduct=primeHookProducts.find(p=>p.video_url);
@@ -1866,15 +1870,17 @@ async function loadShopProducts(){
    const baseName=hasDuration?match[1].trim():fullName;
    const duration=hasDuration?durationCandidate:'Standard';
    const key=baseName.toLowerCase();
-   if(!customProductGroups.has(key))customProductGroups.set(key,{name:baseName,plans:[],createdAt:0});
+   if(!customProductGroups.has(key))customProductGroups.set(key,{name:baseName,plans:[],createdAt:0,displayOrder:Number(product.display_order)||100});
    const group=customProductGroups.get(key);
    group.plans.push({product,duration});
    group.createdAt=Math.max(group.createdAt,Date.parse(product.created_at||'')||0);
+   group.displayOrder=Math.min(group.displayOrder||100,Number(product.display_order)||100);
   });
   customProductGroups.forEach(group=>{
    const card=document.createElement('article');
    card.className='shop-product-card';
    card.dataset.createdAt=String(group.createdAt);
+    card.dataset.displayOrder=String(group.displayOrder||100);
    card.style.cssText='display:block;margin-top:12px;padding:14px;background:linear-gradient(160deg,#111827,#0b1220);border:1px solid #334155;border-radius:16px;overflow:hidden;box-shadow:0 8px 26px #0003';
    const imageProduct=group.plans.find(x=>x.product.image_url)?.product;
    const videoProduct=group.plans.find(x=>x.product.video_url)?.product;
@@ -1924,7 +1930,7 @@ async function loadShopProducts(){
    card.append(title,setupActions,desc,purchase,plans);
    root.appendChild(card);
   });
-   Array.from(root.children).filter(card=>!card.hasAttribute('data-search-empty')).sort((a,b)=>Number(b.dataset.createdAt||0)-Number(a.dataset.createdAt||0)).forEach(card=>root.appendChild(card));
+   Array.from(root.children).filter(card=>!card.hasAttribute('data-search-empty')).sort((a,b)=>Number(a.dataset.displayOrder||100)-Number(b.dataset.displayOrder||100)||Number(b.dataset.createdAt||0)-Number(a.dataset.createdAt||0)).forEach(card=>root.appendChild(card));
   if(document.getElementById('shopProductSearch')?.value.trim())document.getElementById('shopProductSearch').dispatchEvent(new Event('input'));
   // Do not cache rendered product cards; prices are account-specific.
  }catch(e){
