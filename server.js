@@ -1333,23 +1333,28 @@ async function loadCustomers(){
    line("Email verified",customer.confirmed?"Yes":"No");
    line("Approved deposits","₹"+Number(customer.totalDeposited||0).toFixed(2));
    line("Pending deposits","₹"+Number(customer.pendingDeposits||0).toFixed(2));
-   const creditTitle=document.createElement("h4");creditTitle.textContent="Manual Wallet Credit";details.appendChild(creditTitle);
+   const creditTitle=document.createElement("h4");creditTitle.textContent="Wallet Balance Adjust";details.appendChild(creditTitle);
    const creditForm=document.createElement("form");
+   const creditAction=document.createElement("select");creditAction.style.width="100%";creditAction.style.marginBottom="8px";creditAction.setAttribute("aria-label","Wallet action");
+   [["credit","Add Balance (+)"],["debit","Deduct Balance (−)"]].forEach(([value,label])=>{const option=document.createElement("option");option.value=value;option.textContent=label;creditAction.appendChild(option);});
    const creditAmount=document.createElement("input");creditAmount.type="number";creditAmount.min="1";creditAmount.max="50000";creditAmount.step="0.01";creditAmount.required=true;creditAmount.placeholder="Amount (₹)";creditAmount.style.width="100%";
-   const creditReason=document.createElement("input");creditReason.type="text";creditReason.minLength=3;creditReason.maxLength=200;creditReason.required=true;creditReason.placeholder="Reason (Bonus / Promotion / Correction)";creditReason.style.width="100%";
-   const creditButton=document.createElement("button");creditButton.type="submit";creditButton.textContent="Add Balance";
+   const creditReason=document.createElement("input");creditReason.type="text";creditReason.minLength=3;creditReason.maxLength=200;creditReason.required=true;creditReason.placeholder="Reason (Bonus / Correction / Refund / Adjustment)";creditReason.style.width="100%";
+   const creditButton=document.createElement("button");creditButton.type="submit";creditButton.textContent="Apply Wallet Change";
    const creditStatus=document.createElement("p");creditStatus.setAttribute("role","status");
-   creditForm.append(creditAmount,creditReason,creditButton,creditStatus);
+   creditForm.append(creditAction,creditAmount,creditReason,creditButton,creditStatus);
    creditForm.onsubmit=async ev=>{
     ev.preventDefault();
-    const amount=Number(creditAmount.value),reason=creditReason.value.trim();
+    const amount=Number(creditAmount.value),reason=creditReason.value.trim(),action=creditAction.value;
     if(!Number.isFinite(amount)||amount<=0||amount>50000||Math.round(amount*100)!==amount*100){creditStatus.textContent="Amount ₹1 se ₹50,000 tak aur maximum 2 decimal places hona chahiye.";return;}
     if(reason.length<3){creditStatus.textContent="Reason kam se kam 3 characters ka likhein.";return;}
-    if(!confirm((customer.name||customer.email)+" ke wallet mein ₹"+amount.toFixed(2)+" add karna hai?"))return;
-    creditButton.disabled=true;creditStatus.textContent="Balance add ho raha hai...";
+    const verb=action==="credit"?"add":"deduct";
+    if(!confirm((customer.name||customer.email)+" ke wallet se ₹"+amount.toFixed(2)+" "+verb+" karna hai?"))return;
+    creditButton.disabled=true;creditStatus.textContent="Wallet balance update ho raha hai...";
     try{
-     const result=await api("/api/admin/wallet-credit",{method:"POST",body:JSON.stringify({user_id:customer.id,amount,reason})});
-     creditStatus.textContent="Added ₹"+Number(result.credited_amount).toFixed(2)+" | New balance: ₹"+Number(result.wallet_balance).toFixed(2);
+     const result=await api("/api/admin/wallet-adjust",{method:"POST",body:JSON.stringify({user_id:customer.id,amount,reason,action})});
+     customer.walletBalance=Number(result.wallet_balance);
+     balance.textContent="₹"+customer.walletBalance.toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});
+     creditStatus.textContent=(action==="credit"?"Added ₹":"Deducted ₹")+Number(result.adjusted_amount).toFixed(2)+" | New balance: ₹"+Number(result.wallet_balance).toFixed(2);
      creditAmount.value="";creditReason.value="";
     }catch(err){creditStatus.textContent=err.message;}
     finally{creditButton.disabled=false;}
@@ -1926,6 +1931,32 @@ app.post("/api/admin/wallet-credit", isAdmin, async (req, res) => {
   }
 });
 
+
+app.post("/api/admin/wallet-adjust", isAdmin, async (req, res) => {
+  if (!supabase) return res.status(503).json({ error: "Database is not configured" });
+  const userId = typeof req.body?.user_id === "string" ? req.body.user_id.trim() : "";
+  const amount = Number(req.body?.amount);
+  const reason = typeof req.body?.reason === "string" ? req.body.reason.trim() : "";
+  const action = typeof req.body?.action === "string" ? req.body.action.trim().toLowerCase() : "";
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId)) return res.status(400).json({ error: "Valid customer account required." });
+  if (!Number.isFinite(amount) || amount <= 0 || amount > 50000 || Math.round(amount * 100) !== amount * 100) return res.status(400).json({ error: "Amount ₹1 se ₹50,000 tak aur maximum 2 decimal places hona chahiye." });
+  if (!["credit", "debit"].includes(action)) return res.status(400).json({ error: "Add ya Deduct select karein." });
+  if (reason.length < 3 || reason.length > 200) return res.status(400).json({ error: "Reason 3 se 200 characters ka hona chahiye." });
+  try {
+    const { data, error } = await supabase.rpc("admin_adjust_wallet_balance", { p_user_id: userId, p_amount: amount, p_action: action, p_reason: reason });
+    if (error) {
+      const message = String(error.message || "");
+      if (/INSUFFICIENT_WALLET_BALANCE/i.test(message)) return res.status(400).json({ error: "Wallet mein itna balance nahi hai; deduction nahi hua." });
+      if (/INVALID_AMOUNT|INVALID_REASON|INVALID_ACTION|CUSTOMER_REQUIRED/i.test(message)) return res.status(400).json({ error: "Amount, action ya reason valid nahi hai." });
+      console.error("Admin wallet adjustment failed:", message);
+      return res.status(500).json({ error: "Wallet balance update nahi hua. Koi paisa change nahi hua." });
+    }
+    return res.json({ success: true, ...data });
+  } catch (e) {
+    console.error("Admin wallet adjustment exception:", e.message);
+    return res.status(500).json({ error: "Wallet balance update nahi hua." });
+  }
+});
 
 function safeTokenEqual(received, expected) {
   if (typeof received !== "string" || typeof expected !== "string" || !received || !expected) return false;
