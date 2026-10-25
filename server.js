@@ -715,6 +715,8 @@ small{color:#a6b2c0}
   <input id="productId" type="hidden">
   <label for="productName">Product name</label><br>
   <input id="productName" required maxlength="120" placeholder="Product name" style="width:100%"><br>
+  <label for="productDisplayOrder">Shop mein product ka number / position</label><br>
+  <input id="productDisplayOrder" type="number" min="1" max="10000" step="1" value="100" required placeholder="1 = sabse pehle" style="width:100%"><small>Chhota number pehle dikhega. Example: 1, 2, 3...</small><br>
   <h4 style="margin:14px 0 6px">All durations & prices for this product</h4>
   <div style="padding:10px 12px;margin:8px 0 10px;background:#172554;border:1px solid #3b82f6;border-radius:10px;color:#dbeafe;font-size:13px;line-height:1.6">Product ka naam sirf ek baar likhein. Neeche <b>+ Add duration</b> se 6 Hours, 12 Hours, 1 Day, 7 Days jaise sabhi plans aur unki prices add karein. Shop mein ye sab ek hi product card ke andar dikhenge. Alag-alag product banane ki zarurat nahi.</div>
   <div id="productPlanRows"></div>
@@ -1093,6 +1095,7 @@ async function loadProducts(){
    edit.onclick=()=>{
     document.getElementById("productId").value=items[0].id;
     document.getElementById("productName").value=base;
+    document.getElementById("productDisplayOrder").value=String(Math.min(...items.map(p=>Number(p.display_order)||100)));
     document.getElementById("productDescription").value=items.find(p=>p.description)?.description||"";
     document.getElementById("productImage").value=items.find(p=>p.image_url)?.image_url||"";
     document.getElementById("productVideoUrl").value=items.find(p=>p.video_url)?.video_url||"";
@@ -1138,6 +1141,7 @@ function clearProductForm(){
  document.getElementById("productForm").reset();
  document.getElementById("productId").value="";
  document.getElementById("productPublished").checked=true;
+ document.getElementById("productDisplayOrder").value="100";
  document.getElementById("productImage").value="";
  document.getElementById("productImageFile").value="";
  document.getElementById("imageUploadStatus").textContent="";
@@ -1161,6 +1165,8 @@ document.getElementById("productForm").onsubmit=async e=>{
  const videoStatus=document.getElementById("videoUploadStatus");
  try{
   const base=document.getElementById("productName").value.trim();
+  const displayOrder=Number(document.getElementById("productDisplayOrder").value);
+  if(!Number.isInteger(displayOrder)||displayOrder<1||displayOrder>10000)throw new Error("Product number 1 se 10000 ke beech enter karein.");
   const rows=[...document.querySelectorAll("#productPlanRows .product-plan-row")].map(row=>({duration:row.querySelector(".product-plan-duration").value.trim(),price:Number(row.querySelector(".product-plan-price").value)}));
   if(!base||base.length>100)throw new Error("Valid product name enter karein.");
   if(!rows.length)throw new Error("Kam se kam ek duration-price option add karein.");
@@ -1184,7 +1190,7 @@ document.getElementById("productForm").onsubmit=async e=>{
    const name=base+" - "+plan.duration;
    const planKey=durationKey(plan.duration);
    const old=existing.find(p=>!matchedIds.has(p.id)&&durationKey(adminProductNameInfo(p.name).duration)===planKey);
-   const payload={name,price:plan.price,image_url:imageUrl||null,video_url:videoUrl||null,published:document.getElementById("productPublished").checked,description:document.getElementById("productDescription").value.trim()};
+   const payload={name,price:plan.price,image_url:imageUrl||null,video_url:videoUrl||null,published:document.getElementById("productPublished").checked,description:document.getElementById("productDescription").value.trim(),display_order:displayOrder};
    if(old){matchedIds.add(old.id);await api("/api/admin/products/"+encodeURIComponent(old.id),{method:"PATCH",body:JSON.stringify(payload)});}else{await api("/api/admin/products",{method:"POST",body:JSON.stringify(payload)});}
   }
   for(const old of existing){if(!matchedIds.has(old.id)&&old.published)await api("/api/admin/products/"+encodeURIComponent(old.id),{method:"PATCH",body:JSON.stringify({published:false})});}
