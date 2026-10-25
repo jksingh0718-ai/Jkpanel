@@ -2281,7 +2281,7 @@ app.get("/api/check-update-links", async (req, res) => {
 app.get("/api/products", async (req, res) => {
   if (!supabase) return res.status(503).json({ error: "Database is not configured" });
   const { data, error } = await supabase.from("products")
-    .select("id, name, price, image_url, video_url, download_url, description, created_at").eq("published", true).order("created_at", { ascending: false });
+    .select("id, name, price, image_url, video_url, download_url, description, created_at, display_order").eq("published", true).order("display_order", { ascending: true }).order("created_at", { ascending: false });
   if (error) { console.error("Public products load failed:", error.message); return res.status(500).json({ error: "Products load nahi ho sake." }); }
   const user = await getAuthenticatedUser(req);
   let products = data || [];
@@ -2476,8 +2476,8 @@ app.post("/api/orders", async (req, res) => {
 app.get("/api/admin/products", isAdmin, async (req, res) => {
   if (!supabase) return res.status(503).json({ error: "Database is not configured" });
   const { data, error } = await supabase.from("products")
-    .select("id, name, price, image_url, video_url, download_url, published, description, created_at, updated_at")
-    .order("created_at", { ascending: false });
+    .select("id, name, price, image_url, video_url, download_url, published, description, created_at, updated_at, display_order")
+    .order("display_order", { ascending: true }).order("created_at", { ascending: false });
   if (error) {
     console.error("Admin products load failed:", error.message);
     return res.status(500).json({ error: "Products load nahi ho sake." });
@@ -2617,6 +2617,7 @@ app.post("/api/admin/products", isAdmin, async (req, res) => {
   const videoUrl = typeof req.body?.video_url === "string" ? req.body.video_url.trim() : "";
   const published = req.body?.published === true;
   const description = typeof req.body?.description === "string" ? req.body.description.trim() : "";
+  const displayOrder = Number.isInteger(Number(req.body?.display_order)) && Number(req.body?.display_order) >= 1 && Number(req.body?.display_order) <= 10000 ? Number(req.body.display_order) : 100;
   if (description.length > 2000) return res.status(400).json({ error: "Description 2000 characters se kam rakhein." });
   if (!name || name.length > 120 || !Number.isFinite(price) || price < 0 || price > 1000000) {
     return res.status(400).json({ error: "Product name aur valid price enter karein." });
@@ -2626,8 +2627,8 @@ app.post("/api/admin/products", isAdmin, async (req, res) => {
   }
   if (videoUrl && (videoUrl.length > 2000 || !/^https:\/\//i.test(videoUrl))) return res.status(400).json({ error: "Video URL https:// se shuru hona chahiye." });
   const { data, error } = await supabase.from("products")
-    .insert({ name, price, image_url: imageUrl || null, video_url: videoUrl || null, published, description })
-    .select("id, name, price, image_url, video_url, published, description").single();
+    .insert({ name, price, image_url: imageUrl || null, video_url: videoUrl || null, published, description, display_order: displayOrder })
+    .select("id, name, price, image_url, video_url, published, description, display_order").single();
   if (error) {
     console.error("Product create failed:", error.message);
     return res.status(500).json({ error: "Product save nahi ho saka." });
@@ -2638,6 +2639,12 @@ app.post("/api/admin/products", isAdmin, async (req, res) => {
 app.patch("/api/admin/products/:id", isAdmin, async (req, res) => {
   if (!supabase) return res.status(503).json({ error: "Database is not configured" });
   const updates = {};
+  if (Object.prototype.hasOwnProperty.call(req.body || {}, "display_order")) {
+    const displayOrder = Number(req.body.display_order);
+    if (!Number.isInteger(displayOrder) || displayOrder < 1 || displayOrder > 10000)
+      return res.status(400).json({ error: "Product number 1 se 10000 ke beech enter karein." });
+    updates.display_order = displayOrder;
+  }
   if (Object.prototype.hasOwnProperty.call(req.body || {}, "description")) {
     if (typeof req.body.description !== "string" || req.body.description.trim().length > 2000)
       return res.status(400).json({ error: "Description 2000 characters se kam rakhein." });
