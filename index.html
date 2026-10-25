@@ -403,6 +403,15 @@ header.jk-inline-header{display:grid!important;grid-template-columns:auto minmax
 @media(max-width:380px){.stats{gap:9px!important}.stats>.stat{min-height:102px!important;padding:14px 12px!important;border-radius:18px!important}.stats>.stat b{font-size:25px!important}.stats>.stat span{font-size:12px!important}}
 </style>
 
+<style id="jk-wallet-reference-exact">
+/* Match reference screenshot's wallet cards: compact height, large readable value */
+.stats{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;margin-top:16px!important}
+.stats>.stat{height:118px!important;min-height:118px!important;max-height:118px!important;box-sizing:border-box!important;padding:14px 16px!important;border-radius:20px!important;gap:8px!important;justify-content:center!important}
+.stats>.stat b{font-size:clamp(27px,4.5vw,34px)!important;line-height:1.1!important;margin:0 0 4px!important;font-weight:850!important;letter-spacing:-.4px!important}
+.stats>.stat span{font-size:clamp(14px,2.6vw,18px)!important;line-height:1.25!important;font-weight:650!important}
+@media(max-width:380px){.stats{gap:9px!important}.stats>.stat{height:108px!important;min-height:108px!important;max-height:108px!important;padding:12px!important;border-radius:17px!important}.stats>.stat b{font-size:27px!important}.stats>.stat span{font-size:13px!important}}
+</style>
+
 </head>
 <body>
 
