@@ -1698,6 +1698,16 @@ function createProductHelpButtons(products=[]){
  wrap.append(feedback);return wrap;
 }
 
+
+function isPatchedProduct(product){
+ const name=String(product?.name||'').trim().toLowerCase();
+ // Keep these products purchasable exactly as requested.
+ if(/prime\\s*hook/.test(name)||/silent\\s*cheats.*(?:apkmod|proxy)/.test(name))return false;
+ return /phantom/.test(name)||/\\bxrag\\b/.test(name)||/drip\\s*wire/.test(name)||
+        /silent\\s*x\\s*ff/.test(name)||/bala\\s*mods?/.test(name)||
+        /abcd.*nonroot|nonroot.*abcd/.test(name);
+}
+
 async function loadShopProducts(){
  const root=document.getElementById('shopProducts');
  if(!root)return;
@@ -1780,8 +1790,8 @@ async function loadShopProducts(){
     const durationLabel=document.createElement('p');durationLabel.textContent=duration;durationLabel.style.cssText='font-size:14px;font-weight:bold;color:#f8fafc';
     const price=document.createElement('p');price.textContent='₹'+Number(product.price||0).toFixed(0);price.style.cssText='font-size:13px;color:#6ee7b7;margin-top:5px';
     details.append(durationLabel,price);
-    const buy=document.createElement('button');buy.type='button';buy.className='buy';buy.textContent='BUY';buy.style.cssText='padding:11px 14px;flex-shrink:0;background:#10b981;color:#052e16;font-size:12px';
-    buy.onclick=()=>confirmProductPurchase(product);
+    const buy=document.createElement('button');buy.type='button';buy.className='buy';buy.textContent=isPatchedProduct(product)?'PATCHED':'BUY';buy.style.cssText='padding:11px 14px;flex-shrink:0;background:#10b981;color:#052e16;font-size:12px';
+    if(isPatchedProduct(product)){buy.disabled=true;buy.setAttribute('aria-disabled','true');buy.style.cssText='padding:11px 14px;flex-shrink:0;background:#dc2626;color:#fff;font-size:12px;cursor:not-allowed;opacity:.95';}else{buy.onclick=()=>confirmProductPurchase(product);}
     row.append(details,buy);plans.appendChild(row);
    });
    if(!dripProducts.length){plans.style.display='none';}
@@ -1832,8 +1842,8 @@ async function loadShopProducts(){
      const durationLabel=document.createElement('p');durationLabel.textContent=duration.replace(/\b(\d+)\s*hours?\b/ig,'$1 Hours').replace(/\b(\d+)\s*hrs?\b/ig,'$1 Hours').replace(/\b(\d+)\s*h\b/ig,'$1 Hours').replace(/\b(\d+)\s*days?\b/ig,'$1 Days').replace(/\b(\d+)\s*minutes?\b/ig,'$1 Minutes').replace(/\b(\d+)\s*mins?\b/ig,'$1 Minutes').replace(/\b(\d+)\s*hours\b/ig,'$1 Hours');durationLabel.style.cssText='font-size:14px;font-weight:bold;color:#f8fafc';
      const price=document.createElement('p');price.textContent='₹'+Number(isResellerCustomer&&product.reseller_price!==null&&product.reseller_price!==undefined?product.reseller_price:product.price||0).toLocaleString('en-IN',{maximumFractionDigits:0});price.style.cssText='font-size:13px;color:#c4b5fd;margin-top:5px';
      details.append(durationLabel,price);
-     const buy=document.createElement('button');buy.type='button';buy.className='buy';buy.textContent='BUY';buy.style.cssText='padding:11px 14px;flex-shrink:0;background:#10b981;color:#052e16;font-size:12px';
-     buy.onclick=()=>confirmProductPurchase(product);
+     const buy=document.createElement('button');buy.type='button';buy.className='buy';buy.textContent=isPatchedProduct(product)?'PATCHED':'BUY';buy.style.cssText='padding:11px 14px;flex-shrink:0;background:#10b981;color:#052e16;font-size:12px';
+     if(isPatchedProduct(product)){buy.disabled=true;buy.setAttribute('aria-disabled','true');buy.style.cssText='padding:11px 14px;flex-shrink:0;background:#dc2626;color:#fff;font-size:12px;cursor:not-allowed;opacity:.95';}else{buy.onclick=()=>confirmProductPurchase(product);}
      row.append(details,buy);plans.appendChild(row);
     });
     card.append(title,createProductHelpButtons(),purchase,plans);
@@ -1879,8 +1889,8 @@ async function loadShopProducts(){
     const durationLabel=document.createElement('p');durationLabel.textContent=duration;durationLabel.style.cssText='font-size:14px;font-weight:bold;color:#f8fafc';
     const price=document.createElement('p');price.textContent='₹'+Number(product.price||0).toLocaleString('en-IN',{maximumFractionDigits:2});price.style.cssText='font-size:13px;color:#6ee7b7;margin-top:5px';
     details.append(durationLabel,price);
-    const buy=document.createElement('button');buy.type='button';buy.className='buy';buy.textContent='BUY';buy.style.cssText='padding:11px 14px;flex-shrink:0;background:#10b981;color:#052e16;font-size:12px';
-    buy.onclick=()=>confirmProductPurchase(product);
+    const buy=document.createElement('button');buy.type='button';buy.className='buy';buy.textContent=isPatchedProduct(product)?'PATCHED':'BUY';buy.style.cssText='padding:11px 14px;flex-shrink:0;background:#10b981;color:#052e16;font-size:12px';
+    if(isPatchedProduct(product)){buy.disabled=true;buy.setAttribute('aria-disabled','true');buy.style.cssText='padding:11px 14px;flex-shrink:0;background:#dc2626;color:#fff;font-size:12px;cursor:not-allowed;opacity:.95';}else{buy.onclick=()=>confirmProductPurchase(product);}
     row.append(details,buy);plans.appendChild(row);
    });
    card.append(title,createProductHelpButtons(balaProducts),purchase,plans);
@@ -1926,8 +1936,8 @@ async function loadShopProducts(){
     const durationLabel=document.createElement('p');durationLabel.textContent=primeHookDuration(product);durationLabel.style.cssText='font-size:14px;font-weight:bold;color:#f8fafc';
     const price=document.createElement('p');price.textContent='₹'+Number(product.price||0).toLocaleString('en-IN',{maximumFractionDigits:2});price.style.cssText='font-size:13px;color:#6ee7b7;margin-top:5px';
     details.append(durationLabel,price);
-    const buy=document.createElement('button');buy.type='button';buy.className='buy';buy.textContent='BUY';buy.style.cssText='padding:11px 14px;flex-shrink:0;background:#10b981;color:#052e16;font-size:12px';
-    buy.onclick=()=>confirmProductPurchase(product);
+    const buy=document.createElement('button');buy.type='button';buy.className='buy';buy.textContent=isPatchedProduct(product)?'PATCHED':'BUY';buy.style.cssText='padding:11px 14px;flex-shrink:0;background:#10b981;color:#052e16;font-size:12px';
+    if(isPatchedProduct(product)){buy.disabled=true;buy.setAttribute('aria-disabled','true');buy.style.cssText='padding:11px 14px;flex-shrink:0;background:#dc2626;color:#fff;font-size:12px;cursor:not-allowed;opacity:.95';}else{buy.onclick=()=>confirmProductPurchase(product);}
     row.append(details,buy);plans.appendChild(row);
    });
    card.append(title,createProductHelpButtons(primeHookProducts),purchase,plans);
@@ -1997,8 +2007,8 @@ async function loadShopProducts(){
     const durationLabel=document.createElement('p');durationLabel.textContent=duration;durationLabel.style.cssText='font-size:14px;font-weight:bold;color:#f8fafc';
     const price=document.createElement('p');price.textContent='₹'+Number(product.price||0).toLocaleString('en-IN',{maximumFractionDigits:2});price.style.cssText='font-size:13px;color:#6ee7b7;margin-top:5px';
     details.append(durationLabel,price);
-    const buy=document.createElement('button');buy.type='button';buy.className='buy';buy.textContent='BUY';buy.style.cssText='padding:11px 14px;flex-shrink:0;background:#10b981;color:#052e16;font-size:12px';
-    buy.onclick=()=>confirmProductPurchase(product);
+    const buy=document.createElement('button');buy.type='button';buy.className='buy';buy.textContent=isPatchedProduct(product)?'PATCHED':'BUY';buy.style.cssText='padding:11px 14px;flex-shrink:0;background:#10b981;color:#052e16;font-size:12px';
+    if(isPatchedProduct(product)){buy.disabled=true;buy.setAttribute('aria-disabled','true');buy.style.cssText='padding:11px 14px;flex-shrink:0;background:#dc2626;color:#fff;font-size:12px;cursor:not-allowed;opacity:.95';}else{buy.onclick=()=>confirmProductPurchase(product);}
     row.append(details,buy);plans.appendChild(row);
    });
    card.append(title,setupActions,desc,purchase,plans);
