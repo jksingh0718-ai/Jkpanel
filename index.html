@@ -1701,11 +1701,15 @@ function createProductHelpButtons(products=[]){
 
 function isPatchedProduct(product){
  const name=String(product?.name||'').trim().toLowerCase();
- // Keep these products purchasable exactly as requested.
- if(/prime\\s*hook/.test(name)||/silent\\s*cheats.*(?:apkmod|proxy)/.test(name))return false;
- return /phantom/.test(name)||/\\bxrag\\b/.test(name)||/drip\\s*wire/.test(name)||
-        /silent\\s*x\\s*ff/.test(name)||/bala\\s*mods?/.test(name)||
-        /abcd.*nonroot|nonroot.*abcd/.test(name);
+ // Explicit exceptions: these products remain purchasable.
+ if(/prime\s*hook/.test(name))return false;
+ if(/silent\s*cheats/.test(name)&&/(apk\s*mod|apkmod|proxy)/.test(name))return false;
+ // Patch every other product except the explicitly excluded ABCD panel.
+ if(/abcd/.test(name))return false;
+ return /phantom/.test(name)||/xrag/.test(name)||/drip\s*wire/.test(name)||
+        /silent\s*x\s*ff/.test(name)||/bala\s*mod/.test(name)||
+        /drip\s*client/.test(name)||/silent\s*cheats/.test(name)||
+        /(?:patched|panel)/.test(name) && !/abcd/.test(name);
 }
 
 async function loadShopProducts(){
