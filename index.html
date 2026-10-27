@@ -1637,6 +1637,8 @@ function setupShopProductSearch(){
   ranked.sort((a,b)=>{
    if(query&&a.show!==b.show)return a.show?-1:1;
    if(query&&a.starts!==b.starts)return a.starts?-1:1;
+   const da=Number(a.card.dataset.displayOrder||100),db=Number(b.card.dataset.displayOrder||100);
+   if(da!==db)return da-db;
    const ta=Number(a.card.dataset.createdAt||0),tb=Number(b.card.dataset.createdAt||0);
    if(ta!==tb)return tb-ta;
    return a.index-b.index;
