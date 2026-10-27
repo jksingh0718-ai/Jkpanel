@@ -1573,6 +1573,19 @@ app.get("/api/admin/orders", isAdmin, async (req, res) => {
   res.json({ orders: data });
 });
 
+function abcdPanelDuration(productName) {
+  const name = String(productName || "").trim().replace(/\s+/g, " ");
+  if (!/^ABCD\s+PANEL\s+FF\s+NONROOT(?:\s*-|$)/i.test(name)) return null;
+  const match = name.match(/(?:^|\s-\s)(12\s*hours?|1\s*days?|3\s*days?|7\s*days?)$/i);
+  if (!match) return null;
+  const value = match[1].toLowerCase().replace(/\s+/g, " ");
+  if (/^12\s*hours?$/.test(value)) return "12 Hours";
+  if (/^1\s*days?$/.test(value)) return "1 Days";
+  if (/^3\s*days?$/.test(value)) return "3 Days";
+  if (/^7\s*days?$/.test(value)) return "7 Days";
+  return null;
+}
+
 function dripWireDuration(productName) {
   const original = String(productName || "").trim();
   const name = original.toLowerCase().replace(/\s+/g, " ");
@@ -1783,6 +1796,7 @@ app.patch("/api/admin/orders/:id/payment", isAdmin, async (req, res) => {
   }
 
   const productName = existing["Product_name"] || "";
+  const isABCDPanel = /ABCD\s+PANEL\s+FF\s+NONROOT/i.test(productName);
   const isDripWire = /^DRIP Wire - /i.test(productName);
   const isDripClient = /dripclient.*apkmod/i.test(productName);
   const isAimHack = /^AIM HACK FF(?: - |$)/i.test(productName);
@@ -1793,7 +1807,8 @@ app.patch("/api/admin/orders/:id/payment", isAdmin, async (req, res) => {
   const isXrag = /xrag\s*ff\s*all/i.test(productName);
   const isPhantomTroll = /phantom\s*x\s*troll\s*ff\s*all/i.test(productName);
   let duration = null;
-  if (isSilentCheatNonroot) duration = silentCheatNonrootDuration(productName);
+  if (isABCDPanel) duration = abcdPanelDuration(productName);
+  else if (isSilentCheatNonroot) duration = silentCheatNonrootDuration(productName);
   else if (isSilentXFF) duration = silentXFFDuration(productName);
   else if (isPrimeHook) duration = primeHookDuration(productName);
   else if (isXrag) duration = xragDuration(productName);
@@ -1802,8 +1817,8 @@ app.patch("/api/admin/orders/:id/payment", isAdmin, async (req, res) => {
   else if (isDripClient) duration = dripClientApkmodDuration(productName);
   else if (isAimHack) duration = aimHackDuration(productName);
   else if (isBalaMods) duration = balaModsDuration(productName);
-  const usesSupplier = isDripWire || isDripClient || isAimHack || isBalaMods || isPrimeHook || isSilentXFF || isSilentCheatNonroot || isXrag || isPhantomTroll;
-  const supplierProductId = isSilentCheatNonroot ? "148" : (isSilentXFF ? "171" : (isPrimeHook ? "48" : (isXrag ? "149" : (isPhantomTroll ? "133" : (isAimHack ? "133" : (isBalaMods ? "136" : (isDripClient ? "62" : "150")))))));
+  const usesSupplier = isABCDPanel || isDripWire || isDripClient || isAimHack || isBalaMods || isPrimeHook || isSilentXFF || isSilentCheatNonroot || isXrag || isPhantomTroll;
+  const supplierProductId = isABCDPanel ? "151" : (isSilentCheatNonroot ? "148" : (isSilentXFF ? "171" : (isPrimeHook ? "48" : (isXrag ? "149" : (isPhantomTroll ? "133" : (isAimHack ? "133" : (isBalaMods ? "136" : (isDripClient ? "62" : "150"))))))));
   const nextSupplierStatus = usesSupplier ? (duration ? "processing" : "failed") : "not_applicable";
 
   const { data, error } = await supabase.from("orders")
@@ -2429,6 +2444,7 @@ app.post("/api/orders", async (req, res) => {
     return res.status(400).json({ error: "Is product ki price admin panel mein sahi set karein." });
   }
 
+  const isABCDPanel = /ABCD\s+PANEL\s+FF\s+NONROOT/i.test(product.name || "");
   const isDripWire = /^DRIP Wire - /i.test(product.name || "");
   const isDripClient = /dripclient.*apkmod/i.test(product.name || "");
   const isAimHack = /^AIM HACK FF(?: - |$)/i.test(product.name || "");
@@ -2438,9 +2454,9 @@ app.post("/api/orders", async (req, res) => {
   const isSilentCheatNonroot = /silent\s+cheat\s+ff\s+nonroot\s+proxy/i.test(product.name || "");
   const isXrag = /xrag\s*ff\s*all/i.test(product.name || "");
   const isPhantomTroll = /phantom\s*x\s*troll\s*ff\s*all/i.test(product.name || "");
-  if (isDripWire || isDripClient || isAimHack || isBalaMods || isPrimeHook || isSilentXFF || isSilentCheatNonroot || isXrag || isPhantomTroll) {
-    const duration = isSilentCheatNonroot ? silentCheatNonrootDuration(product.name) : isSilentXFF ? silentXFFDuration(product.name) : isPrimeHook ? primeHookDuration(product.name) : isXrag ? xragDuration(product.name) : isPhantomTroll ? phantomTrollDuration(product.name) : isDripWire ? dripWireDuration(product.name) : isBalaMods ? balaModsDuration(product.name) : isDripClient ? dripClientApkmodDuration(product.name) : aimHackDuration(product.name);
-    const supplierProductId = isSilentCheatNonroot ? "148" : (isSilentXFF ? "171" : (isPrimeHook ? "48" : (isXrag ? "149" : (isPhantomTroll ? "133" : (isAimHack ? "133" : (isBalaMods ? "136" : (isDripClient ? "62" : "150")))))));
+  if (isABCDPanel || isDripWire || isDripClient || isAimHack || isBalaMods || isPrimeHook || isSilentXFF || isSilentCheatNonroot || isXrag || isPhantomTroll) {
+    const duration = isABCDPanel ? abcdPanelDuration(product.name) : isSilentCheatNonroot ? silentCheatNonrootDuration(product.name) : isSilentXFF ? silentXFFDuration(product.name) : isPrimeHook ? primeHookDuration(product.name) : isXrag ? xragDuration(product.name) : isPhantomTroll ? phantomTrollDuration(product.name) : isDripWire ? dripWireDuration(product.name) : isBalaMods ? balaModsDuration(product.name) : isDripClient ? dripClientApkmodDuration(product.name) : aimHackDuration(product.name);
+    const supplierProductId = isABCDPanel ? "151" : (isSilentCheatNonroot ? "148" : (isSilentXFF ? "171" : (isPrimeHook ? "48" : (isXrag ? "149" : (isPhantomTroll ? "133" : (isAimHack ? "133" : (isBalaMods ? "136" : (isDripClient ? "62" : "150"))))))));
     if (!duration) return res.status(400).json({ error: "Product duration configured nahi hai." });
 
     // Give customers a clear deposit redirect before attempting the atomic purchase.
@@ -2595,7 +2611,9 @@ app.get("/api/admin/product-health-check", isAdmin, async (req, res) => {
     const checks = (products || []).map(p => {
       const name = String(p.name || "");
       let supplierId = null, duration = null, automatic = false;
-      if (/silent\s+cheat\s+ff\s+nonroot\s+proxy/i.test(name)) {
+      if (/ABCD\s+PANEL\s+FF\s+NONROOT/i.test(name)) {
+        supplierId = "151"; duration = abcdPanelDuration(name); automatic = true;
+      } else if (/silent\s+cheat\s+ff\s+nonroot\s+proxy/i.test(name)) {
         supplierId = "148"; duration = silentCheatNonrootDuration(name); automatic = true;
       } else if (/silent\s*x\s*ff/i.test(name)) {
         supplierId = "171"; duration = silentXFFDuration(name); automatic = true;
