@@ -1082,7 +1082,38 @@ async function loadProducts(){
   const groups=new Map();
   const productNameInfo=adminProductNameInfo;
   products.forEach(p=>{const info=productNameInfo(p.name);if(!groups.has(info.base))groups.set(info.base,[]);groups.get(info.base).push(p);});
-  groups.forEach((items,base)=>{
+  const preferredProductRank = base => {
+   const n=String(base||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
+   if(/phantom/.test(n))return 1;
+   if(/xrag|xr ag/.test(n))return 2;
+   if(/drip wire/.test(n))return 3;
+   if(/silent x ff|silent x/.test(n))return 4;
+   if(/bala mod/.test(n))return 5;
+   if(/abcd nonroot/.test(n))return 6;
+   if(/drip ?client.*apkmod|dripclient/.test(n))return 7;
+   if(/silent cheats ff.*proxy|silent cheats.*nonroot.*proxy/.test(n))return 8;
+   if(/silent cheats apkmod/.test(n))return 9;
+   if(/prime hook/.test(n))return 10;
+   return 1000;
+  };
+  const orderedGroups=[...groups.entries()].sort((a,b)=>{
+   const ra=preferredProductRank(a[0]),rb=preferredProductRank(b[0]);
+   if(ra!==rb)return ra-rb;
+   const oa=Math.min(...a[1].map(p=>Number(p.display_order)||100));
+   const ob=Math.min(...b[1].map(p=>Number(p.display_order)||100));
+   return oa-ob||a[0].localeCompare(b[0],"en",{numeric:true,sensitivity:"base"});
+  });
+  // Normalize positions to 1..number of product groups, keeping each product's duration plans together.
+  for(let i=0;i<orderedGroups.length;i++){
+   const [base,items]=orderedGroups[i],position=i+1;
+   if(items.some(p=>Number(p.display_order)!==position)){
+    for(const p of items){
+     const response=await api("/api/admin/products/"+encodeURIComponent(p.id),{method:"PATCH",body:JSON.stringify({display_order:position})});
+     p.display_order=position;
+    }
+   }
+  }
+  orderedGroups.forEach(([base,items],groupIndex)=>{
    const card=document.createElement("article");card.className="card";
    const title=document.createElement("h3");title.textContent=base;
    const titleRow=document.createElement("div");titleRow.style.cssText="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px";
@@ -1124,7 +1155,34 @@ async function loadProducts(){
    const activity=document.createElement("button");activity.type="button";activity.textContent="See Activity";activity.style.cssText="background:linear-gradient(135deg,#c084fc,#7c3aed);color:#fff;border:0;border-radius:9px;margin:4px 0 0";
    activity.onclick=()=>{options.hidden=!options.hidden;description.hidden=options.hidden;media.hidden=options.hidden;activity.textContent=options.hidden?"See Activity":"Hide Activity";};
    visibility.onclick=async()=>{visibility.disabled=true;try{const publish=!items.some(p=>p.published);for(const p of items)await api("/api/admin/products/"+encodeURIComponent(p.id),{method:"PATCH",body:JSON.stringify({published:publish})});await loadProducts();}catch(e){document.getElementById("productMessage").textContent=e.message;}finally{visibility.disabled=false;}};
-   titleRow.append(title);card.append(titleRow,edit,visibility,activity,options,description,media,linksBox);root.appendChild(card);
+   const positionWrap=document.createElement("label");positionWrap.style.cssText="display:flex;align-items:center;gap:7px;margin:8px 0;font-size:12px;font-weight:700;color:#cbd5e1";
+   positionWrap.appendChild(document.createTextNode("Shop position"));
+   const positionSelect=document.createElement("select");positionSelect.style.cssText="min-width:78px;padding:8px;background:#0f172a;color:#fff;border:1px solid #475569;border-radius:8px";
+   for(let n=1;n<=orderedGroups.length;n++){const option=document.createElement("option");option.value=String(n);option.textContent=String(n);positionSelect.appendChild(option);}
+   positionSelect.value=String(groupIndex+1);
+   positionSelect.onchange=async()=>{
+    const target=Number(positionSelect.value),from=groupIndex+1;
+    if(target===from)return;
+    positionSelect.disabled=true;
+    try{
+     const reordered=orderedGroups.slice();
+     const [moving]=reordered.splice(from-1,1);reordered.splice(target-1,0,moving);
+     for(let i=0;i<reordered.length;i++){
+      const [groupBase,groupItems]=reordered[i],newPosition=i+1;
+      for(const product of groupItems){
+       if(Number(product.display_order)!==newPosition){
+        await api("/api/admin/products/"+encodeURIComponent(product.id),{method:"PATCH",body:JSON.stringify({display_order:newPosition})});
+        product.display_order=newPosition;
+       }
+      }
+     }
+     document.getElementById("productMessage").textContent="Shop product order save ho gaya.";
+     await loadProducts();
+    }catch(err){document.getElementById("productMessage").textContent="Position save nahi hui: "+err.message;positionSelect.value=String(from);}
+    finally{positionSelect.disabled=false;}
+   };
+   positionWrap.appendChild(positionSelect);
+   titleRow.append(title);card.append(titleRow,positionWrap,edit,visibility,activity,options,description,media,linksBox);root.appendChild(card);
   });
  }catch(e){document.getElementById("productMessage").textContent=e.message;}
 }
