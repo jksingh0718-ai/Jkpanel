@@ -1622,7 +1622,7 @@ function balaModsDuration(productName) {
   const hours = name.match(/(?:^|\s-\s)(1|3|6|12)\s*hours?/i);
   if (hours) return hours[1] + " Hours";
   const days = name.match(/(?:^|\s-\s)(1)\s*days?/i);
-  if (days) return "1 DaYs";
+  if (days) return "1 Day";
   return null;
 }
 
@@ -2606,8 +2606,8 @@ app.get("/api/admin/product-health-check", isAdmin, async (req, res) => {
       .select("id, name, price, published").order("name", { ascending: true });
     if (error) throw error;
     const credentialsReady = Boolean(
-      String(process.env.BANTI_MASTER_KEY || process.env.RESELLER_ACCESS_TOKEN || "").trim() &&
-      String(process.env.RESELLER_API_KEY || process.env.RESELLER_ACCESS_TOKEN || "").trim()
+      String(process.env.RESELLER_API_KEY || process.env.RESELLER_ACCESS_TOKEN || "").trim() &&
+      String(process.env.X_MASTER_KEY || process.env.BANTI_MASTER_KEY || "").trim()
     );
     const checks = (products || []).map(p => {
       const name = String(p.name || "");
