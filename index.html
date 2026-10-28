@@ -1700,13 +1700,9 @@ function createProductHelpButtons(products=[]){
 
 
 function isPatchedProduct(product){
- const name=String(product?.name||'').trim().toLowerCase();
- // Keep these products purchasable.
- if(/prime\s*hook/.test(name))return false;
- if(/abcd/.test(name))return false;
- if(/silent\s*cheats/.test(name)&&/(apk\s*mod|apkmod|proxy)/.test(name))return false;
- // All remaining shop products show PATCHED and cannot be purchased.
- return true;
+ // Re-enable the BUY button for every shop product.
+ // Purchase availability is still validated by the normal order/delivery flow.
+ return false;
 }
 
 async function loadShopProducts(){
