@@ -1575,12 +1575,13 @@ app.get("/api/admin/orders", isAdmin, async (req, res) => {
 
 function abcdPanelDuration(productName) {
   const name = String(productName || "").trim().replace(/\s+/g, " ");
-  if (!/^ABCD\s+PANEL\s+FF\s+NONROOT(?:\s*-|$)/i.test(name)) return null;
+  // Support both the full catalog label and the shorter "ABCD Nonroot" shop label.
+  if (!/^ABCD(?:\s+PANEL)?(?:\s+FF)?\s+NONROOT(?:\s*-|$)/i.test(name)) return null;
   const match = name.match(/(?:^|\s-\s)(12\s*hours?|1\s*days?|3\s*days?|7\s*days?)$/i);
   if (!match) return null;
   const value = match[1].toLowerCase().replace(/\s+/g, " ");
   if (/^12\s*hours?$/.test(value)) return "12 Hours";
-  if (/^1\s*days?$/.test(value)) return "1 Days";
+  if (/^1\s*days?$/.test(value)) return "1 Day";
   if (/^3\s*days?$/.test(value)) return "3 Days";
   if (/^7\s*days?$/.test(value)) return "7 Days";
   return null;
@@ -2444,7 +2445,7 @@ app.post("/api/orders", async (req, res) => {
     return res.status(400).json({ error: "Is product ki price admin panel mein sahi set karein." });
   }
 
-  const isABCDPanel = /ABCD\s+PANEL\s+FF\s+NONROOT/i.test(product.name || "");
+  const isABCDPanel = /^ABCD(?:\s+PANEL)?(?:\s+FF)?\s+NONROOT(?:\s*-|$)/i.test(String(product.name || "").trim());
   const isDripWire = /^DRIP Wire - /i.test(product.name || "");
   const isDripClient = /dripclient.*apkmod/i.test(product.name || "");
   const isAimHack = /^AIM HACK FF(?: - |$)/i.test(product.name || "");
