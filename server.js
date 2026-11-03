@@ -1236,10 +1236,16 @@ document.getElementById("productForm").onsubmit=async e=>{
   let videoUrl=document.getElementById("productVideoUrl").value.trim();const videoFile=document.getElementById("productVideoFile").files[0];
   if(videoFile){if(videoFile.size>100*1024*1024)throw new Error("Video 100 MB se chhoti honi chahiye.");videoStatus.textContent="Gallery video upload ho rahi hai...";const formData=new FormData();formData.append("video",videoFile);const r=await fetch("/api/admin/product-video",{method:"POST",body:formData});const raw=await r.text();let d={};try{d=raw?JSON.parse(raw):{};}catch{}if(!r.ok)throw new Error(d.error||"Video upload fail hua.");videoUrl=d.video_url;document.getElementById("productVideoUrl").value=videoUrl;videoStatus.textContent="Video upload ho gaya.";}
   const current=await api("/api/admin/products"),all=Array.isArray(current.products)?current.products:[];
-  const isPrimeHook=/^prime\s*hook(?:\s+ff\s+nonroot\s+android)?$/i.test(base);
-  const existing=all.filter(p=>{
-   const name=String(p.name||"").trim();
-   return isPrimeHook?/^prime\s*hook(?:\b|$)/i.test(name):(name.toLowerCase()===base.toLowerCase()||name.toLowerCase().startsWith((base+" - ").toLowerCase()));
+  const selectedProduct=id?all.find(p=>String(p.id)===String(id)):null;
+  if(id&&!selectedProduct)throw new Error("Edit wala product nahi mila. Refresh karke dobara try karein.");
+  const originalBase=selectedProduct?adminProductNameInfo(selectedProduct.name).base:base;
+  const isPrimeHook=/^prime\s*hook(?:\s+ff\s+nonroot\s+android)?$/i.test(originalBase);
+  const existing=selectedProduct?all.filter(p=>{
+   const itemBase=adminProductNameInfo(p.name).base;
+   return isPrimeHook?/^prime\s*hook(?:\b|$)/i.test(String(p.name||"")):itemBase.toLowerCase()===originalBase.toLowerCase();
+  }):all.filter(p=>{
+   const itemBase=adminProductNameInfo(p.name).base;
+   return itemBase.toLowerCase()===base.toLowerCase();
   });
   const durationKey=value=>String(value||"").toLowerCase().replace(/[^a-z0-9]/g,"");
   const wanted=new Set(rows.map(p=>durationKey(p.duration)));
@@ -1638,7 +1644,7 @@ function silentCheatNonrootDuration(productName) {
 
 function silentXFFDuration(productName) {
   const name = String(productName || "").trim().toLowerCase().replace(/\s+/g, " ");
-  if (!/^silent\s*x\s*ff(?:\s+all)?(?:\s*-|$)/i.test(name)) return null;
+  if (!/^(?:silent\s*x\s*ff(?:\s+all)?|myth\s*panel\s*all)(?:\s*-|$)/i.test(name)) return null;
   const hours = name.match(/(?:^|\s-\s)(1|3|6|12)\s*hours?/i);
   if (hours) return hours[1] + " Hours";
   const days = name.match(/(?:^|\s-\s)(1|3|7|30)\s*days?/i);
@@ -1803,7 +1809,7 @@ app.patch("/api/admin/orders/:id/payment", isAdmin, async (req, res) => {
   const isAimHack = /^AIM HACK FF(?: - |$)/i.test(productName);
   const isBalaMods = /bala\s*mods/i.test(productName);
   const isPrimeHook = /prime\s*hook/i.test(productName);
-  const isSilentXFF = /silent\s*x\s*ff/i.test(productName);
+  const isSilentXFF = /(?:silent\s*x\s*ff|myth\s*panel\s*all)/i.test(productName);
   const isSilentCheatNonroot = /silent\s+cheat\s+ff\s+nonroot\s+proxy/i.test(productName);
   const isXrag = /xrag\s*ff\s*all/i.test(productName);
   const isPhantomTroll = /phantom\s*x\s*troll\s*ff\s*all/i.test(productName);
@@ -2451,7 +2457,7 @@ app.post("/api/orders", async (req, res) => {
   const isAimHack = /^AIM HACK FF(?: - |$)/i.test(product.name || "");
    const isBalaMods = /bala\s*mods/i.test(product.name || "");
   const isPrimeHook = /prime\s*hook/i.test(product.name || "");
-  const isSilentXFF = /silent\s*x\s*ff/i.test(product.name || "");
+  const isSilentXFF = /(?:silent\s*x\s*ff|myth\s*panel\s*all)/i.test(product.name || "");
   const isSilentCheatNonroot = /silent\s+cheat\s+ff\s+nonroot\s+proxy/i.test(product.name || "");
   const isXrag = /xrag\s*ff\s*all/i.test(product.name || "");
   const isPhantomTroll = /phantom\s*x\s*troll\s*ff\s*all/i.test(product.name || "");
@@ -2616,7 +2622,7 @@ app.get("/api/admin/product-health-check", isAdmin, async (req, res) => {
         supplierId = "151"; duration = abcdPanelDuration(name); automatic = true;
       } else if (/silent\s+cheat\s+ff\s+nonroot\s+proxy/i.test(name)) {
         supplierId = "148"; duration = silentCheatNonrootDuration(name); automatic = true;
-      } else if (/silent\s*x\s*ff/i.test(name)) {
+      } else if (/(?:silent\s*x\s*ff|myth\s*panel\s*all)/i.test(name)) {
         supplierId = "171"; duration = silentXFFDuration(name); automatic = true;
       } else if (/prime\s*hook/i.test(name)) {
         supplierId = "48"; duration = primeHookDuration(name); automatic = true;
