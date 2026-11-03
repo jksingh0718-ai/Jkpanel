@@ -1079,15 +1079,25 @@ async function loadProducts(){
   root.replaceChildren();
   const products=Array.isArray(data.products)?data.products:[];
   if(!products.length){root.textContent="Abhi koi product nahi hai. Upar se product add karein.";return;}
-  const groups=new Map();
   const productNameInfo=adminProductNameInfo;
-  products.forEach(p=>{const info=productNameInfo(p.name);if(!groups.has(info.base))groups.set(info.base,[]);groups.get(info.base).push(p);});
+  const durationKey=value=>String(value||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+  const activePlanKeys=new Set(products.filter(p=>p.published).map(p=>{
+   const info=productNameInfo(p.name);return info.base.toLowerCase()+"|"+durationKey(info.duration);
+  }));
+  // Keep archived plans manageable, but don't show an archived duplicate beside its active replacement.
+  const manageableProducts=products.filter(p=>{
+   if(p.published)return true;
+   const info=productNameInfo(p.name);
+   return !activePlanKeys.has(info.base.toLowerCase()+"|"+durationKey(info.duration));
+  });
+  const groups=new Map();
+  manageableProducts.forEach(p=>{const info=productNameInfo(p.name);if(!groups.has(info.base))groups.set(info.base,[]);groups.get(info.base).push(p);});
   const preferredProductRank = base => {
    const n=String(base||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
    if(/phantom/.test(n))return 1;
    if(/xrag|xr ag/.test(n))return 2;
    if(/drip wire/.test(n))return 3;
-   if(/silent x ff|silent x/.test(n))return 4;
+   if(/myth panel all|silent x ff|silent x/.test(n))return 4;
    if(/bala mod/.test(n))return 5;
    if(/abcd nonroot/.test(n))return 6;
    if(/drip ?client.*apkmod|dripclient/.test(n))return 7;
@@ -1240,13 +1250,13 @@ document.getElementById("productForm").onsubmit=async e=>{
   if(id&&!selectedProduct)throw new Error("Edit wala product nahi mila. Refresh karke dobara try karein.");
   const originalBase=selectedProduct?adminProductNameInfo(selectedProduct.name).base:base;
   const isPrimeHook=/^prime\s*hook(?:\s+ff\s+nonroot\s+android)?$/i.test(originalBase);
-  const existing=selectedProduct?all.filter(p=>{
+  const existing=(selectedProduct?all.filter(p=>{
    const itemBase=adminProductNameInfo(p.name).base;
    return isPrimeHook?/^prime\s*hook(?:\b|$)/i.test(String(p.name||"")):itemBase.toLowerCase()===originalBase.toLowerCase();
   }):all.filter(p=>{
    const itemBase=adminProductNameInfo(p.name).base;
    return itemBase.toLowerCase()===base.toLowerCase();
-  });
+  })).sort((a,b)=>Number(Boolean(b.published))-Number(Boolean(a.published)));
   const durationKey=value=>String(value||"").toLowerCase().replace(/[^a-z0-9]/g,"");
   const wanted=new Set(rows.map(p=>durationKey(p.duration)));
   const matchedIds=new Set();
