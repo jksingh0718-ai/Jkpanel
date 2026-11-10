@@ -2760,8 +2760,12 @@ app.post("/api/admin/products", isAdmin, async (req, res) => {
     return res.status(400).json({ error: "Image URL https:// se shuru hona chahiye." });
   }
   if (videoUrl && (videoUrl.length > 2000 || !/^https:\/\//i.test(videoUrl))) return res.status(400).json({ error: "Video URL https:// se shuru hona chahiye." });
+  const supplierPid = String(req.body?.supplier_product_id || "").trim();
+  const supplierDuration = String(req.body?.supplier_duration || "").trim();
+  if ((supplierPid && !/^\\d{1,20}$/.test(supplierPid)) || (Boolean(supplierPid) !== Boolean(supplierDuration)) || supplierDuration.length > 80)
+    return res.status(400).json({ error: "Valid Supplier PID aur exact API duration dono enter karein, ya dono blank chhodein." });
   const { data, error } = await supabase.from("products")
-    .insert({ name, price, image_url: imageUrl || null, video_url: videoUrl || null, published, description, display_order: displayOrder, supplier_product_id: String(req.body?.supplier_product_id || "").trim() || null, supplier_duration: String(req.body?.supplier_duration || "").trim() || null })
+    .insert({ name, price, image_url: imageUrl || null, video_url: videoUrl || null, published, description, display_order: displayOrder, supplier_product_id: supplierPid || null, supplier_duration: supplierDuration || null })
     .select("id, name, price, image_url, video_url, published, description, display_order, supplier_product_id, supplier_duration").single();
   if (error) {
     console.error("Product create failed:", error.message);
