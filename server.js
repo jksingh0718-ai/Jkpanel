@@ -1092,23 +1092,7 @@ async function loadProducts(){
   });
   const groups=new Map();
   manageableProducts.forEach(p=>{const info=productNameInfo(p.name);if(!groups.has(info.base))groups.set(info.base,[]);groups.get(info.base).push(p);});
-  const preferredProductRank = base => {
-   const n=String(base||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
-   if(/phantom/.test(n))return 1;
-   if(/xrag|xr ag/.test(n))return 2;
-   if(/drip wire/.test(n))return 3;
-   if(/myth panel all|silent x ff|silent x/.test(n))return 4;
-   if(/bala mod/.test(n))return 5;
-   if(/abcd nonroot/.test(n))return 6;
-   if(/drip ?client.*apkmod|dripclient/.test(n))return 7;
-   if(/silent cheats ff.*proxy|silent cheats.*nonroot.*proxy/.test(n))return 8;
-   if(/silent cheats apkmod/.test(n))return 9;
-   if(/prime hook/.test(n))return 10;
-   return 1000;
-  };
   const orderedGroups=[...groups.entries()].sort((a,b)=>{
-   const ra=preferredProductRank(a[0]),rb=preferredProductRank(b[0]);
-   if(ra!==rb)return ra-rb;
    const oa=Math.min(...a[1].map(p=>Number(p.display_order)||100));
    const ob=Math.min(...b[1].map(p=>Number(p.display_order)||100));
    return oa-ob||a[0].localeCompare(b[0],"en",{numeric:true,sensitivity:"base"});
