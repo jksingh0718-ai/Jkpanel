@@ -1029,7 +1029,10 @@ function adminProductNameInfo(name){
   return {base:"PRIME HOOK FF NONROOT ANDROID",duration:duration||"Standard"};
  }
  const match=raw.match(/^(.*?)\s*-\s*(.+)$/);
- return {base:match?match[1].trim():raw,duration:match?match[2].trim():"Standard"};
+ let base=match?match[1].trim():raw;
+ // Treat archived AIM HACK FF plans and live AIM HACK FF ALL plans as one product group.
+ if(/^AIM\s*HACK\s*FF(?:\s+ALL)?$/i.test(base))base="AIM HACK FF ALL";
+ return {base,duration:match?match[2].trim():"Standard"};
 }
 
 document.getElementById("testAllProducts")?.addEventListener("click", async () => {
