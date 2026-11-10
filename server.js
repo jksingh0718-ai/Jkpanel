@@ -1184,13 +1184,16 @@ async function loadProducts(){
  }catch(e){document.getElementById("productMessage").textContent=e.message;}
 }
 const productPlanSeed=[{duration:"",price:""}];
-function addProductPlanRow(duration="",price=""){
+function addProductPlanRow(duration="",price="",supplierPid="",supplierDuration=""){
  const root=document.getElementById("productPlanRows"),row=document.createElement("div");row.className="card product-plan-row";row.style.cssText="padding:10px;margin:8px 0;border:1px solid #334155";
- const fields=document.createElement("div");fields.style.cssText="display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:8px";
- const time=document.createElement("input");time.className="product-plan-duration";time.required=true;time.maxLength=80;time.placeholder="Duration, e.g. 6 Hours";time.value=duration;time.style.width="100%";
- const cost=document.createElement("input");cost.className="product-plan-price";cost.required=true;cost.type="number";cost.min="0";cost.max="1000000";cost.step="0.01";cost.placeholder="Price ₹";cost.value=price;cost.style.width="100%";
+ const fields=document.createElement("div");fields.style.cssText="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px";
+ const time=document.createElement("input");time.className="product-plan-duration";time.required=true;time.maxLength=80;time.placeholder="Shop duration, e.g. 1 Day";time.value=duration;time.style.width="100%";
+ const cost=document.createElement("input");cost.className="product-plan-price";cost.required=true;cost.type="number";cost.min="0";cost.max="1000000";cost.step="0.01";cost.placeholder="Shop price ₹";cost.value=price;cost.style.width="100%";
+ const pid=document.createElement("input");pid.className="product-plan-supplier-pid";pid.inputMode="numeric";pid.placeholder="Supplier PID (e.g. 174)";pid.value=supplierPid;pid.maxLength=20;pid.style.width="100%";
+ const apiDuration=document.createElement("input");apiDuration.className="product-plan-supplier-duration";apiDuration.placeholder="Exact API duration (e.g. 1 Hours)";apiDuration.value=supplierDuration;apiDuration.maxLength=80;apiDuration.style.width="100%";
+ const help=document.createElement("small");help.textContent="Supplier mapping optional: PID aur exact API duration dono bharein. Blank chhodne par purana automatic mapping use hoga.";help.style.cssText="display:block;color:#94a3b8;font-size:11px;line-height:1.4;margin:6px 0";
  const remove=document.createElement("button");remove.type="button";remove.textContent="Remove duration";remove.style.cssText="background:#7f1d1d;color:white";remove.onclick=()=>row.remove();
- fields.append(time,cost);row.append(fields,remove);root.appendChild(row);
+ fields.append(time,cost,pid,apiDuration);row.append(fields,help,remove);root.appendChild(row);
 }
 function clearProductForm(){
  document.getElementById("productForm").reset();
