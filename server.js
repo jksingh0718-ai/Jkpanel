@@ -719,6 +719,14 @@ small{color:#a6b2c0}
   <input id="productDisplayOrder" type="number" min="1" max="10000" step="1" value="100" required placeholder="1 = sabse pehle" style="width:100%"><small>Chhota number pehle dikhega. Example: 1, 2, 3...</small><br>
   <h4 style="margin:14px 0 6px">All durations & prices for this product</h4>
   <div style="padding:10px 12px;margin:8px 0 10px;background:#172554;border:1px solid #3b82f6;border-radius:10px;color:#dbeafe;font-size:13px;line-height:1.6">Product ka naam sirf ek baar likhein. Neeche <b>+ Add duration</b> se 6 Hours, 12 Hours, 1 Day, 7 Days jaise sabhi plans aur unki prices add karein. Shop mein ye sab ek hi product card ke andar dikhenge. Alag-alag product banane ki zarurat nahi.</div>
+  <div style="padding:12px;margin:10px 0;background:#082f49;border:1px solid #0891b2;border-radius:10px">
+   <b style="color:#67e8f9">Quick Supplier Setup (one time)</b>
+   <label for="sharedSupplierPid" style="display:block;margin-top:8px">Supplier PID (same for all durations)</label>
+   <input id="sharedSupplierPid" inputmode="numeric" maxlength="20" placeholder="Example: 174" style="width:100%">
+   <label for="sharedSupplierDurations" style="display:block;margin-top:8px">Exact API durations (one per line, same order as shop durations)</label>
+   <textarea id="sharedSupplierDurations" placeholder="1 Hours&#10;3 Hours&#10;6 Hours&#10;12 Hours&#10;1 Days&#10;3 Days&#10;7 Days&#10;15 Days&#10;30 Days" style="width:100%;min-height:150px"></textarea>
+   <small>Save karte waqt PID sabhi plans par lag jayega. API durations line-by-line plans se map hongi; har row mein alag PID bharne ki zaroorat nahi.</small>
+  </div>
   <div id="productPlanRows"></div>
   <button type="button" id="addProductPlan" style="background:#334155;color:white">+ Add duration</button><br><small>Existing product ko edit karne par uske sabhi durations ek saath load honge. Yahan se plans update kar sakte hain.</small><br>
   <label for="productDescription">Product description</label><br>
@@ -1225,7 +1233,15 @@ document.getElementById("productForm").onsubmit=async e=>{
   const base=document.getElementById("productName").value.trim();
   const displayOrder=Number(document.getElementById("productDisplayOrder").value);
   if(!Number.isInteger(displayOrder)||displayOrder<1||displayOrder>10000)throw new Error("Product number 1 se 10000 ke beech enter karein.");
-  const rows=[...document.querySelectorAll("#productPlanRows .product-plan-row")].map(row=>({duration:row.querySelector(".product-plan-duration").value.trim(),price:Number(row.querySelector(".product-plan-price").value),supplier_product_id:row.querySelector(".product-plan-supplier-pid").value.trim(),supplier_duration:row.querySelector(".product-plan-supplier-duration").value.trim()}));
+  const planElements=[...document.querySelectorAll("#productPlanRows .product-plan-row")];
+  const sharedPid=document.getElementById("sharedSupplierPid").value.trim();
+  const sharedDurations=document.getElementById("sharedSupplierDurations").value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  if(sharedPid){
+   if(!/^\d{1,20}$/.test(sharedPid))throw new Error("Supplier PID sirf numbers mein enter karein.");
+   if(sharedDurations.length!==planElements.length)throw new Error("API durations ki lines aur shop duration rows ki ginti same honi chahiye.");
+   planElements.forEach((row,index)=>{row.querySelector(".product-plan-supplier-pid").value=sharedPid;row.querySelector(".product-plan-supplier-duration").value=sharedDurations[index];});
+  }
+  const rows=planElements.map(row=>({duration:row.querySelector(".product-plan-duration").value.trim(),price:Number(row.querySelector(".product-plan-price").value),supplier_product_id:row.querySelector(".product-plan-supplier-pid").value.trim(),supplier_duration:row.querySelector(".product-plan-supplier-duration").value.trim()}));
   if(!base||base.length>100)throw new Error("Valid product name enter karein.");
   if(!rows.length)throw new Error("Kam se kam ek duration-price option add karein.");
   const seen=new Set();for(const row of rows){const key=row.duration.toLowerCase();if(!row.duration||row.duration.length>80||seen.has(key))throw new Error("Har duration bharein aur duplicate duration na rakhein.");if(!Number.isFinite(row.price)||row.price<0||row.price>1000000)throw new Error("Har duration ki valid price enter karein.");if((row.supplier_product_id&&!/^\\d{1,20}$/.test(row.supplier_product_id))||(Boolean(row.supplier_product_id)!==Boolean(row.supplier_duration)))throw new Error("Supplier PID aur exact API duration dono sahi bharein, ya dono blank chhodein.");if(row.supplier_duration.length>80)throw new Error("Supplier duration 80 characters se kam rakhein.");seen.add(key);}
