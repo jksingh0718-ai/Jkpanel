@@ -2626,8 +2626,8 @@ app.get("/api/admin/product-health-check", isAdmin, async (req, res) => {
         supplierId = "133"; duration = phantomTrollDuration(name); automatic = true;
       } else if (/^DRIP Wire - /i.test(name)) {
         supplierId = "150"; duration = dripWireDuration(name); automatic = true;
-      } else if (/^AIM HACK FF(?: - |$)/i.test(name)) {
-        supplierId = "133"; duration = aimHackDuration(name); automatic = true;
+      } else if (/^AIM HACK FF(?: ALL)?(?: - |$)/i.test(name)) {
+        supplierId = "174"; duration = aimHackDuration(name); automatic = true;
       } else if (/bala\s*mods/i.test(name)) {
         supplierId = "136"; duration = balaModsDuration(name); automatic = true;
       } else if (/dripclient.*apkmod/i.test(name)) {
