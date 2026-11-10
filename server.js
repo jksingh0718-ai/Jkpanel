@@ -1800,30 +1800,27 @@ app.patch("/api/admin/orders/:id/payment", isAdmin, async (req, res) => {
   }
 
   const productName = existing["Product_name"] || "";
-  const isABCDPanel = /ABCD\s+PANEL\s+FF\s+NONROOT/i.test(productName);
-  const isDripWire = /^DRIP Wire - /i.test(productName);
-  const isDripClient = /dripclient.*apkmod/i.test(productName);
-  const isAimHack = /^AIM HACK FF(?: - |$)/i.test(productName);
-  const isBalaMods = /bala\s*mods/i.test(productName);
-  const isPrimeHook = /prime\s*hook/i.test(productName);
-  const isSilentXFF = /(?:silent\s*x\s*ff|myth\s*panel\s*all)/i.test(productName);
-  const isSilentCheatNonroot = /silent\s+cheat\s+ff\s+nonroot\s+proxy/i.test(productName);
-  const isXrag = /xrag\s*ff\s*all/i.test(productName);
-  const isPhantomTroll = /phantom\s*x\s*troll\s*ff\s*all/i.test(productName);
-  let duration = null;
-  if (isABCDPanel) duration = abcdPanelDuration(productName);
-  else if (isSilentCheatNonroot) duration = silentCheatNonrootDuration(productName);
-  else if (isSilentXFF) duration = silentXFFDuration(productName);
-  else if (isPrimeHook) duration = primeHookDuration(productName);
-  else if (isXrag) duration = xragDuration(productName);
-  else if (isPhantomTroll) duration = phantomTrollDuration(productName);
-  else if (isDripWire) duration = dripWireDuration(productName);
-  else if (isDripClient) duration = dripClientApkmodDuration(productName);
-  else if (isAimHack) duration = aimHackDuration(productName);
-  else if (isBalaMods) duration = balaModsDuration(productName);
-  const usesSupplier = isABCDPanel || isDripWire || isDripClient || isAimHack || isBalaMods || isPrimeHook || isSilentXFF || isSilentCheatNonroot || isXrag || isPhantomTroll;
-  const supplierProductId = isABCDPanel ? "151" : (isSilentCheatNonroot ? "148" : (isSilentXFF ? "171" : (isPrimeHook ? "48" : (isXrag ? "149" : (isPhantomTroll ? "133" : (isAimHack ? "174" : (isBalaMods ? "136" : (isDripClient ? "62" : "150"))))))));
-  const nextSupplierStatus = usesSupplier ? (duration ? "processing" : "failed") : "not_applicable";
+  const { data: mappedProduct, error: mappedProductError } = await supabase.from("products")
+    .select("supplier_product_id, supplier_duration").eq("name", productName).maybeSingle();
+  if (mappedProductError) console.error("Supplier mapping lookup failed:", mappedProductError.message);
+  const legacyId = /^ABCD\s+PANEL\s+FF\s+NONROOT/i.test(productName) ? "151" :
+    /silent\s+cheat\s+ff\s+nonroot\s+proxy/i.test(productName) ? "148" :
+    /(?:silent\s*x\s*ff|myth\s*panel\s*all)/i.test(productName) ? "171" :
+    /prime\s*hook/i.test(productName) ? "48" : /xrag\s*ff\s*all/i.test(productName) ? "149" :
+    /phantom\s*x\s*troll\s*ff\s*all/i.test(productName) ? "133" :
+    /^AIM HACK FF(?: ALL)?(?: - |$)/i.test(productName) ? "174" :
+    /bala\s*mods/i.test(productName) ? "136" : /dripclient.*apkmod/i.test(productName) ? "62" :
+    /^DRIP Wire - /i.test(productName) ? "150" : null;
+  const legacyDuration = legacyId === "151" ? abcdPanelDuration(productName) :
+    legacyId === "148" ? silentCheatNonrootDuration(productName) :
+    legacyId === "171" ? silentXFFDuration(productName) : legacyId === "48" ? primeHookDuration(productName) :
+    legacyId === "149" ? xragDuration(productName) : legacyId === "133" ? phantomTrollDuration(productName) :
+    legacyId === "174" ? aimHackDuration(productName) : legacyId === "136" ? balaModsDuration(productName) :
+    legacyId === "62" ? dripClientApkmodDuration(productName) : legacyId === "150" ? dripWireDuration(productName) : null;
+  const supplierProductId = String(mappedProduct?.supplier_product_id || legacyId || "").trim();
+  const duration = String(mappedProduct?.supplier_duration || legacyDuration || "").trim();
+  const usesSupplier = Boolean(supplierProductId || duration);
+  const nextSupplierStatus = usesSupplier && supplierProductId && duration ? "processing" : usesSupplier ? "failed" : "not_applicable";
 
   const { data, error } = await supabase.from("orders")
     .update({
@@ -2424,7 +2421,7 @@ app.post("/api/orders", async (req, res) => {
   }
 
   const { data: product, error: productError } = await supabase.from("products")
-    .select("id, name, price").eq("id", productId).eq("published", true).maybeSingle();
+    .select("id, name, price, supplier_product_id, supplier_duration").eq("id", productId).eq("published", true).maybeSingle();
   if (productError) {
     console.error("Order product lookup failed:", productError.message);
     return res.status(500).json({ error: "Product verify nahi ho saka." });
@@ -2448,20 +2445,32 @@ app.post("/api/orders", async (req, res) => {
     return res.status(400).json({ error: "Is product ki price admin panel mein sahi set karein." });
   }
 
-  const isABCDPanel = /^ABCD(?:\s+PANEL)?(?:\s+FF)?\s+NONROOT(?:\s*-|$)/i.test(String(product.name || "").trim());
-  const isDripWire = /^DRIP Wire - /i.test(product.name || "");
-  const isDripClient = /dripclient.*apkmod/i.test(product.name || "");
-  const isAimHack = /^AIM HACK FF(?: ALL)?(?: - |$)/i.test(product.name || "");
-   const isBalaMods = /bala\s*mods/i.test(product.name || "");
-  const isPrimeHook = /prime\s*hook/i.test(product.name || "");
-  const isSilentXFF = /(?:silent\s*x\s*ff|myth\s*panel\s*all)/i.test(product.name || "");
-  const isSilentCheatNonroot = /silent\s+cheat\s+ff\s+nonroot\s+proxy/i.test(product.name || "");
-  const isXrag = /xrag\s*ff\s*all/i.test(product.name || "");
-  const isPhantomTroll = /phantom\s*x\s*troll\s*ff\s*all/i.test(product.name || "");
-  if (isABCDPanel || isDripWire || isDripClient || isAimHack || isBalaMods || isPrimeHook || isSilentXFF || isSilentCheatNonroot || isXrag || isPhantomTroll) {
-    const duration = isABCDPanel ? abcdPanelDuration(product.name) : isSilentCheatNonroot ? silentCheatNonrootDuration(product.name) : isSilentXFF ? silentXFFDuration(product.name) : isPrimeHook ? primeHookDuration(product.name) : isXrag ? xragDuration(product.name) : isPhantomTroll ? phantomTrollDuration(product.name) : isDripWire ? dripWireDuration(product.name) : isBalaMods ? balaModsDuration(product.name) : isDripClient ? dripClientApkmodDuration(product.name) : aimHackDuration(product.name);
-    const supplierProductId = isABCDPanel ? "151" : (isSilentCheatNonroot ? "148" : (isSilentXFF ? "171" : (isPrimeHook ? "48" : (isXrag ? "149" : (isPhantomTroll ? "133" : (isAimHack ? "174" : (isBalaMods ? "136" : (isDripClient ? "62" : "150"))))))));
-    if (!duration) return res.status(400).json({ error: "Product duration configured nahi hai." });
+  const legacyName = String(product.name || "");
+  const legacyId = /^ABCD(?:\s+PANEL)?(?:\s+FF)?\s+NONROOT(?:\s*-|$)/i.test(legacyName) ? "151" :
+    /silent\s+cheat\s+ff\s+nonroot\s+proxy/i.test(legacyName) ? "148" :
+    /(?:silent\s*x\s*ff|myth\s*panel\s*all)/i.test(legacyName) ? "171" :
+    /prime\s*hook/i.test(legacyName) ? "48" :
+    /xrag\s*ff\s*all/i.test(legacyName) ? "149" :
+    /phantom\s*x\s*troll\s*ff\s*all/i.test(legacyName) ? "133" :
+    /^AIM HACK FF(?: ALL)?(?: - |$)/i.test(legacyName) ? "174" :
+    /bala\s*mods/i.test(legacyName) ? "136" :
+    /dripclient.*apkmod/i.test(legacyName) ? "62" :
+    /^DRIP Wire - /i.test(legacyName) ? "150" : null;
+  const legacyDuration = legacyId === "151" ? abcdPanelDuration(legacyName) :
+    legacyId === "148" ? silentCheatNonrootDuration(legacyName) :
+    legacyId === "171" ? silentXFFDuration(legacyName) :
+    legacyId === "48" ? primeHookDuration(legacyName) :
+    legacyId === "149" ? xragDuration(legacyName) :
+    legacyId === "133" ? phantomTrollDuration(legacyName) :
+    legacyId === "174" ? aimHackDuration(legacyName) :
+    legacyId === "136" ? balaModsDuration(legacyName) :
+    legacyId === "62" ? dripClientApkmodDuration(legacyName) :
+    legacyId === "150" ? dripWireDuration(legacyName) : null;
+  const supplierProductId = String(product.supplier_product_id || legacyId || "").trim();
+  const duration = String(product.supplier_duration || legacyDuration || "").trim();
+  const usesSupplier = Boolean(supplierProductId || duration);
+  if (usesSupplier && (!/^\d{1,20}$/.test(supplierProductId) || !duration || duration.length > 80))
+    return res.status(400).json({ error: "Admin panel mein valid Supplier PID aur exact duration set karein." });
 
     // Give customers a clear deposit redirect before attempting the atomic purchase.
     // The RPC below remains the final authority for charging the wallet.
@@ -2591,7 +2600,7 @@ app.post("/api/orders", async (req, res) => {
 app.get("/api/admin/products", isAdmin, async (req, res) => {
   if (!supabase) return res.status(503).json({ error: "Database is not configured" });
   const { data, error } = await supabase.from("products")
-    .select("id, name, price, image_url, video_url, download_url, published, description, created_at, updated_at, display_order")
+    .select("id, name, price, image_url, video_url, download_url, published, description, created_at, updated_at, display_order, supplier_product_id, supplier_duration")
     .order("display_order", { ascending: true }).order("created_at", { ascending: false });
   if (error) {
     console.error("Admin products load failed:", error.message);
@@ -2606,7 +2615,7 @@ app.get("/api/admin/product-health-check", isAdmin, async (req, res) => {
   if (!supabase) return res.status(503).json({ error: "Database is not configured" });
   try {
     const { data: products, error } = await supabase.from("products")
-      .select("id, name, price, published").order("name", { ascending: true });
+      .select("id, name, price, published, supplier_product_id, supplier_duration").order("name", { ascending: true });
     if (error) throw error;
     const credentialsReady = Boolean(
       String(process.env.RESELLER_API_KEY || process.env.RESELLER_ACCESS_TOKEN || "").trim() &&
@@ -2744,8 +2753,8 @@ app.post("/api/admin/products", isAdmin, async (req, res) => {
   }
   if (videoUrl && (videoUrl.length > 2000 || !/^https:\/\//i.test(videoUrl))) return res.status(400).json({ error: "Video URL https:// se shuru hona chahiye." });
   const { data, error } = await supabase.from("products")
-    .insert({ name, price, image_url: imageUrl || null, video_url: videoUrl || null, published, description, display_order: displayOrder })
-    .select("id, name, price, image_url, video_url, published, description, display_order").single();
+    .insert({ name, price, image_url: imageUrl || null, video_url: videoUrl || null, published, description, display_order: displayOrder, supplier_product_id: String(req.body?.supplier_product_id || "").trim() || null, supplier_duration: String(req.body?.supplier_duration || "").trim() || null })
+    .select("id, name, price, image_url, video_url, published, description, display_order, supplier_product_id, supplier_duration").single();
   if (error) {
     console.error("Product create failed:", error.message);
     return res.status(500).json({ error: "Product save nahi ho saka." });
@@ -2799,10 +2808,20 @@ app.patch("/api/admin/products/:id", isAdmin, async (req, res) => {
     if (typeof req.body.published !== "boolean") return res.status(400).json({ error: "Invalid published value." });
     updates.published = req.body.published;
   }
+  if (Object.prototype.hasOwnProperty.call(req.body || {}, "supplier_product_id")) {
+    const pid = String(req.body.supplier_product_id || "").trim();
+    if (pid && !/^\d{1,20}$/.test(pid)) return res.status(400).json({ error: "Supplier PID sirf numbers mein enter karein." });
+    updates.supplier_product_id = pid || null;
+  }
+  if (Object.prototype.hasOwnProperty.call(req.body || {}, "supplier_duration")) {
+    const supplierDuration = String(req.body.supplier_duration || "").trim();
+    if (supplierDuration.length > 80) return res.status(400).json({ error: "Supplier duration 80 characters se kam rakhein." });
+    updates.supplier_duration = supplierDuration || null;
+  }
   if (!Object.keys(updates).length) return res.status(400).json({ error: "Koi product change nahi mila." });
   updates.updated_at = new Date().toISOString();
   const { data, error } = await supabase.from("products").update(updates)
-    .eq("id", req.params.id).select("id, name, price, image_url, video_url, published, description").maybeSingle();
+    .eq("id", req.params.id).select("id, name, price, image_url, video_url, published, description, supplier_product_id, supplier_duration").maybeSingle();
   if (error) {
     console.error("Product update failed:", error.message);
     return res.status(500).json({ error: "Product update nahi ho saka." });
