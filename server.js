@@ -1133,7 +1133,7 @@ async function loadProducts(){
     document.getElementById("imageUploadStatus").textContent=items.find(p=>p.image_url)?"Current photo saved. Nayi photo select karne par replace hogi.":"";
     document.getElementById("productPublished").checked=items.some(p=>p.published);
     const rows=document.getElementById("productPlanRows");rows.replaceChildren();
-    items.forEach(p=>addProductPlanRow(productNameInfo(p.name).duration,String(p.price)));
+    items.forEach(p=>addProductPlanRow(productNameInfo(p.name).duration,String(p.price),String(p.supplier_product_id||""),String(p.supplier_duration||"")));
     document.getElementById("productEditor").hidden=false;
     document.getElementById("productSave").textContent="Update Product and Durations";
     document.getElementById("productMessage").textContent="Editing: "+base;
@@ -1222,10 +1222,10 @@ document.getElementById("productForm").onsubmit=async e=>{
   const base=document.getElementById("productName").value.trim();
   const displayOrder=Number(document.getElementById("productDisplayOrder").value);
   if(!Number.isInteger(displayOrder)||displayOrder<1||displayOrder>10000)throw new Error("Product number 1 se 10000 ke beech enter karein.");
-  const rows=[...document.querySelectorAll("#productPlanRows .product-plan-row")].map(row=>({duration:row.querySelector(".product-plan-duration").value.trim(),price:Number(row.querySelector(".product-plan-price").value)}));
+  const rows=[...document.querySelectorAll("#productPlanRows .product-plan-row")].map(row=>({duration:row.querySelector(".product-plan-duration").value.trim(),price:Number(row.querySelector(".product-plan-price").value),supplier_product_id:row.querySelector(".product-plan-supplier-pid").value.trim(),supplier_duration:row.querySelector(".product-plan-supplier-duration").value.trim()}));
   if(!base||base.length>100)throw new Error("Valid product name enter karein.");
   if(!rows.length)throw new Error("Kam se kam ek duration-price option add karein.");
-  const seen=new Set();for(const row of rows){const key=row.duration.toLowerCase();if(!row.duration||row.duration.length>80||seen.has(key))throw new Error("Har duration bharein aur duplicate duration na rakhein.");if(!Number.isFinite(row.price)||row.price<0||row.price>1000000)throw new Error("Har duration ki valid price enter karein.");seen.add(key);}
+  const seen=new Set();for(const row of rows){const key=row.duration.toLowerCase();if(!row.duration||row.duration.length>80||seen.has(key))throw new Error("Har duration bharein aur duplicate duration na rakhein.");if(!Number.isFinite(row.price)||row.price<0||row.price>1000000)throw new Error("Har duration ki valid price enter karein.");if((row.supplier_product_id&&!/^\\d{1,20}$/.test(row.supplier_product_id))||(Boolean(row.supplier_product_id)!==Boolean(row.supplier_duration)))throw new Error("Supplier PID aur exact API duration dono sahi bharein, ya dono blank chhodein.");if(row.supplier_duration.length>80)throw new Error("Supplier duration 80 characters se kam rakhein.");seen.add(key);}
   status.textContent=id?"Product aur durations update ho rahe hain...":"Product aur durations add ho rahe hain...";
   let imageUrl=document.getElementById("productImage").value.trim();
   const imageStatus=document.getElementById("imageUploadStatus"),imageFile=document.getElementById("productImageFile").files[0];
@@ -1251,7 +1251,7 @@ document.getElementById("productForm").onsubmit=async e=>{
    const name=base+" - "+plan.duration;
    const planKey=durationKey(plan.duration);
    const old=existing.find(p=>!matchedIds.has(p.id)&&durationKey(adminProductNameInfo(p.name).duration)===planKey);
-   const payload={name,price:plan.price,image_url:imageUrl||null,video_url:videoUrl||null,published:document.getElementById("productPublished").checked,description:document.getElementById("productDescription").value.trim(),display_order:displayOrder};
+   const payload={name,price:plan.price,image_url:imageUrl||null,video_url:videoUrl||null,published:document.getElementById("productPublished").checked,description:document.getElementById("productDescription").value.trim(),display_order:displayOrder,supplier_product_id:plan.supplier_product_id||null,supplier_duration:plan.supplier_duration||null};
    if(old){matchedIds.add(old.id);await api("/api/admin/products/"+encodeURIComponent(old.id),{method:"PATCH",body:JSON.stringify(payload)});}else{await api("/api/admin/products",{method:"POST",body:JSON.stringify(payload)});}
   }
   for(const old of existing){if(!matchedIds.has(old.id)&&old.published)await api("/api/admin/products/"+encodeURIComponent(old.id),{method:"PATCH",body:JSON.stringify({published:false})});}
@@ -2644,6 +2644,11 @@ app.get("/api/admin/product-health-check", isAdmin, async (req, res) => {
         supplierId = "136"; duration = balaModsDuration(name); automatic = true;
       } else if (/dripclient.*apkmod/i.test(name)) {
         supplierId = "62"; duration = dripClientApkmodDuration(name); automatic = true;
+      }
+      if (String(p.supplier_product_id || "").trim() && String(p.supplier_duration || "").trim()) {
+        supplierId = String(p.supplier_product_id).trim();
+        duration = String(p.supplier_duration).trim();
+        automatic = true;
       }
       let status, detail;
       if (!automatic) { status = "manual"; detail = "No automatic supplier mapping detected; manual/download-link product or mapping needed."; }
