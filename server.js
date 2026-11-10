@@ -1621,10 +1621,10 @@ function dripClientApkmodDuration(productName) {
 }
 function aimHackDuration(productName) {
   const name = String(productName || "").trim().toLowerCase().replace(/\s+/g, " ");
-  if (name === "aim hack ff" || name === "aim hack ff - 1 hour" || name === "aim hack ff - 1 hours") return "1 Hours";
-  if (name === "aim hack ff - 3 hours") return "3 Hours";
-  if (name === "aim hack ff - 6 hours") return "6 Hours";
-  if (name === "aim hack ff - 12 hours") return "12 Hours";
+  if (/^aim hack ff all(?:\s*-\s*)?1\s*hours?$/.test(name) || /^aim hack ff all\s*-\s*1\s*hours?$/.test(name) || /^aim hack ff(?:\s*-\s*)?1\s*hours?$/.test(name)) return "1 Hours";
+  if (/^aim hack ff all\s*-\s*3\s*hours?$/.test(name) || /^aim hack ff\s*-\s*3\s*hours?$/.test(name)) return "3 Hours";
+  if (/^aim hack ff all\s*-\s*6\s*hours?$/.test(name) || /^aim hack ff\s*-\s*6\s*hours?$/.test(name)) return "6 Hours";
+  if (/^aim hack ff all\s*-\s*12\s*hours?$/.test(name) || /^aim hack ff\s*-\s*12\s*hours?$/.test(name)) return "12 Hours";
   if (name === "aim hack ff - 1 day") return "1 Day";
   if (name === "aim hack ff - 3 days") return "3 Days";
   if (name === "aim hack ff - 7 days") return "7 Days";
@@ -1835,7 +1835,7 @@ app.patch("/api/admin/orders/:id/payment", isAdmin, async (req, res) => {
   else if (isAimHack) duration = aimHackDuration(productName);
   else if (isBalaMods) duration = balaModsDuration(productName);
   const usesSupplier = isABCDPanel || isDripWire || isDripClient || isAimHack || isBalaMods || isPrimeHook || isSilentXFF || isSilentCheatNonroot || isXrag || isPhantomTroll;
-  const supplierProductId = isABCDPanel ? "151" : (isSilentCheatNonroot ? "148" : (isSilentXFF ? "171" : (isPrimeHook ? "48" : (isXrag ? "149" : (isPhantomTroll ? "133" : (isAimHack ? "133" : (isBalaMods ? "136" : (isDripClient ? "62" : "150"))))))));
+  const supplierProductId = isABCDPanel ? "151" : (isSilentCheatNonroot ? "148" : (isSilentXFF ? "171" : (isPrimeHook ? "48" : (isXrag ? "149" : (isPhantomTroll ? "133" : (isAimHack ? "174" : (isBalaMods ? "136" : (isDripClient ? "62" : "150"))))))));
   const nextSupplierStatus = usesSupplier ? (duration ? "processing" : "failed") : "not_applicable";
 
   const { data, error } = await supabase.from("orders")
@@ -2464,7 +2464,7 @@ app.post("/api/orders", async (req, res) => {
   const isABCDPanel = /^ABCD(?:\s+PANEL)?(?:\s+FF)?\s+NONROOT(?:\s*-|$)/i.test(String(product.name || "").trim());
   const isDripWire = /^DRIP Wire - /i.test(product.name || "");
   const isDripClient = /dripclient.*apkmod/i.test(product.name || "");
-  const isAimHack = /^AIM HACK FF(?: - |$)/i.test(product.name || "");
+  const isAimHack = /^AIM HACK FF(?: ALL)?(?: - |$)/i.test(product.name || "");
    const isBalaMods = /bala\s*mods/i.test(product.name || "");
   const isPrimeHook = /prime\s*hook/i.test(product.name || "");
   const isSilentXFF = /(?:silent\s*x\s*ff|myth\s*panel\s*all)/i.test(product.name || "");
