@@ -2475,6 +2475,7 @@ app.post("/api/orders", async (req, res) => {
   if (usesSupplier && (!/^\d{1,20}$/.test(supplierProductId) || !duration || duration.length > 80))
     return res.status(400).json({ error: "Admin panel mein valid Supplier PID aur exact duration set karein." });
 
+  if (usesSupplier) {
     // Give customers a clear deposit redirect before attempting the atomic purchase.
     // The RPC below remains the final authority for charging the wallet.
     const { data: currentWallet, error: currentWalletError } = await supabase
