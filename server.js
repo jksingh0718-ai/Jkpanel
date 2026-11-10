@@ -2473,7 +2473,7 @@ app.post("/api/orders", async (req, res) => {
   const isPhantomTroll = /phantom\s*x\s*troll\s*ff\s*all/i.test(product.name || "");
   if (isABCDPanel || isDripWire || isDripClient || isAimHack || isBalaMods || isPrimeHook || isSilentXFF || isSilentCheatNonroot || isXrag || isPhantomTroll) {
     const duration = isABCDPanel ? abcdPanelDuration(product.name) : isSilentCheatNonroot ? silentCheatNonrootDuration(product.name) : isSilentXFF ? silentXFFDuration(product.name) : isPrimeHook ? primeHookDuration(product.name) : isXrag ? xragDuration(product.name) : isPhantomTroll ? phantomTrollDuration(product.name) : isDripWire ? dripWireDuration(product.name) : isBalaMods ? balaModsDuration(product.name) : isDripClient ? dripClientApkmodDuration(product.name) : aimHackDuration(product.name);
-    const supplierProductId = isABCDPanel ? "151" : (isSilentCheatNonroot ? "148" : (isSilentXFF ? "171" : (isPrimeHook ? "48" : (isXrag ? "149" : (isPhantomTroll ? "133" : (isAimHack ? "133" : (isBalaMods ? "136" : (isDripClient ? "62" : "150"))))))));
+    const supplierProductId = isABCDPanel ? "151" : (isSilentCheatNonroot ? "148" : (isSilentXFF ? "171" : (isPrimeHook ? "48" : (isXrag ? "149" : (isPhantomTroll ? "133" : (isAimHack ? "174" : (isBalaMods ? "136" : (isDripClient ? "62" : "150"))))))));
     if (!duration) return res.status(400).json({ error: "Product duration configured nahi hai." });
 
     // Give customers a clear deposit redirect before attempting the atomic purchase.
