@@ -1235,7 +1235,7 @@ document.getElementById("productForm").onsubmit=async e=>{
   if(!Number.isInteger(displayOrder)||displayOrder<1||displayOrder>10000)throw new Error("Product number 1 se 10000 ke beech enter karein.");
   const planElements=[...document.querySelectorAll("#productPlanRows .product-plan-row")];
   const sharedPid=document.getElementById("sharedSupplierPid").value.trim();
-  const sharedDurations=document.getElementById("sharedSupplierDurations").value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  const sharedDurations=document.getElementById("sharedSupplierDurations").value.split(/\\r?\\n/).map(x=>x.trim()).filter(Boolean);
   if(sharedPid){
    if(!/^\d{1,20}$/.test(sharedPid))throw new Error("Supplier PID sirf numbers mein enter karein.");
    if(sharedDurations.length!==planElements.length)throw new Error("API durations ki lines aur shop duration rows ki ginti same honi chahiye.");
