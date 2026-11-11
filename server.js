@@ -1210,7 +1210,7 @@ function addProductPlanRow(duration="",price="",supplierDuration=""){
 function generateProductPlansFromBulk(){
  const raw=document.getElementById("bulkProductPlans").value.trim();
  if(!raw)throw new Error("Pehle plans paste karein.");
- const parsed=raw.split(/\r?\n/).map((line,index)=>{
+ const parsed=raw.split(/\\r?\\n/).map((line,index)=>{
   const parts=line.split("|").map(part=>part.trim());
   if(parts.length!==3||!parts[0]||!parts[1]||!parts[2])throw new Error("Line "+(index+1)+" ka format galat hai. Aise likhein: 1 Day | 20 | 1 Hours");
   const price=Number(parts[1]);
@@ -1261,11 +1261,11 @@ document.getElementById("productForm").onsubmit=async e=>{
   if(!Number.isInteger(displayOrder)||displayOrder<1||displayOrder>10000)throw new Error("Product number 1 se 10000 ke beech enter karein.");
   const planElements=[...document.querySelectorAll("#productPlanRows .product-plan-row")];
   const sharedPid=document.getElementById("sharedSupplierPid").value.trim();
-  if(sharedPid&&!/^\d{1,20}$/.test(sharedPid))throw new Error("Supplier PID sirf numbers mein enter karein.");
+  if(sharedPid&&!/^\\d{1,20}$/.test(sharedPid))throw new Error("Supplier PID sirf numbers mein enter karein.");
   const rows=planElements.map(row=>({duration:row.querySelector(".product-plan-duration").value.trim(),price:Number(row.querySelector(".product-plan-price").value),supplier_product_id:sharedPid,supplier_duration:String(row.dataset.supplierDuration||"").trim()}));
   if(!base||base.length>100)throw new Error("Valid product name enter karein.");
   if(!rows.length)throw new Error("Kam se kam ek duration-price option add karein.");
-  const seen=new Set();for(const row of rows){const key=row.duration.toLowerCase();if(!row.duration||row.duration.length>80||seen.has(key))throw new Error("Har duration bharein aur duplicate duration na rakhein.");if(!Number.isFinite(row.price)||row.price<0||row.price>1000000)throw new Error("Har duration ki valid price enter karein.");if((row.supplier_product_id&&!/^\d{1,20}$/.test(row.supplier_product_id))||(Boolean(row.supplier_product_id)!==Boolean(row.supplier_duration)))throw new Error("Supplier PID aur exact API duration dono sahi bharein, ya dono blank chhodein.");if(row.supplier_duration.length>80)throw new Error("Supplier duration 80 characters se kam rakhein.");seen.add(key);}
+  const seen=new Set();for(const row of rows){const key=row.duration.toLowerCase();if(!row.duration||row.duration.length>80||seen.has(key))throw new Error("Har duration bharein aur duplicate duration na rakhein.");if(!Number.isFinite(row.price)||row.price<0||row.price>1000000)throw new Error("Har duration ki valid price enter karein.");if((row.supplier_product_id&&!/^\\d{1,20}$/.test(row.supplier_product_id))||(Boolean(row.supplier_product_id)!==Boolean(row.supplier_duration)))throw new Error("Supplier PID aur exact API duration dono sahi bharein, ya dono blank chhodein.");if(row.supplier_duration.length>80)throw new Error("Supplier duration 80 characters se kam rakhein.");seen.add(key);}
   status.textContent=id?"Product aur durations update ho rahe hain...":"Product aur durations add ho rahe hain...";
   let imageUrl=document.getElementById("productImage").value.trim();
   const imageStatus=document.getElementById("imageUploadStatus"),imageFile=document.getElementById("productImageFile").files[0];
