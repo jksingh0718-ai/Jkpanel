@@ -2006,7 +2006,7 @@ async function loadShopProducts(){
    const purchase=document.createElement('button');purchase.type='button';purchase.className='purchase-plans-toggle';purchase.textContent=isResellerCustomer?'BUY RESELLER KEY':'PURCHASE KEY';purchase.setAttribute('aria-expanded','false');
    purchase.style.cssText='display:block;width:100%;padding:14px;background:linear-gradient(90deg,#06b6d4,#22d3ee);color:#082f49;font-size:14px;border-radius:10px';
    const plans=document.createElement('div');plans.hidden=true;plans.style.cssText='margin-top:12px;display:none';
-   if(isSilentMaintenanceCard){purchase.textContent='🛠 UNDER MAINTENANCE';purchase.disabled=true;purchase.setAttribute('aria-disabled','true');purchase.style.cssText='display:block;width:100%;padding:14px;background:#737373;color:#e5e7eb;font-size:14px;border-radius:10px;cursor:not-allowed;opacity:1';}
+   if(isSilentMaintenanceCard){purchase.textContent='🛠 UNDER MAINTENANCE';purchase.disabled=true;purchase.setAttribute('aria-disabled','true');purchase.style.cssText='display:block;width:100%;padding:14px;background:#777777;color:#bfc3c9;font-size:14px;font-weight:900;border:1px solid #777777;border-radius:10px;cursor:not-allowed;opacity:1;box-shadow:none';}
    else{purchase.onclick=()=>{const open=plans.style.display==='none';plans.style.display=open?'block':'none';plans.hidden=!open;purchase.setAttribute('aria-expanded',String(open));};}
    group.plans.sort((a,b)=>shopDurationRank(a.duration)-shopDurationRank(b.duration));
    group.plans.forEach(({product,duration})=>{
