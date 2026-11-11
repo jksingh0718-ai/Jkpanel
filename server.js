@@ -2955,6 +2955,6 @@ app.post("/api/admin/reseller-prices", isAdmin, async (req,res) => {
   res.json({success:true,reseller_price:saved});
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log("JKPanel server running on port " + PORT);
 });
