@@ -1242,7 +1242,7 @@ function clearProductForm(){
 }
 document.getElementById("showProductForm").addEventListener("click",()=>{const editor=document.getElementById("productEditor");if(editor.hidden){clearProductForm();editor.hidden=false;}else{editor.hidden=false;}const rows=document.getElementById("productPlanRows");if(rows&&!rows.querySelector(".product-plan-row"))addProductPlanRow();document.getElementById("productName").focus({preventScroll:true});editor.scrollIntoView({behavior:"smooth",block:"start"});});
 document.getElementById("showKeyForm").onclick=()=>{const editor=document.getElementById("keyEditor");if(editor.hidden){clearKeyGroupForm();editor.hidden=false;document.getElementById("keyGroupName").focus();}else{editor.hidden=true;}};
-document.getElementById("addProductPlan").onclick=()=>addProductPlanRow();
+const addProductPlanButton=document.getElementById("addProductPlan");if(addProductPlanButton)addProductPlanButton.onclick=()=>addProductPlanRow();
 document.getElementById("generateProductPlans").onclick=()=>{
  const status=document.getElementById("productMessage");
  try{const count=generateProductPlansFromBulk();status.textContent=count+" plans ready. Duration aur price check karke Save karein.";}
