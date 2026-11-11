@@ -1960,11 +1960,13 @@ async function loadShopProducts(){
   customProductGroups.forEach(group=>{
    const card=document.createElement('article');
    card.className='shop-product-card';
+   const isSilentMaintenanceCard=/^silent\s+cheats?\b/i.test(group.name)&&(/\bproxy\b/i.test(group.name)||(/\bnonroot\b/i.test(group.name)&&/\bapkmod\b/i.test(group.name)));
    card.dataset.createdAt=String(group.createdAt);
-    card.dataset.displayOrder=String(group.displayOrder||100);
+   card.dataset.displayOrder=String(isSilentMaintenanceCard?999999:(group.displayOrder||100));
    card.style.cssText='display:block;margin-top:12px;padding:14px;background:linear-gradient(160deg,#111827,#0b1220);border:1px solid #334155;border-radius:16px;overflow:hidden;box-shadow:0 8px 26px #0003';
    const imageProduct=group.plans.find(x=>x.product.image_url)?.product;
    const videoProduct=group.plans.find(x=>x.product.video_url)?.product;
+   let maintenanceMedia=null;
    if(videoProduct?.video_url){
     const thumb=document.createElement('button');thumb.type='button';thumb.className='product-video-thumb';thumb.setAttribute('aria-label','Play '+group.name+' video');
     thumb.dataset.videoUrl=videoProduct.video_url;thumb.dataset.productTitle=group.name;
@@ -1978,12 +1980,20 @@ async function loadShopProducts(){
     }
     const play=document.createElement('span');play.className='product-video-play';play.textContent='▶';thumb.appendChild(play);
     const hint=document.createElement('span');hint.className='product-video-hint';hint.textContent='TAP TO PLAY VIDEO';thumb.appendChild(hint);
-    thumb.onclick=()=>openProductVideo(videoProduct.video_url,group.name,thumb);
-    card.appendChild(thumb);
+    if(!isSilentMaintenanceCard)thumb.onclick=()=>openProductVideo(videoProduct.video_url,group.name,thumb);
+    card.appendChild(thumb);maintenanceMedia=thumb;
    }else if(imageProduct?.image_url){
+    const media=document.createElement('div');media.style.cssText='position:relative;width:100%;margin-bottom:14px;border-radius:12px;overflow:hidden;background:#030712';
     const img=document.createElement('img');img.src=imageProduct.image_url;img.alt=group.name;img.loading='lazy';
-    img.style.cssText='display:block;width:100%;height:clamp(200px,58vw,340px);object-fit:contain;background:#030712;border-radius:12px;margin-bottom:14px';
-    img.onerror=()=>{img.style.display='none';};card.appendChild(img);
+    img.style.cssText='display:block;width:100%;height:clamp(200px,58vw,340px);object-fit:contain;background:#030712';
+    img.onerror=()=>{img.style.display='none';};media.appendChild(img);card.appendChild(media);maintenanceMedia=media;
+   }
+   if(isSilentMaintenanceCard&&maintenanceMedia){
+    const overlay=document.createElement('div');overlay.setAttribute('role','status');
+    overlay.style.cssText='position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:12px;background:rgba(3,7,18,.78);z-index:5;pointer-events:none;text-align:center';
+    const banner=document.createElement('div');banner.textContent='🛠 UNDER MAINTENANCE';banner.style.cssText='width:100%;max-width:500px;padding:15px 8px;border:3px solid #f59e0b;border-radius:18px;background:rgba(15,15,20,.94);color:#fff;font-size:clamp(17px,4.5vw,25px);font-weight:900;letter-spacing:1px;box-shadow:0 0 18px #f59e0b66';
+    const sub=document.createElement('strong');sub.textContent='TEMPORARILY UNAVAILABLE';sub.style.cssText='color:#f8fafc;font-size:clamp(12px,3.2vw,16px);font-weight:900';
+    overlay.append(banner,sub);maintenanceMedia.appendChild(overlay);
    }
    const title=document.createElement('h4');title.textContent=group.name;title.style.cssText='font-size:20px;color:#f8fafc;margin:4px 0 8px;overflow-wrap:anywhere';
    const desc=document.createElement('p');desc.textContent='Apni duration select karein.';desc.style.cssText='font-size:12px;color:#94a3b8;line-height:1.6;margin-bottom:12px';
@@ -1996,7 +2006,8 @@ async function loadShopProducts(){
    const purchase=document.createElement('button');purchase.type='button';purchase.className='purchase-plans-toggle';purchase.textContent=isResellerCustomer?'BUY RESELLER KEY':'PURCHASE KEY';purchase.setAttribute('aria-expanded','false');
    purchase.style.cssText='display:block;width:100%;padding:14px;background:linear-gradient(90deg,#06b6d4,#22d3ee);color:#082f49;font-size:14px;border-radius:10px';
    const plans=document.createElement('div');plans.hidden=true;plans.style.cssText='margin-top:12px;display:none';
-   purchase.onclick=()=>{const open=plans.style.display==='none';plans.style.display=open?'block':'none';plans.hidden=!open;purchase.setAttribute('aria-expanded',String(open));};
+   if(isSilentMaintenanceCard){purchase.textContent='🛠 UNDER MAINTENANCE';purchase.disabled=true;purchase.setAttribute('aria-disabled','true');purchase.style.cssText='display:block;width:100%;padding:14px;background:#737373;color:#e5e7eb;font-size:14px;border-radius:10px;cursor:not-allowed;opacity:1';}
+   else{purchase.onclick=()=>{const open=plans.style.display==='none';plans.style.display=open?'block':'none';plans.hidden=!open;purchase.setAttribute('aria-expanded',String(open));};}
    group.plans.sort((a,b)=>shopDurationRank(a.duration)-shopDurationRank(b.duration));
    group.plans.forEach(({product,duration})=>{
     const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 0;border-bottom:1px solid #263247';
