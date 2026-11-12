@@ -1960,7 +1960,7 @@ async function loadShopProducts(){
   customProductGroups.forEach(group=>{
    const card=document.createElement('article');
    card.className='shop-product-card';
-   const isSilentMaintenanceCard=/^silent\\s+cheats?\\b/i.test(group.name)&&/\\bproxy\\b/i.test(group.name);
+   const isSilentMaintenanceCard=/^silent\s+cheats?\b/i.test(group.name)&&/\bproxy\b/i.test(group.name);
    card.dataset.createdAt=String(group.createdAt);
    card.dataset.displayOrder=String(isSilentMaintenanceCard?999999:(group.displayOrder||100));
    card.style.cssText='display:block;margin-top:12px;padding:14px;background:linear-gradient(160deg,#111827,#0b1220);border:1px solid #334155;border-radius:16px;overflow:hidden;box-shadow:0 8px 26px #0003';
