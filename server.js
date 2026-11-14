@@ -2096,19 +2096,20 @@ async function novapayPost(url, fields) {
 }
 
 async function verifyNovapayOrder(orderId, expectedAmount) {
-  const token = process.env.NOVAPAY_USER_TOKEN;
+  const token = process.env.NOVAGATE_USER_TOKEN;
   if (!token) throw new Error("Payment gateway is not configured");
-  const data = await novapayPost("https://novaapay.shop/api/check-order-status", {
+  const data = await novapayPost("https://novagate.in/api/check-order-status", {
     user_token: token,
     order_id: orderId
   });
   const result = data?.result || {};
-  // NovaPay can report the final state as COMPLETE as well as COMPLETED/SUCCESS.
+  // NovaGate can report the final state as COMPLETE as well as COMPLETED/SUCCESS.
   // Check all known status fields instead of letting an earlier non-final field mask the final one.
   // Fail closed: a successful API/order response alone is NOT proof of payment.
   // Require an explicit final paid status from the transaction result, matching amount,
   // and a gateway transaction reference before enabling wallet credit/reseller activation.
   const statuses = [
+    data?.status,
     result?.status,
     result?.payment_status,
     result?.paymentStatus,
@@ -2176,8 +2177,8 @@ app.post("/api/payments/novapay/create-order", async (req, res) => {
     return res.status(400).json({ error: "Valid 10-digit Indian mobile number enter karein." });
   }
 
-  const token = process.env.NOVAPAY_USER_TOKEN;
-  if (!token) return res.status(503).json({ error: "Gateway setup pending hai. Admin Render Environment Variables mein NOVAPAY_USER_TOKEN set karein." });
+  const token = process.env.NOVAGATE_USER_TOKEN;
+  if (!token) return res.status(503).json({ error: "Gateway setup pending hai. Admin Render Environment Variables mein NOVAGATE_USER_TOKEN set karein." });
 
   const orderId = "JK" + Date.now().toString() + crypto.randomBytes(4).toString("hex").toUpperCase();
   const { data: pending, error: insertError } = await supabase.from("payment_requests").insert({
@@ -2194,26 +2195,25 @@ app.post("/api/payments/novapay/create-order", async (req, res) => {
   }
 
   try {
-    const gateway = await novapayPost("https://novaapay.shop/api/create-order", {
+    const gateway = await novapayPost("https://novagate.in/api/create-order", {
       customer_mobile: mobile,
       user_token: token,
       amount,
       order_id: orderId,
-      redirect_url: "https://jkpanel.onrender.com/?payment=success&order_id=" + encodeURIComponent(orderId),
-      callback_url: "https://jkpanel-backend.onrender.com/api/payments/novapay/webhook",
+      redirect_url: String(process.env.FRONTEND_URL || "https://jkpanel.onrender.com").replace(/\/+$/, "") + "/?payment=success&order_id=" + encodeURIComponent(orderId),
       remark1: purpose === "reseller" ? "JK PANEL SHOP reseller activation" : "JK PANEL SHOP wallet deposit",
       remark2: user.id
     });
     const paymentUrl = gateway?.result?.payment_url;
     if (gateway?.status !== true || typeof paymentUrl !== "string" || !/^https:\/\//i.test(paymentUrl)) {
       await supabase.from("payment_requests").update({ status: "failed", updated_at: new Date().toISOString() }).eq("id", pending.id).eq("status", "pending");
-      console.error("NovaPay create order rejected:", JSON.stringify({ status: gateway?.status, message: gateway?.message }));
+      console.error("NovaGate create order rejected:", JSON.stringify({ status: gateway?.status, message: gateway?.message }));
       return res.status(502).json({ error: gateway?.message || "Gateway payment link create nahi kar saka." });
     }
     res.json({ success: true, order_id: orderId, amount, payment_url: paymentUrl });
   } catch (error) {
     await supabase.from("payment_requests").update({ status: "failed", updated_at: new Date().toISOString() }).eq("id", pending.id).eq("status", "pending");
-    console.error("NovaPay create order failed:", error.message);
+    console.error("NovaGate create order failed:", error.message);
     res.status(502).json({ error: "Payment gateway se order create nahi hua. Thodi der baad try karein." });
   }
 });
@@ -2242,51 +2242,45 @@ app.post("/api/payments/novapay/check-status", async (req, res) => {
     await creditVerifiedNovapayPayment(orderId, Number(request.amount), verified.utr, { source: "status_check", gateway: verified.data });
     return res.json({ success: true, paid: true, message: "Payment verify ho gaya. Wallet balance update ho gaya." });
   } catch (error) {
-    console.error("NovaPay status verification failed:", error.message);
+    console.error("NovaGate status verification failed:", error.message);
     return res.status(502).json({ error: error.message || "Payment status verify nahi ho saka." });
   }
 });
 
 app.post("/api/payments/novapay/webhook", async (req, res) => {
   if (!supabase) return res.status(503).json({ error: "Database is not configured" });
-  const token = process.env.NOVAPAY_USER_TOKEN;
-  if (!token || !safeTokenEqual(req.body?.user_token, token)) {
-    return res.status(401).json({ error: "Invalid webhook authentication" });
-  }
-  const event = String(req.body?.event || "");
-  const callbackStatus = String(req.body?.status || "").toUpperCase();
-  const orderId = String(req.body?.order_id || "").trim();
-  const amount = Number(req.body?.amount);
-  if (event !== "payment.success" || callbackStatus !== "SUCCESS" || !orderId || !Number.isFinite(amount) || amount <= 0) {
-    return res.status(400).json({ error: "Invalid payment webhook payload" });
-  }
+  // NovaGate's dashboard sends a callback after successful verification.
+  // Treat callback data only as a notification; the server independently checks
+  // the order with NovaGate before any wallet credit or reseller activation.
+  const body = req.body || {};
+  const orderId = String(body.order_id || body.orderId || body.result?.orderId || body.result?.order_id || "").trim();
+  if (!orderId) return res.status(400).json({ error: "Payment order ID missing" });
 
   const { data: request, error } = await supabase.from("payment_requests")
     .select("id, user_id, amount, provider, provider_order_id, status")
     .in("provider", ["novapay","novapay_reseller"]).eq("provider_order_id", orderId).maybeSingle();
   if (error) return res.status(500).json({ error: "Payment request lookup failed" });
   if (!request) return res.status(404).json({ error: "Payment order not found" });
-  if (Math.round(Number(request.amount) * 100) !== Math.round(amount * 100)) {
+  if (request.status === "paid") return res.json({ success: true, already_paid: true });
+
+  const callbackAmount = Number(body.amount ?? body.result?.amount);
+  if (Number.isFinite(callbackAmount) && callbackAmount > 0 &&
+      Math.round(Number(request.amount) * 100) !== Math.round(callbackAmount * 100)) {
     return res.status(400).json({ error: "Payment amount mismatch" });
   }
-  if (request.status === "paid") return res.json({ success: true, already_paid: true });
 
   try {
     const verified = await verifyNovapayOrder(orderId, Number(request.amount));
     if (!verified.paid) return res.status(409).json({ error: "Gateway status is not completed yet" });
-    const payload = {
-      source: "webhook",
-      gateway: verified.data,
-      callback: { event, status: callbackStatus, order_id: orderId, amount }
-    };
+    const payload = { source: "webhook", gateway: verified.data, callback: body };
     if (request.provider === "novapay_reseller") {
-      await activateResellerFromVerifiedPayment(request, req.body?.utr || verified.utr, payload);
-      return res.json({success:true,isReseller:true});
+      await activateResellerFromVerifiedPayment(request, verified.utr, payload);
+      return res.json({ success: true, isReseller: true });
     }
-    await creditVerifiedNovapayPayment(orderId, Number(request.amount), req.body?.utr || verified.utr, payload);
+    await creditVerifiedNovapayPayment(orderId, Number(request.amount), verified.utr, payload);
     return res.json({ success: true });
   } catch (error) {
-    console.error("NovaPay webhook verification failed:", error.message);
+    console.error("NovaGate webhook verification failed:", error.message);
     return res.status(502).json({ error: error.message || "Payment verification failed" });
   }
 });
